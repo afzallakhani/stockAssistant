@@ -1,0 +1,53 @@
+<% layout('layout/boilerplate') %>
+    <div class="row">
+        <h1 class="text-center">Edit Item</h1>
+        <div class="col-6 offset-3">
+            <form action="/items/<%= item._id %>?_method=PUT" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
+                <div class="mb-2">
+                    <label for="name" class="form-label">Item Name</label>
+                    <input type="text" id="name" name="item[itemName]" class="form-control" value="<%= item.itemName %>" required>
+                </div>
+
+                <div class="mb-2">
+                    <label for="description" class="form-label">Item Description</label>
+                    <input type="text" id="description" name="item[itemDescription]" class="form-control" value="<%= item.itemDescription %>" required>
+                </div>
+
+                <div class="mb-2">
+                    <label for="unit" class="form-label">Item Quantity Unit</label>
+                    <select class="form-select form-select-lg" name="item[itemUnit]" id="unit" required>
+                        <option selected><%= item.itemUnit %> </option>
+                        <option value="NOS">NOS</option>
+                        <option value="PCS">PCS</option>
+                        <option value="PCS">BAGS</option>
+                        <option value="BOX">BOX</option>
+                        <option value="KGS">KGS</option>
+                        <option value="MTS">MTS</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label for="quantity" class="form-label">Item Quantity</label>
+                    <input type="text" id="quantity" name="item[itemQty]" class="form-control" value="<%= item.itemQty %>" required>
+                </div>
+
+                <div class="mb-2">
+                    <label for="category" class="form-label">Item Category</label>
+                    <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>
+                        <option selected><%= item.itemCategoryName %> </option>
+                        <option value="CCM REFRACTORIES">CCM REFRACTORIES</option>
+                        <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
+                        <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
+                        <option value="FURNACE REFRACTORIES">FURNACE REFRACTORIES</option>
+                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
+                    </select>
+                </div>
+                <% for(image of item.itemImage){%>
+                    <label class="form-label" for="image"><b>Current Image Name:- <%= image.name %></b></label>
+                    <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]">
+                    <button class="btn btn-success my-2" onclick="return confirm('Are you sure you want to edit this item?')">Save Item</button>
+                    <%} %>
+
+            </form>
+        </div>
+    </div>

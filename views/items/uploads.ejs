@@ -1,0 +1,12 @@
+<% layout('layout/boilerplate') %>
+    <div class="container">
+        <div class="row">
+            <div class="col-6 offset-3">
+                <form action="/uploads" enctype="multipart/form-data" method="post" class="form-control">
+                    <label class="form-label" for="image">Item Image</label>
+                    <input class="form-control img-fluid" type="file" accept="image/*" id="image" name="image" required>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>

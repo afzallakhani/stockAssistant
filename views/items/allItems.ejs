@@ -1,0 +1,57 @@
+<% layout('layout/boilerplate') %>
+    <div class="container">
+        <div class="row">
+            <h1 class="col-10">All Items</h1>
+            <span class="col-2">
+            <a class="link-light nav-link btn btn-primary" href="/items/new">Add New Item</a>
+<div class="mt-2">
+    <form action="/items/search" method="get">
+        <input class="form-control" type="search" id="keyWord" name="item[itemName]" placeholder="Search Item"  class="mt-1">
+
+
+    </form>
+</div>
+           
+        </span>
+        </div>
+    </div>
+
+
+
+    <% for(let item of items){%>
+        <div class="card w-70 mb-3">
+            <div class="row">
+                <div class="col-3">
+                    <% for(let image of item.itemImage) {%>
+                        <img src="data:image/<%=image.contentType%>;base64,
+                        <%=image.data.toString('base64')%>" class="img-fluid" style="height: 300px; max-width: 300px;">
+                        <% }%>
+                </div>
+                <div class="col-9 my-auto">
+                    <h5 class="card-title">
+                        <%= item.itemName %>
+                    </h5>
+                    <p class="card-text">
+                        <%= item.itemQty %>
+                            <%= item.itemUnit %>
+                    </p>
+                    <p class="card-text">
+                        <%= item.itemDescription %>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted"><%= item.itemCategoryName %> </small>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted"><%= item._id %> </small>
+                    </p>
+                    <a href="/items/<%= item._id %>/edit " class="btn  btn-warning mb-1">Edit</a>
+                    <!-- <a href="" class="d-inline" method="POST" onclick="return confirm('Are you sure you want to edit this item?')" class="btn  btn-danger mb-1 ">Delete</a> -->
+                    <form action="/items/<%= item._id %>?_method=DELETE" method="post">
+                        <button type="submit" onclick="return confirm('Are you sure you want to edit this item?')" class="btn btn-danger d-inline mb-1">DELETE</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <%} %>
