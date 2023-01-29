@@ -37,7 +37,6 @@ router.get("/new", (req, res) => {
 router.get("/search", async(req, res) => {
     const queryString = req.query.item;
     const query = queryString.itemName;
-    console.log(query);
 
     // for (let query of queryString) {
     //     //     console.log(typeof queryString);
@@ -45,12 +44,12 @@ router.get("/search", async(req, res) => {
     // }
 
     const item = await Items.find({
-        itemName: query,
+        $or: [
+            { itemName: { $regex: query, $options: "i" } },
+            { itemCategoryName: { $regex: query, $options: "i" } },
+        ],
     }).populate("itemImage");
-    console.log(item);
-    for (let unit of item) {
-        console.log(unit.itemUnit, "4545");
-    }
+
     res.render("items/search", { item });
 });
 
