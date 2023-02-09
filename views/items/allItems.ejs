@@ -1,14 +1,20 @@
 <% layout('layout/boilerplate') %>
+
+
+
+    <div class="container align">
+        <!-- Content here -->
+    </div>
+
+
     <div class="container">
         <div class="row">
             <h1 class="col-10">All Items</h1>
             <span class="col-2">
             <a class="link-light nav-link btn btn-primary" href="/items/new">Add New Item</a>
-<div class="mt-2">
+<div class="mt-2 mb-2">
     <form action="/items/search" method="get">
         <input class="form-control" type="search" id="keyWord" name="item[itemName]" placeholder="Search Item"  class="mt-1">
-
-
     </form>
 </div>
            
@@ -16,42 +22,124 @@
         </div>
     </div>
 
+    <div class="tabel-responsive">
+        <table class="table table-hover table align-middle" id="dataTable">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Image</th>
+                    <th scope="col">Item Name</th>
+                    <th scope="col">Item Category</th>
+                    <th scope="col">Item Description</th>
+                    <th scope="col">Item Quantity</th>
+                    <th scope="col">Unit</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
 
+            <tbody>
+                <form action="/items" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
+                    <tr>
+                        <td class="font-weight-bold">
+                            Add
+                        </td>
+                        <td>
+                            <form action="/items" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
+                                <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]" required>
+                            </form>
+                        </td>
+                        <td>
+                            <input class="form-control" type="text" id="name" name="item[itemName]" required>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>
+                                <option selected>Select Item Category</option>
+                                <option value="CCM REFACTORIES">CCM REFACTORIES</option>
+                                <option value="CCM REFACTORIES">CCM CONSUMABLES</option>
+                                <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
+                                <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
+                                <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input class="form-control" type="text" id="description" name="item[itemDescription]" required>
+                        </td>
+                        <td>
+                            <input class="form-control" type="text" id="qty" name="item[itemQty]" required>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-lg" name="item[itemUnit]" id="unit" required>
+                                <option selected>Select Item Quantity Unit</option>
+                                <option value="NOS">NOS</option>
+                                <option value="PCS">PCS</option>
+                                <option value="BOX">BOX</option>
+                                <option value="KGS">KGS</option>
+                                <option value="MTS">MTS</option>
+                                <option value="BAGS">BAGS</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-success my-2">Save Item</button>
 
-    <% for(let item of items){%>
-        <div class="card w-70 mb-3">
-            <div class="row">
-                <div class="col-3">
-                    <% for(let image of item.itemImage) {%>
-                        <img src="data:image/<%=image.contentType%>;base64,
-                        <%=image.data.toString('base64')%>" class="img-fluid" style="height: 300px; max-width: 300px;">
-                        <% }%>
-                </div>
-                <div class="col-9 my-auto">
-                    <h5 class="card-title">
-                        <%= item.itemName %>
-                    </h5>
-                    <p class="card-text">
-                        <%= item.itemQty %>
+                        </td>
+
+                    </tr>
+                </form>
+
+                <% items.forEach(function(item, index){%>
+
+                    <tr>
+                        <td>
+                            <%= index + 1 %>
+                        </td>
+                        <td>
+                            <% for(let image of item.itemImage) {%>
+                                <img src="data:image/<%=image.contentType%>;base64,
+                            <%=image.data.toString('base64')%>" class="img-fluid" style="height: 60px; width: 60px;">
+                                <% }%>
+                        </td>
+                        <td id="itemNameFilter">
+                            <%= item.itemName %>
+                        </td>
+                        <td id="itemCategoryFilter">
+                            <%= item.itemCategoryName %>
+                        </td>
+                        <td>
+                            <%= item.itemDescription %>
+                        </td>
+                        <td>
+                            <%= item.itemQty %>
+                        </td>
+                        <td>
                             <%= item.itemUnit %>
-                    </p>
-                    <p class="card-text">
-                        <%= item.itemDescription %>
-                    </p>
-                    <p class="card-text">
-                        <small class="text-muted"><%= item.itemCategoryName %> </small>
-                    </p>
-                    <p class="card-text">
-                        <small class="text-muted"><%= item._id %> </small>
-                    </p>
-                    <a href="/items/<%= item._id %>/edit " class="btn  btn-warning mb-1">Edit</a>
-                    <!-- <a href="" class="d-inline" method="POST" onclick="return confirm('Are you sure you want to edit this item?')" class="btn  btn-danger mb-1 ">Delete</a> -->
-                    <form action="/items/<%= item._id %>?_method=DELETE" method="post">
-                        <button type="submit" onclick="return confirm('Are you sure you want to edit this item?')" class="btn btn-danger d-inline mb-1">DELETE</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+                        </td>
+                    </tr>
+                    <%}) %>
+            </tbody>
+        </table>
+    </div>
 
+    <button onclick="filterTable()">Filter</button>
 
-        <%} %>
+    <script>
+        function filterTable() {
+            // Get the value of the filter inputs
+            var itemNameFilter = document.getElementById("itemNameFilter").value.toUpperCase();
+            var itemCategoryFilter = document.getElementById("itemCategoryFilter").value.toUpperCase();
+
+            // Get the table rows
+            var rows = document.getElementById("dataTable").getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+
+            // Loop through the rows and hide those that do not match the filter
+            for (var i = 0; i < rows.length; i++) {
+                var itemName = rows[i].getElementsByTagName("td")[0].innerHTML.toUpperCase();
+                var itemCategory = rows[i].getElementsByTagName("td")[5].innerHTML.toUpperCase();
+
+                if (itemName.indexOf(itemNameFilter) > -1 && itemCategory.indexOf(itemCategoryFilter) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    </script>
