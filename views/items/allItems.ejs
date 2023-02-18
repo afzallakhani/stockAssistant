@@ -2,28 +2,12 @@
 
 
 
-    <div class="container align">
-        <!-- Content here -->
-    </div>
-
-
-    <div class="container">
-        <div class="row">
-            <h1 class="col-10">All Items</h1>
-            <span class="col-2">
-            <a class="link-light nav-link btn btn-primary" href="/items/new">Add New Item</a>
-<div class="mt-2 mb-2">
-    <form action="/items/search" method="get">
-        <input class="form-control" type="search" id="keyWord" name="item[itemName]" placeholder="Search Item"  class="mt-1">
-    </form>
-</div>
-           
-        </span>
-        </div>
+    <div class="container-fluid align-items-center justify-content-center">
+        <h1 class="font-weight-bold">Refractories And Consumables</h1>
     </div>
 
     <div class="tabel-responsive">
-        <table class="table table-hover table align-middle" id="dataTable">
+        <table class="table table-hover table align-middle text-center" id="dataTable">
             <thead>
                 <tr>
                     <th scope="col">#</th>
@@ -38,22 +22,21 @@
             </thead>
 
             <tbody>
-                <form action="/items" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
-                    <tr>
-                        <td class="font-weight-bold">
+                <tr>
+                    <form action="/items" method="POST" novalidate class="validated-form form-inline" enctype="multipart/form-data">
+
+                        <td class="form-control-sm text-center">
                             Add
                         </td>
                         <td>
-                            <form action="/items" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
-                                <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]" required>
-                            </form>
+                            <input class="form-control form-control-sm text-center img-fluid" type="file" id="image" name="item[itemImage]" required>
                         </td>
                         <td>
-                            <input class="form-control" type="text" id="name" name="item[itemName]" required>
+                            <input class="form-control form-control-sm" type="text" id="name" name="item[itemName]" required>
                         </td>
                         <td>
-                            <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>
-                                <option selected>Select Item Category</option>
+                            <select class="form-select form-select-sm" name="item[itemCategoryName]" id="category" required>
+                                <option selected>Category</option>
                                 <option value="CCM REFACTORIES">CCM REFACTORIES</option>
                                 <option value="CCM REFACTORIES">CCM CONSUMABLES</option>
                                 <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
@@ -62,14 +45,14 @@
                             </select>
                         </td>
                         <td>
-                            <input class="form-control" type="text" id="description" name="item[itemDescription]" required>
+                            <input class="form-control form-control-sm" type="text" id="description" name="item[itemDescription]" required>
                         </td>
                         <td>
-                            <input class="form-control" type="text" id="qty" name="item[itemQty]" required>
+                            <input class="form-control form-control-sm" type="text" id="qty" name="item[itemQty]" required>
                         </td>
                         <td>
-                            <select class="form-select form-select-lg" name="item[itemUnit]" id="unit" required>
-                                <option selected>Select Item Quantity Unit</option>
+                            <select class="form-select form-select-sm" name="item[itemUnit]" id="unit" required>
+                                <option selected>Qty Unit</option>
                                 <option value="NOS">NOS</option>
                                 <option value="PCS">PCS</option>
                                 <option value="BOX">BOX</option>
@@ -79,12 +62,12 @@
                             </select>
                         </td>
                         <td>
-                            <button class="btn btn-success my-2">Save Item</button>
-
+                            <button class="btn btn-success btn-sm my-2 form-control form-control-sm">Save</button>
                         </td>
 
-                    </tr>
-                </form>
+                    </form>
+
+                </tr>
 
                 <% items.forEach(function(item, index){%>
 
@@ -112,6 +95,13 @@
                         </td>
                         <td>
                             <%= item.itemUnit %>
+                        </td>
+                        <td>
+                            <a href="/items/<%= item._id %>/edit " class="btn btn-sm btn-warning mb-1">Edit</a>
+                            <!-- <a href="" class="d-inline" method="POST" onclick="return confirm('Are you sure you want to edit this item?')" class="btn  btn-danger mb-1 ">Delete</a> -->
+                            <form action="/items/<%= item._id %>?_method=DELETE" method="post">
+                                <button type="submit" onclick="return confirm('Are you sure you want to edit this item?')" class="btn btn-danger btn-sm d-inline mb-1">DELETE</button>
+                            </form>
                         </td>
                     </tr>
                     <%}) %>
