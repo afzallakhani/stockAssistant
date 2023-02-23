@@ -1,0 +1,14 @@
+<% layout('layout/boilerplate') %>
+
+    <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
+        <label class="form-label" for="newItemCategory">New Item Category</label>
+        <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]">
+        <button type="submit">Add Category</button>
+    </form>
+
+    <% for(let item of category){%>
+
+        <p>
+            <%= item.itemCategoryName %>
+        </p>
+        <%} %>
