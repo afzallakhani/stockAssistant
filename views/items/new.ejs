@@ -2,6 +2,7 @@
     <div class="row">
         <h1 class="text-center">Add New Item To The Inventory</h1>
         <div class="col-6 offset-3">
+
             <form action="/items" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
                 <label class="form-label" for="name">Item Name</label>
                 <input class="form-control" type="text" id="name" name="item[itemName]" required>
@@ -20,32 +21,71 @@
                         <option value="KGS">KGS</option>
                         <option value="MTS">MTS</option>
                         <option value="BAGS">BAGS</option>
-                    </select>
+                        <option value="">
+                            
+                        </option>
+                        
+                        </select>
 
                 <label class="form-label" for="qty">Item Quantity</label>
                 <input class="form-control" type="number" id="qty" name="item[itemQty]" required>
 
                 <!-- <label class="form-label" for="category">Item Category</label>
                 <input class="form-control" type="text" id="category" name="item[itemCategoryName]" required> -->
-                <label for="category" class="form-label">Item Category</label>
-                <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>
-                        <option selected>Select Item Category</option>
-                        <option value="CCM REFACTORIES">CCM REFACTORIES</option>
-                        <option value="CCM REFACTORIES">CCM CONSUMABLES</option>
-                        <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
-                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
-                        <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
+                <div class="row">
+                    <div class="col">
+                        <label for="category" class="form-label-sm">Item Category</label>
+                        <select class="form-select" name="item[itemCategoryName]" id="category" required>
+                                <option selected>Select Item Category</option>
+                                <% for(let item of itemCategories){%>
+            
+                                <option value="Item Category"><%= item.itemCategoryName %>
+                                </option>
+                                <%} %>
+                            </select>
+                    </div>
+                    <div class="col mt-4">
+                        <input type="text" name="" id="" class="form-control"> </div>
+                </div>
+                <div>
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-sm btn-primary mt-2" data-toggle="modal" data-target="#exampleModalCenter">
+                        Add New Category
+                      </button>
 
-                    </select>
-
-                <!-- <form action="/items/" class="validated-form" method="POST" enctype="multipart/form-data"> -->
+                </div>
                 <label class="form-label" for="image">Item Image</label>
                 <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]" required>
-                <!-- <button class="btn btn-primary my-2" type="submit">Upload</button> -->
-                <!-- </form> -->
-
                 <button class="btn btn-success my-2">Save Item</button>
             </form>
+            <!-- Modal -->
 
+            <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Add New Category</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+                        </div>
+                        <div class="modal-body">
+                            <div>
+                                <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
+                                    <label class="form-label" for="newItemCategory">New Item Category</label>
+                                    <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]" required>
+                                    <button type="submit" class="mt-2 btn btn-success">Save Category</button>
+                                </form>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    <div class="container">

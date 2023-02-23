@@ -5,7 +5,11 @@
     <div class="container-fluid align-items-center justify-content-center">
         <h1 class="font-weight-bold">Refractories And Consumables</h1>
     </div>
+    <form action="/items/search" method="get">
+        <input class="form-control" type="search" id="keyWord" name="item[itemName]" placeholder="Search Item" class="mt-1">
 
+
+    </form>
     <div class="tabel-responsive">
         <table class="table table-hover table align-middle text-center" id="dataTable">
             <thead>
@@ -109,7 +113,15 @@
         </table>
     </div>
 
-    <button onclick="filterTable()">Filter</button>
+    <!-- <button onclick="filterTable()">Filter</button> -->
+    <div class="btn-group">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Filter
+        </button>
+        <div class="dropdown-menu">
+            ...
+        </div>
+    </div>
 
     <script>
         function filterTable() {
