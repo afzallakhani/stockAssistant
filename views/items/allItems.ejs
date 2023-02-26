@@ -101,7 +101,7 @@
                             <%= item.itemUnit %>
                         </td>
                         <td>
-                            <a href="/items/<%= item._id %>/edit " class="btn btn-sm btn-warning mb-1">Edit</a>
+                            <a href="/items/<%= item._id %>/edit " class="btn mb-1 bi bi-pencil-square"></a>
                             <!-- <a href="" class="d-inline" method="POST" onclick="return confirm('Are you sure you want to edit this item?')" class="btn  btn-danger mb-1 ">Delete</a> -->
                             <form action="/items/<%= item._id %>?_method=DELETE" method="post">
                                 <button type="submit" onclick="return confirm('Are you sure you want to edit this item?')" class="btn btn-danger btn-sm d-inline mb-1">DELETE</button>

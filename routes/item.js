@@ -26,8 +26,6 @@ router.get(
   "/",
   catchAsync(async (req, res) => {
     const items = await Items.find({}).populate("itemImage");
-    console.log(items.itemCategoryName);
-
     const images = await Images.find({});
     res.render("items/allItems", { items });
   })
@@ -37,7 +35,6 @@ router.get(
   "/new",
   catchAsync(async (req, res) => {
     const itemCategories = await ItemCategories.find({});
-    console.log(itemCategories);
     res.render("items/new", { itemCategories });
   })
 );
@@ -46,7 +43,6 @@ router.get(
   "/category",
   catchAsync(async (req, res) => {
     const category = await ItemCategories.find({});
-    console.log(category);
     res.render("items/category", { category });
   })
 );
@@ -80,7 +76,6 @@ router.post(
     // if (!req.body.item) throw new ExpressError("Invalid Item Data", 400);
 
     let item = new Items(req.body.item);
-    console.log(req.body);
     let image = new Images();
     image.contentType = req.file.mimetype;
     image.data = fs.readFileSync(
@@ -115,7 +110,6 @@ router.post(
 
     let category = new ItemCategories(req.body.category);
     await category.save();
-    console.log(category);
     res.redirect("/items/new");
   })
 );
