@@ -1,0 +1,16 @@
+<% layout('layout/boilerplate') %>
+
+    <a class="btn btn-secondary" href="/partymaster/new">Add New Party</a>
+
+    <% for(let party of parties){%>
+
+        <p>
+            <%= party.partyName %>
+                <%= party.partyAddress %>
+                    <%= party.partyType %>
+                        <%= party.partyItemCategory %>
+        </p>
+        <form action="/partymaster/<%= party._id %>?_method=DELETE" method="post">
+            <button type="submit" onclick="return confirm('Are you sure you want to edit this item?')" class="btn btn-danger btn-sm d-inline mb-1">DELETE</button>
+        </form>
+        <%} %>

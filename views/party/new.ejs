@@ -1,0 +1,59 @@
+<% layout('layout/boilerplate') %>
+
+
+
+    <% layout('layout/boilerplate') %>
+        <div class="row">
+            <h1 class="text-center">Add New Party To The Party Master</h1>
+            <div class="col-6 offset-3">
+
+                <form action="/partymaster" novalidate method="POST" enctype="multipart/form-data">
+                    <label class="form-label mt-1" for="partyName">Enter Party Name</label>
+                    <input class="form-control" type="text" id="partyName" name="party[partyName]">
+
+                    <label class="form-label mt-1" for="partyAddress">Enter Party Address</label>
+                    <input class="form-control" type="text" id="partyAddress" name="party[partyAddress]">
+                    <label class="form-label mt-1" for="partyType">Enter Party Type</label>
+                    <select class="form-select form-select-md" name="party[partyType]" id="partyType" required>
+                        <option selected>Select Party Type</option>
+                        <option value="Supplier">Supplier</option>
+                        <option value="Buyer">Buyer</option>
+                        </select>
+                    <label class="form-label mt-1" for="partyItemCategory">Enter Party Item Category</label>
+                    <input class="form-control" type="text" id="partyItemCategory" name="party[partyItemCategory]">
+
+
+
+                    <button type="submit" class="btn btn-primary mt-3">Add Party</button>
+                </form>
+                <!-- Modal -->
+
+                <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">Add New Category</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+                            </div>
+                            <div class="modal-body">
+                                <div>
+                                    <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
+                                        <label class="form-label" for="newItemCategory">New Item Category</label>
+                                        <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]" required>
+                                        <button type="submit" class="mt-2 btn btn-success">Save Category</button>
+                                    </form>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary">Save changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
