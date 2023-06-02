@@ -10,6 +10,7 @@ const multer = require("multer");
 const fs = require("fs");
 require("dotenv/config");
 const ExpressError = require("../utils/ExpressError");
+const Party = require("../models/partyMaster");
 const Items = require("../models/elafStock");
 const ItemCategories = require("../models/itemCategories");
 const Images = require("../models/images");
@@ -30,6 +31,9 @@ router.get(
     res.render("items/allItems", { items });
   })
 );
+router.get("/", (req, res) => {
+  res.render("home");
+});
 
 router.get(
   "/new",
