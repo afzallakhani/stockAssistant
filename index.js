@@ -37,10 +37,10 @@ const app = express();
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 app.use("/items", item);
 app.use("/partymaster", party);
 app.get("/", (req, res) => {
