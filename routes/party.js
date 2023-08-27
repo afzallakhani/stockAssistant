@@ -34,6 +34,25 @@ router.get(
 //   res.render("party/allParties");
 // });
 
+// searched Party display
+router.get("/search", async (req, res) => {
+  const queryString = req.query.party;
+  const query = queryString.partyName;
+
+  // for (let query of queryString) {
+  //     //     console.log(typeof queryString);
+  //     console.log(query.itemName);
+  // }
+
+  const party = await Party.find({
+    $or: [
+      { partyName: { $regex: query, $options: "i" } },
+      { partyItemCategory: { $regex: query, $options: "i" } },
+    ],
+  });
+
+  res.render("party/search", { party });
+});
 // Add New Party
 router.post(
   "/",
@@ -43,7 +62,6 @@ router.post(
 
     let party = new Party(req.body.party);
     await party.save();
-    console.log(party);
     res.redirect("/partymaster/allparties");
   })
 );
@@ -78,7 +96,6 @@ router.get(
   catchAsync(async (req, res) => {
     const { id } = req.params;
     const party = await Party.findById(id);
-    console.log(party);
     res.render("party/edit", { party });
   })
 );

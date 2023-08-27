@@ -2,6 +2,11 @@
     <div class="container-fluid align-items-center justify-content-center mb-1">
         <h1 class="font-weight-bold mt-1">Party Master</h1>
     </div>
+    <form action="/partymaster/search" method="get">
+        <input class="form-control" type="search" id="keyWord" name="party[partyName]" placeholder="Search Party/Item" class="mt-1">
+
+
+    </form>
     <a class="btn btn-secondary mt-2 mb-2" href="/partymaster/new">Add New Party</a>
     <div class="table-responsive">
         <table class="table table-hover table align-middle text-center" id="dataTable">
