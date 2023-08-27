@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const path = require("path");
 const { promisify } = require("util");
-const { urlencoded, query } = require("express");
+const { urlencoded, query, json } = require("express");
 // const unlinkAsync = promisify(fs.unlink);
 const catchAsync = require("../utils/catchAsync");
 const methodOverride = require("method-override");
@@ -57,11 +57,30 @@ router.delete(
     res.redirect("/partymaster/allparties");
   })
 );
+// EDIT PARTY
+router.put(
+  "/:id",
+  catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    await Party.findByIdAndUpdate(id, { ...req.body.party });
+    res.redirect("/partymaster/allparties");
+  })
+);
 router.get("/new", (req, res) => {
   res.render("party/new");
 });
-router.get("/edit", (req, res) => {
-  res.render("party/edit");
-});
+// router.get("/:id/edit", (req, res) => {
+//   res.render("party/edit");
+// });
+
+router.get(
+  "/:id/edit",
+  catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const party = await Party.findById(id);
+    console.log(party);
+    res.render("party/edit", { party });
+  })
+);
 
 module.exports = router;
