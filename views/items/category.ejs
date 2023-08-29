@@ -1,14 +1,21 @@
 <% layout('layout/boilerplate') %>
+    <div class="container">
+        <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
+            <label class="form-label" for="newItemCategory">New Item Category</label>
+            <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]">
+            <button type="submit">Add Category</button>
+        </form>
 
-    <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
-        <label class="form-label" for="newItemCategory">New Item Category</label>
-        <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]">
-        <button type="submit">Add Category</button>
-    </form>
+        <% for(let item of category){%>
 
-    <% for(let item of category){%>
+            <p>
+                <%= item.itemCategoryName %>
 
-        <p>
-            <%= item.itemCategoryName %>
-        </p>
-        <%} %>
+            </p>
+            <p class="d-inline">
+                <form action="/items/category/<%= item._id %>?_method=DELETE" method="post">
+                    <button type="submit" onclick="return confirm('Are you sure you want to edit this item category?')" class="btn mb-1 bi bi-trash btn-danger"></button>
+                </form>
+            </p>
+            <%} %>
+    </div>

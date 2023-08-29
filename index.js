@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 // const Items = require("./models/elafStock");
 const item = require("./routes/item");
 const party = require("./routes/party");
+const billets = require("./routes/billet");
 // const Images = require("./models/images");
 // const Joi = require("joi");
 const ejsMate = require("ejs-mate");
@@ -43,6 +44,7 @@ app.use(methodOverride("_method"));
 // app.use(bodyParser.json());
 app.use("/items", item);
 app.use("/partymaster", party);
+app.use("/billets", billets);
 app.get("/", (req, res) => {
   res.render("home");
 });
