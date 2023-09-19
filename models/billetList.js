@@ -1,7 +1,7 @@
-// const { date, Number } = require("joi");
+// const { date, String } = require("joi");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-
+const BilletTc = require("./billetTc");
 const BilletSchema = new mongoose.Schema({
   sectionSize: String,
   gradeName: {
@@ -12,26 +12,27 @@ const BilletSchema = new mongoose.Schema({
     type: String,
     uppercase: true,
     unique: true,
+    ref: "BilletTc",
   },
   productionDate: String,
-  c: Number,
-  mn: Number,
-  p: Number,
-  s: Number,
-  si: Number,
-  cr: Number,
-  mo: Number,
-  ni: Number,
-  al: Number,
-  cu: Number,
-  v: Number,
-  ce: Number,
-  fullLengthQty: Number,
-  fullPisLength: [Number],
-  shortLengthQty: [Number],
-  shortPisLength: [Number],
+  c: String,
+  mn: String,
+  p: String,
+  s: String,
+  si: String,
+  cr: String,
+  mo: String,
+  ni: String,
+  al: String,
+  cu: String,
+  v: String,
+  ce: String,
+  fullLengthQty: String,
+  fullPisLength: [String],
+  shortLengthQty: [String],
+  shortPisLength: [String],
 });
 
-module.exports = mongoose.model("billetList", BilletSchema);
+module.exports = mongoose.model("BilletList", BilletSchema);
 // module.exports = mongoose.SchemaTypes("billetList", BilletSchema);
 // module.exports.productionDate = BilletSchema;

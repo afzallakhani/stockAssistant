@@ -1,0 +1,125 @@
+<% layout('layout/boilerplate') %>
+
+
+    <form action="/billets/<%= tc._id %>?_method=PUT" method="POST" class="validatedForm" enctype="application/x-www-form-urlencoded">
+        <div class="row">
+            <h1 class="mb-3">
+                Create Test Certificate.
+            </h1>
+
+            <div class="col">
+                <label class="form-label" for="billNo">Tax Invoice No.</label>
+                <input type="text" class="form-control" id="billNo" name="tc[billNo]" value="<%= tc.billNo %>" aria-label="Invoice Number" required>
+            </div>
+            <div class="col">
+                <label class="form-label" for="tcNo">TC No.</label>
+                <input type="text" class="form-control" name="tc[tcNo]" id="tcNo" value="<%= tc.tcNo %>" aria-label="TC Number" required>
+            </div>
+            <div class="col">
+                <label class="form-label" for="tcDate">TC Date</label>
+                <input type="text" class="form-control" name="tc[tcDate]" id="tcDate" value="<%= tc.tcDate %>" aria-label="TC Date" required>
+            </div>
+            <div class="col">
+                <label class="form-label" for="poDate">PO Date</label>
+                <input type="text" class="form-control" name="tc[poDate]" id="poDate" value="<%= tc.poDate %>" aria-label="PO Date" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label class="form-label" for="poNo">PO No.</label>
+                <input type="text" class="form-control" name="tc[poNo]" id="poNo" value="<%= tc.poNo %>" aria-label="PO Number" required>
+            </div>
+            <div class="col">
+                <label class="form-label" for="totalQtyMts">Total Weight Mts.</label>
+                <input type="text" class="form-control" name="tc[totalQtyMts]" id="totalQtyMts" value="<%= tc.totalQtyMts %>" aria-label="Total Quantity Mts" required>
+            </div>
+            <div class="col">
+                <label class="form-label" for="totalPcs">Total Pcs.</label>
+                <input type="text" class="form-control" name="tc[totalPcs]" id="totalPcs" value="<%= tc.totalPcs %>" aria-label="Total Number of Pcs" required>
+            </div>
+            <div class="col">
+                <label class="form-label" for="vehicleNo">Vehicle No.</label>
+                <input type="text" class="form-control" name="tc[vehicleNo]" id="vehicleNo" value="<%= tc.vehicleNo %>" aria-label="Vehicle Number" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label class="form-label" for="buyerName">Buyer</label>
+                <select class="form-select form-select-md" name="tc[buyerName]" id="buyerName" required>
+                    <option selected><%= tc.buyerName %></option>
+                                        <% for(let buyer of party){%>
+            
+                                            <option><%= buyer.partyName %>
+                                            </option>
+                                            <%} %>
+                                        </select>
+
+
+
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label class="form-label" for="heatNos">Enter All Heat Numbers</label>
+
+                    <input type="search" class="form-control" name="billet[heatNo]" id="heatNos" value="<% for (let heat of tc.heatNo){%><%= heat.heatNo %><%}%>
+                        " aria-label="Heat Numbers" required>
+
+
+
+                </div>
+            </div>
+            <div class="row" id="inputContainer">
+
+                <button class="btn btn-info mt-2">Create TC</button>
+
+            </div>
+        </div>
+
+
+    </form>
+
+    <!-- <form action="/billets/newTc" method="get"> -->
+    <!-- <div class="row">
+            <div class="col">
+                <label class="form-label" for "heatNos">Buyer</label>
+                <input type="search" class="form-control" name="tc[heatNo]" id="heatNos" placeholder="Enter All Heat Numbers (E.g. h123 h124 h125)" aria-label="Heat Numbers" required>
+            </div>
+        </div>
+    </form> -->
+
+
+    <script>
+        const addButton = document.getElementById("addInputButton");
+        const inputContainer = document.getElementById("inputContainer");
+        // const inputCountField = document.getElementById("totalShortLengthPcs");
+        let inputCount = 0
+
+        function addInputFields() {
+            console.log("shgd")
+                // let count = parseInt(inputCountField.value, 10);
+                // let lastValue = count
+                // if (lastValue != count && lengthOfShortPcs) {
+                //     inputContainer.removeChild(lengthOfShortPcs)
+                // }
+                // if (isNaN(count) || count <= 0) {
+                //     alert("Please enter a valid positive number.");
+                //     return;
+                // }
+            inputCount++;
+
+
+            // Clear existing input fields
+            // inputContainer.innerHTML = "";
+
+
+            const inputField = document.createElement("input");
+            inputField.type = "text";
+            inputField.name = "billet[shortPisLength]";
+            inputField.classList = "form-control m-2"
+            inputField.id = "lengthOfShortPcs"
+            inputContainer.appendChild(inputField);
+
+        }
+
+        addButton.addEventListener("click", addInputFields);
+    </script>

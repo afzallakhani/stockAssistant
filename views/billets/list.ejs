@@ -3,11 +3,16 @@
         <h1 class="font-weight-bold mt-1">Billet List</h1>
     </div>
     <form action="/billets/search" method="get">
-        <input class="form-control" type="search" id="keyWord" name="party[partyName]" placeholder="Search Party/Item" class="mt-1">
+        <input class="form-control" type="search" id="keyWord" name="heat[heatNo]" placeholder="Search Heats" class="mt-1">
 
 
     </form>
     <a class="btn btn-secondary mt-2 mb-2" href="/billets/new">Add New - Billet Inwards</a>
+    <form action="/billets/newTc" method="get">
+        <lab class="form-label" for="" heatNo>Enter Heat Numbers</lab>
+        <input type="text" name="billet[heatNo]" id="heatNo" class="form-control">
+    </form>
+    <a class="btn btn-secondary mt-2 mb-2" href="/billets/newTc">Create New TC - Billet Outwards</a>
 
 
     <div class="table-responsive">
