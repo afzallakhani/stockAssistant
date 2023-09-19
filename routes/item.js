@@ -10,10 +10,12 @@ const multer = require("multer");
 const fs = require("fs");
 require("dotenv/config");
 const ExpressError = require("../utils/ExpressError");
+
 const Party = require("../models/partyMaster");
 const Items = require("../models/elafStock");
 const ItemCategories = require("../models/itemCategories");
 const Images = require("../models/images");
+const Billets = require("../models/billetList");
 const multerStorage = require("../utils/multerStorage");
 const bodyParser = require("body-parser");
 
@@ -115,6 +117,15 @@ router.post(
     let category = new ItemCategories(req.body.category);
     await category.save();
     res.redirect("/items/new");
+  })
+);
+
+router.delete(
+  "/category/:id",
+  catchAsync(async (req, res) => {
+    const { id } = req.params;
+    await ItemCategories.findByIdAndDelete(id);
+    res.redirect("/items/category");
   })
 );
 router.get(

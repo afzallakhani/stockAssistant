@@ -13,7 +13,7 @@
                 <!-- <label class="form-label" for="unit">Item Quantity Unit</label>
                 <input class="form-control" type="text" id="unit" name="item[itemUnit]" required> -->
                 <label for="unit" class="form-label">Item Quantity Unit</label>
-                <select class="form-select form-select-lg" name="item[itemUnit]" id="unit" required>
+                <select class="form-select form-select-md" name="item[itemUnit]" id="unit" required>
                         <option selected>Select Item Quantity Unit</option>
                         <option value="NOS">NOS</option>
                         <option value="PCS">PCS</option>
@@ -28,6 +28,7 @@
                 <input class="form-control" type="text" id="category" name="item[itemCategoryName]" required> -->
                 <div class="row">
                     <div class="col">
+
                         <label for="category" class="form-label-sm">Item Category</label>
                         <select class="form-select" name="item[itemCategoryName]" id="category" required>
                                 <option selected>Select Item Category</option>
@@ -37,49 +38,47 @@
                                 </option>
                                 <%} %>
                             </select>
-                    </div>
-                    <!-- <div class="col mt-4">
-                        <input type="text" name="" id="" class="form-control"> </div>
-                </div> -->
-                    <div>
                         <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-sm btn-primary mt-2" data-toggle="modal" data-target="#exampleModalCenter">
-                        Add New Category
-                      </button>
+                        <button type="button" class="btn btn-sm btn-primary mt-2 mb-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
+    Add New Category
+  </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content ">
+                                    <div class="modal-header ">
+                                        <h5 class="modal-title " id="exampleModalLongTitle ">Add New Category</h5>
+
+
+                                    </div>
+                                    <div class="modal-body">
+                                        <div>
+                                            <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
+                                            </form>
+                                            <h1></h1>
+                                            <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
+                                                <label class="form-label" for="newItemCategory">New Item Category</label>
+                                                <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]">
+                                                <button type="submit" class="mt-2 btn btn-success">Add Category</button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
 
                     </div>
+                    <!-- <div class="col mt-4 ">
+                        <input type="text " name=" " id=" " class="form-control "> </div>
+                </div> -->
+
                     <label class="form-label" for="image">Item Image</label>
                     <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]" required>
                     <button class="btn btn-success my-2">Save Item</button>
             </form>
-            <!-- Modal -->
-
-            <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLongTitle">Add New Category</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-                        </div>
-                        <div class="modal-body">
-                            <div>
-                                <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
-                                    <label class="form-label" for="newItemCategory">New Item Category</label>
-                                    <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]" required>
-                                    <button type="submit" class="mt-2 btn btn-success">Save Category</button>
-                                </form>
-                            </div>
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
             </div>
         </div>
-        <div class="container">
+    </div>
+    <div class="container ">

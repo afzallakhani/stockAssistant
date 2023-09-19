@@ -1,0 +1,279 @@
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tc Preview - CLOSE CASTING</title>
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <!-- <link rel="script" href="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/fontawesome.min.css" integrity="sha384-QYIZto+st3yW+o8+5OHfT6S482Zsvz2WfOzpFSXMF9zqeLcFV0/wlZpMtyFcZALm" crossorigin="anonymous">
+
+
+
+
+</head>
+
+<body class="" id="">
+    <main class="container mb-5" id="">
+        <div class="justify-content-center row mt-5 px-0" id="makePdf">
+            <div class="col-8 mt-5 px-0">
+                <div class="text-center mb-1 mt-5" id="">
+                    <h6 class="font-weight-bold mt-1" style="font-size: 15px;"><u>TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO STEEL GENERAL/STRUCTURAL PURPOSES.</u></h6>
+                    <P class="" style="font-size: 14px;">
+                        It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.
+                    </P>
+                    <h6 class="mb-1">License Serial No. - ES/BIS/2830/7600107011.</h6>
+                </div>
+                <table class="table table-bordered table-responsive justify-content-center">
+                    <thead class="text-center" style="font-size: 13px;">
+                        <th scope="col" class="px-0">Inv No.</th>
+                        <th scope="col" class="px-0">Date</th>
+                        <th scope="col" class="px-0">Po No.</th>
+                        <th scope="col" class="px-0">Po Dt.</th>
+                        <th scope="col" class="px-0">Total Wt.</th>
+                        <th scope="col" class="px-0">Total Pcs</th>
+                        <th scope="col" class="px-0">Vehicle No.</th>
+                    </thead>
+                    <tbody class="text-center" style="font-size: 13px;">
+                        <tr class="">
+                            <td class="px-0">
+                                <input type="text" class="text-center" value="<%= tc.billNo %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                            </td>
+                            <td class="px-0">
+                                <input type="text" class="text-center" value="<%= tc.tcDate %>" id="dynamicInput" style="width: 85px; border: 0; box-shadow: none;">
+                            </td>
+                            <td class="px-0">
+                                <input type="text" class="text-center" value="<%= tc.poNo %>" id="dynamicInput" style="width: 85px; border: 0; box-shadow: none;">
+                            </td>
+                            <td class="px-0">
+                                <input type="text" class="text-center" value="<%= tc.poDate %>" id="dynamicInput" style="width: 85px; border: 0; box-shadow: none;">
+                            </td>
+                            <td class="px-0">
+                                <input type="text" class="text-center" value="<%= tc.totalQtyMts %>" id="dynamicInput" style="width: 55px; border: 0; box-shadow: none;">
+                            </td>
+                            <td class="px-0">
+                                <input type="text" class="text-center" value="<%= tc.totalPcs %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                            </td>
+                            <td class="px-0">
+                                <input type="text" class="text-center" value="<%= tc.vehicleNo %>" id="dynamicInput" style="width: 95px; border: 0; box-shadow: none;">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h6 class="mt-1 mb-4 text-center" style="font-size: 16px;"><input type="text" class="text-center" value="<%= tc.buyerName %>" id="dynamicInput" style="border: 0; text-decoration: underline; width: 550px; font-weight: bold; box-shadow: none;">
+                </h6>
+                <h6 class="mt-2 mb-2 text-center" style="font-size: 15px;">CHEMICAL COMPOSITION</h6>
+                <table class="table table-responsive table-bordered">
+                    <thead style="font-size: 13px;" class="text-center">
+                        <th scope="col" class="px-0">Size</th>
+                        <th scope="col" class="px-0">Heat No.</th>
+                        <th scope="col" class="px-0">Pcs.</th>
+                        <th scope="col" class="px-0">C%</th>
+                        <th scope="col" class="px-0">Mn%</th>
+                        <th scope="col" class="px-0">P%</th>
+                        <th scope="col" class="px-0">S%</th>
+                        <th scope="col" class="px-0">AL%</th>
+                        <th scope="col" class="px-0">CR%</th>
+                        <th scope="col" class="px-0">NI%</th>
+                        <th scope="col" class="px-0">MO%</th>
+                        <th scope="col" class="px-0">CU%</th>
+                        <th scope="col" class="px-0">V%</th>
+                        <th scope="col" class="px-0">Si%</th>
+                        <th scope="col" class="px-0">CE%</th>
+                        <th scope="col" class="px-0">Grade</th>
+                        <th scope="col" class="px-0">Color</th>
+                    </thead>
+                    <tbody style="font-size: 13px;" class="text-center">
+                        <% for (let heat of tc.heatNo){%>
+                            <tr class="px-0">
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.sectionSize %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td style="width: 75px;" class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.heatNo %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.fullLengthQty %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+
+                                    <!-- <script>
+                                        resizeInput()
+                                    </script> -->
+                                </td>
+
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.c %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.mn %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.p %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.s %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.al %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.cr %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.ni %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.mo %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.cu %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.v %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.si %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.ce %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" class="text-center" value="<%= heat.gradeName %>" id="dynamicInput" style="width: 35px; border: 0; box-shadow: none;">
+                                </td>
+                                <td class="px-0">
+                                    <input type="text" placeholder="Color" class="text-center" id="dynamicInput" style="width: 65px; border: 0; padding: 0; box-shadow: none;">
+                                </td>
+                            </tr>
+                            <%}%>
+                    </tbody>
+
+
+                </table>
+                <div class="mt-5" style="font-size: 14px;">
+                    <h6 class="mt-2 mb-2">PHYSICAL PARAMETERS</h6>
+                    <LI>All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.</LI>
+                    <LI>The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.</LI>
+                    <H6>
+                        Process Route - EIF-CCM
+                    </H6>
+
+                </div>
+                <div class="float-end mt-5" style="font-size: 13px;">
+                    <h6 class="mb-5">Q.C.</h6>
+                    <h6 class="mt-5">Elaf Steel</h6>
+
+
+                </div>
+
+
+            </div>
+        </div>
+        <a href="/billets/<%= tc._id %>/genratePdfCc" style="font-weight: 600;" class="btn btn-success btn-md text-light mb-1">Generate PDf</a>
+
+
+    </main>
+
+    <!-- <script>
+        function resizeInput() {
+            const input = document.getElementById('dynamicInput');
+            const contentWidth = input.scrollWidth;
+            input.style.width = contentWidth + 'px';
+        }
+    </script> -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" integrity="sha512-CryKbMe7sjSCDPl18jtJI5DR5jtkUWxPXWaLCst6QjH8wxDexfRJic2WRmRXmstr2Y8SxDDWuBO6CQC6IE4KTA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        // Example starter JavaScript for disabling form submissions if there are invalid fields
+        (function() {
+            'use strict'
+
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            const forms = document.querySelectorAll('.validated-form')
+
+            // Loop over them and prevent submission
+            Array.from(forms)
+                .forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+        // var myModal = document.getElementById('myModal')
+        // var myInput = document.getElementById('myInput')
+
+        // myModal.addEventListener('shown.bs.modal', function() {
+        //     myInput.focus()
+        // })
+    </script>
+    <script>
+        $(function() {
+            $('#datepicker').datepicker();
+        });
+    </script>
+    <script>
+        const generatePdfButton = document.getElementById('generatePdf');
+
+        generatePdfButton.addEventListener('click', () => {
+            const elementToConvert = document.getElementById('makePdf'); // Replace 'contentToConvert' with the ID of the HTML element you want to convert.
+
+            html2pdf()
+                .from(elementToConvert)
+                .set({
+                    margin: 0,
+                })
+                .save('generated.pdf');
+        });
+    </script>
+    <script>
+        function generatePDF() {
+            const htmlContent = document.getElementById('html-content').innerHTML;
+
+            const pdfDefinition = {
+                content: [{
+                    text: 'PDFMake Example',
+                    fontSize: 18,
+                    bold: true,
+                    margin: [0, 0, 0, 20]
+                }, {
+                    text: htmlContent
+                }]
+            };
+
+            pdfMake.createPdf(pdfDefinition).download('example.pdf');
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.1/html2pdf.bundle.min.js"></script>
+
+</body>
+<!-- <form action="/billets/tcList/search" method="get">
+        <input class="form-control" type="search" id="keyWord" name="tc[tcNo]" placeholder="Search TC" class="mt-1">
+
+
+    </form> -->
+<!-- <a class="btn btn-secondary mt-2 mb-2" href="/billets/new">Add New - Billet Inwards</a>
+    <form action="/billets/newTc" method="get">
+        <lab class="form-label" for="" heatNo>Enter Heat Numbers</lab>
+        <input type="text" name="billet[heatNo]" id="heatNo" class="form-control">
+    </form>
+    <a class="btn btn-secondary mt-2 mb-2" href="/billets/newTc">Create New TC - Billet Outwards</a> -->

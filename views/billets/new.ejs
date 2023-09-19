@@ -1,0 +1,119 @@
+<% layout('layout/boilerplate') %>
+
+    <div class="row">
+        <h1 class="text-center">Data Entry - Billets Inwards</h1>
+        <div class="col-6 offset-3">
+
+            <form action="/billets" method="POST" novalidate enctype="multipart/form-data">
+                <label class="form-label" for="heatNumber">Heat No.</label>
+                <input class="form-control" type="text" id="heatNumber" name="billet[heatNo]" required>
+
+                <label class="form-label" for="grade">Grade</label>
+                <input class="form-control" type="text" id="grade" name="billet[gradeName]" required>
+
+                <!-- <label class="form-label" for="unit">Item Quantity Unit</label>
+                                <input class="form-control" type="text" id="unit" name="item[itemUnit]" required> -->
+                <label for="section" class="form-label">Section Size - (MM)</label>
+                <select class="form-select form-select-md" name="billet[sectionSize]" id="section" required>
+                                        <option selected>Select Section</option>
+                                        <option value="75">75x75</option>
+                                        <option value="100">100x100</option>
+                                        <option value="130">130x130</option>
+                                        <option value="160">160x160</option>
+                                        <option value="200">200x200</option>
+                                        </select>
+
+                <label for="date" class="form-label">Production Date</label>
+                <input type="date" name="billet[productionDate]" id="date" class="form-control" required>
+
+                <h5 class="mt-2">
+                    Enter Chemical Compositon (e.g. :- 0.18, 0.051)
+                </h5>
+                <label for="carbon" class="form-label">Carbon %</label>
+                <input type="text" name="billet[c]" id="carbon" class="form-control" required>
+
+                <label for="manganese" class="form-label">Manganese %</label>
+                <input type="text" name="billet[mn]" id="manganese" class="form-control" required>
+
+                <label for="phos" class="form-label">Phos %</label>
+                <input type="text" name="billet[p]" id="phos" class="form-control" required>
+
+
+                <label for="sulphur" class="form-label">Sulphur %</label>
+                <input type="text" name="billet[s]" id="sulphur" class="form-control" required>
+
+                <label for="silicon" class="form-label">Silicon %</label>
+                <input type="text" name="billet[si]" id="silicon" class="form-control" required>
+
+                <label for="chrome" class="form-label">Chrome %</label>
+                <input type="text" name="billet[cr]" id="chrome" class="form-control" required>
+
+                <label for="moly" class="form-label">Moly %</label>
+                <input type="text" name="billet[mo]" id="moly" class="form-control" required>
+
+                <label for="nickel" class="form-label">Nickel %</label>
+                <input type="text" name="billet[ni]" id="nickel" class="form-control" required>
+
+                <label for="aluminium" class="form-label">Aluminium %</label>
+                <input type="text" name="billet[al]" id="aluminium" class="form-control" required>
+
+                <label for="copper" class="form-label">Copper %</label>
+                <input type="text" name="billet[cu]" id="copper" class="form-control" required>
+
+                <label for="vanadium" class="form-label">Vanadium %</label>
+                <input type="text" name="billet[v]" id="vanadium" class="form-control" required>
+
+                <label for="ce" class="form-label">Ce %</label>
+                <input type="text" name="billet[ce]" id="ce" class="form-control" required>
+
+                <label for="totalPcs" class="form-label">Total Pcs</label>
+                <input type="number" name="billet[fullLengthQty]" id="totalPcs" class="form-control" required>
+
+                <label for="totalShortLengthPcs" class="form-label">No. of Total Short Length Pcs</label>
+                <input type="number" name="billet[shortLengthQty]" id="totalShortLengthPcs" class="form-control">
+                <!-- <button id="addInputButton" class="btn btn-info m-2">Add Input Field</button> -->
+
+                <div id="inputContainer" class="mt-2">
+                    <label for="lengthOfShortPcs" class="form-label">Enter Length of Short Pcs Below</label>
+                    <!-- <input type="number" name="billet[shortPisLength]" id="lengthOfShortPcs" class="form-control"> -->
+
+                </div>
+
+
+                <button class="btn btn-success my-2" type="submit">Save Heat</button>
+
+
+            </form>
+        </div>
+    </div>
+    <script>
+        const addButton = document.getElementById("addInputButton");
+        const inputContainer = document.getElementById("inputContainer");
+        const inputCountField = document.getElementById("totalShortLengthPcs");
+
+        function addInputFields() {
+            let count = parseInt(inputCountField.value, 10);
+            // let lastValue = count
+            // if (lastValue != count && lengthOfShortPcs) {
+            //     inputContainer.removeChild(lengthOfShortPcs)
+            // }
+            if (isNaN(count) || count <= 0) {
+                alert("Please enter a valid positive number.");
+                return;
+            }
+
+            // Clear existing input fields
+            // inputContainer.innerHTML = "";
+
+            for (let i = 0; i < count; i++) {
+                const inputField = document.createElement("input");
+                inputField.type = "number";
+                inputField.name = "billet[shortPisLength]";
+                inputField.classList = "form-control m-2"
+                inputField.id = "lengthOfShortPcs"
+                inputContainer.appendChild(inputField);
+            }
+        }
+
+        inputCountField.addEventListener("input", addInputFields);
+    </script>
