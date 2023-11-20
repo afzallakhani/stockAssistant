@@ -65,10 +65,10 @@ router.get("/search", async (req, res) => {
   //     console.log(query.itemName);
   // }
 
-  const heatss = await Billets.find({ heatNo: { $in: queryList } });
+  const heats = await Billets.find({ heatNo: { $in: queryList } });
   // console.log(heatss);
 
-  res.render("billets/search", { heatss });
+  res.render("billets/search", { heats });
 });
 
 router.get(

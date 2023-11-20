@@ -1,18 +1,16 @@
 <% layout('layout/boilerplate') %>
     <div class="container-fluid align-items-center justify-content-center mb-1">
-        <h1 class="font-weight-bold mt-1">Billet List</h1>
+        <h1 class="font-weight-bold mt-1 mb-1">Billet List</h1>
     </div>
-    <form action="/billets/search" method="get">
-        <input class="form-control" type="search" id="keyWord" name="heat[heatNo]" placeholder="Search Heats" class="mt-1">
+    <form action="/billets/search" class="mb-1" method="get">
+        <label for="keyWord" class="d-inline bi bi-search form-label fw-bold mb-1">  Search By Heat No.</label>
+        <input class="form-control" type="search" id="keyWord" name="heat[heatNo]" placeholder="Search Heats" class="mt-2">
 
 
     </form>
-    <a class="btn btn-secondary mt-2 mb-2" href="/billets/new">Add New - Billet Inwards</a>
-    <form action="/billets/newTc" method="get">
-        <lab class="form-label" for="" heatNo>Enter Heat Numbers</lab>
-        <input type="text" name="billet[heatNo]" id="heatNo" class="form-control">
-    </form>
-    <a class="btn btn-secondary mt-2 mb-2" href="/billets/newTc">Create New TC - Billet Outwards</a>
+    <a class="btn btn-primary mt-3 mb-2" href="/billets/new">Add New - Billet Inwards</a>
+
+    <a class="btn btn-success mt-3 mb-2" href="/billets/newTc">Create New TC - Billet Outwards</a>
 
 
     <div class="table-responsive">

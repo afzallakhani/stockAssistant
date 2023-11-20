@@ -4,7 +4,7 @@
         <h1 class="text-center">Data Entry - Billets Inwards</h1>
         <div class="col-6 offset-3">
 
-            <form action="/billets" method="POST" novalidate enctype="multipart/form-data">
+            <form action="/billets" method="POST" enctype="multipart/form-data">
                 <label class="form-label" for="heatNumber">Heat No.</label>
                 <input class="form-control" type="text" id="heatNumber" name="billet[heatNo]" required>
 
@@ -27,42 +27,42 @@
                 <h5 class="mt-2">
                     Enter Chemical Compositon (e.g. :- 0.18, 0.051)
                 </h5>
-                <label for="carbon" class="form-label">Carbon %</label>
-                <input type="text" name="billet[c]" id="carbon" class="form-control" required>
+                <label for="carbon" class="form-label">Carbon - C %</label>
+                <input type="text" name="billet[c]" id="carbon" class="form-control" placeholder="E.g. 0.45" required>
 
-                <label for="manganese" class="form-label">Manganese %</label>
-                <input type="text" name="billet[mn]" id="manganese" class="form-control" required>
+                <label for="manganese" class="form-label">Manganese - Mn %</label>
+                <input type="text" name="billet[mn]" id="manganese" class="form-control" placeholder="E.g. 0.75" required>
 
-                <label for="phos" class="form-label">Phos %</label>
-                <input type="text" name="billet[p]" id="phos" class="form-control" required>
+                <label for="phos" class="form-label">Phos - P %</label>
+                <input type="text" name="billet[p]" id="phos" class="form-control" placeholder="E.g. 0.035" required>
 
 
-                <label for="sulphur" class="form-label">Sulphur %</label>
-                <input type="text" name="billet[s]" id="sulphur" class="form-control" required>
+                <label for="sulphur" class="form-label">Sulphur - S %</label>
+                <input type="text" name="billet[s]" id="sulphur" class="form-control" placeholder="E.g. 0.025" required>
 
-                <label for="silicon" class="form-label">Silicon %</label>
-                <input type="text" name="billet[si]" id="silicon" class="form-control" required>
+                <label for="silicon" class="form-label">Silicon - Si %</label>
+                <input type="text" name="billet[si]" id="silicon" class="form-control" placeholder="E.g. 0.31" required>
 
-                <label for="chrome" class="form-label">Chrome %</label>
-                <input type="text" name="billet[cr]" id="chrome" class="form-control" required>
+                <label for="chrome" class="form-label">Chrome - Cr %</label>
+                <input type="text" name="billet[cr]" id="chrome" class="form-control" placeholder="E.g. 0.05, 0.11" required>
 
-                <label for="moly" class="form-label">Moly %</label>
-                <input type="text" name="billet[mo]" id="moly" class="form-control" required>
+                <label for="moly" class="form-label">Moly - Mo %</label>
+                <input type="text" name="billet[mo]" id="moly" class="form-control" placeholder="E.g. 0.0065" required>
 
-                <label for="nickel" class="form-label">Nickel %</label>
-                <input type="text" name="billet[ni]" id="nickel" class="form-control" required>
+                <label for="nickel" class="form-label">Nickel - Ni %</label>
+                <input type="text" name="billet[ni]" id="nickel" class="form-control" placeholder="E.g. 0.055" required>
 
-                <label for="aluminium" class="form-label">Aluminium %</label>
-                <input type="text" name="billet[al]" id="aluminium" class="form-control" required>
+                <label for="aluminium" class="form-label">Aluminium - Al %</label>
+                <input type="text" name="billet[al]" id="aluminium" class="form-control" placeholder="E.g. 0.004, 0.012, 0.0007" required>
 
-                <label for="copper" class="form-label">Copper %</label>
-                <input type="text" name="billet[cu]" id="copper" class="form-control" required>
+                <label for="copper" class="form-label">Copper - Cu %</label>
+                <input type="text" name="billet[cu]" id="copper" class="form-control" placeholder="E.g. 0.05" required>
 
-                <label for="vanadium" class="form-label">Vanadium %</label>
-                <input type="text" name="billet[v]" id="vanadium" class="form-control" required>
+                <label for="vanadium" class="form-label">Vanadium - V %</label>
+                <input type="text" name="billet[v]" id="vanadium" class="form-control" placeholder="E.g. 0.007" required>
 
-                <label for="ce" class="form-label">Ce %</label>
-                <input type="text" name="billet[ce]" id="ce" class="form-control" required>
+                <label for="ce" class="form-label">Carbon Equivalent - Ce %</label>
+                <input type="text" name="billet[ce]" id="ce" class="form-control" placeholder="E.g. 0.55" required>
                 <!-- 
                 <label for="totalPcs" class="form-label">Total Pcs</label>
                 <input type="number" name="billet[fullLengthQty]" id="totalPcs" class="form-control" required>
@@ -81,6 +81,7 @@
             </form>
         </div>
     </div>
+
     <!-- <script>
         const addButton = document.getElementById("addInputButton");
         const inputContainer = document.getElementById("inputContainer");
