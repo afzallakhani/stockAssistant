@@ -2,10 +2,7 @@ const express = require("express");
 const router = express.Router();
 const path = require("path");
 const officegen = require("officegen");
-// const docx = officegen("docx");
-
 const docx = require("docx");
-
 const { promisify } = require("util");
 const puppeteer = require("puppeteer");
 const { urlencoded, query, json } = require("express");
@@ -19,26 +16,17 @@ const ExpressError = require("../utils/ExpressError");
 const Party = require("../models/partyMaster");
 const Items = require("../models/elafStock");
 const Tc = require("../models/billetTc");
-
 const Billets = require("../models/billetList");
 const ItemCategories = require("../models/itemCategories");
 const Images = require("../models/images");
 const multerStorage = require("../utils/multerStorage");
 const bodyParser = require("body-parser");
-
 const validateItem = require("../utils/validateItem");
 const events = require("events");
 const billetTc = require("../models/billetTc");
 const { date } = require("joi");
 const eventEmitter = new events.EventEmitter();
-
 let upload = multer({ storage: multerStorage });
-// router.get("/list", (req, res) => {
-//   res.render("billets/list");
-// });
-
-// Documents contain sections, you can have multiple sections per document, go here to learn more about sections
-// This simple example will only contain one section
 
 router.get(
   "/list",
@@ -57,16 +45,8 @@ router.get("/search", async (req, res) => {
   const queryString = req.query.heat;
   let query = queryString.heatNo.toString();
   let queryList = query.split(" ");
-  // console.log(queryList);
-  // console.log(req.query.heat);
-
-  // for (let query of queryString) {
-  //     //     console.log(typeof queryString);
-  //     console.log(query.itemName);
-  // }
 
   const heats = await Billets.find({ heatNo: { $in: queryList } });
-  // console.log(heatss);
 
   res.render("billets/search", { heats });
 });
@@ -97,18 +77,10 @@ router.post(
 
     const heatId = heats.map((item) => item._id);
     tc.heatNo = heatId;
-    // console.log(item););
     console.log(tc);
     await tc.save();
     let = currentTc = await Tc.findById(tc.id);
-    // currentTc.heatNo.push(heats);
-    // await tc.save();
-    // let = finalTc = await Tc.findById(tc.id);
-
     console.log(currentTc);
-    // console.log(finalTc);
-    // let newTc = Tc.find({});
-    // console.log(newTc);
     res.redirect("/billets/newTc");
   })
 );
@@ -124,15 +96,6 @@ router.get(
   })
 );
 
-// UPDATE TC
-// router.put(
-//   "/:id",
-//   catchAsync(async (req, res, next) => {
-//     const { id } = req.params;
-//     await Tc.findByIdAndUpdate(id, { ...req.body.billet });
-//     res.redirect("/billets/tcList");
-//   })
-// );
 // DELETE TC
 router.delete(
   "/:id/tc",
@@ -143,50 +106,6 @@ router.delete(
     res.redirect("/billets/tcList");
   })
 );
-
-// const generatePdf = async (req, res) => {
-//   try {
-//     const browser = await puppeteer.launch();
-//     const page = await browser.newPage();
-//     const url =
-//       `${req.protocol}://${req.get("host")}` +
-//       "/billets/" +
-//       `${req.params.id}` +
-//       "/tcPdf";
-
-//     console.log(url);
-//     await page.goto(
-//       `${req.protocol}://${req.get("host")}` +
-//         "/billets/" +
-//         `${req.params.id}` +
-//         "/tcPdf",
-//       {
-//         waitUntil: "networkidle2",
-//       }
-//     );
-
-//     await page.setViewport({ width: 1980, height: 1050 });
-//     const todayDate = new Date();
-//     const pdfn = await page.pdf({
-//       path: `${path.join(__dirname, "../files", todayDate.getTime() + ".pdf")}`,
-//       format: "a4",
-//     });
-//     await browser.close();
-//     const pdfURL = path.join(
-//       __dirname,
-//       "../files",
-//       todayDate.getTime() + ".pdf"
-//     );
-//     res.set({
-//       "Content-Type": "application/pdf",
-//       "Content-Length": pdfn.length,
-//     });
-//     res.sendFile(pdfURL);
-//   } catch (error) {
-//     console.log(error.message);
-//   }
-// };
-// TC PREVIEW GET
 
 // TC PREVIEW GET
 router.get(
@@ -239,119 +158,6 @@ router.get(
     res.render("billets/closeCastTcPdf", { tc, tcList });
   })
 );
-// router.get(
-//   "/:id/genratePdf",
-//   catchAsync(async (req, res) => {
-//     console.log("hi");
-//     try {
-//       console.log("hi");
-//       const browser = await puppeteer.launch({ headless: true });
-//       const page = await browser.newPage();
-//       const url =
-//         `${req.protocol}://${req.get("host")}` +
-//         "/billets/" +
-//         `${req.params.id}` +
-//         "/tcPreview";
-
-//       console.log(url);
-//       await page.goto(
-//         `${req.protocol}://${req.get("host")}` +
-//           "/billets/" +
-//           `${req.params.id}` +
-//           "/tcPreview",
-//         {
-//           waitUntil: "networkidle2",
-//         }
-//       );
-
-//       await page.setViewport({ width: 1600, height: 1050 });
-//       await page.evaluate(() => {
-//         (document.querySelectorAll("a") || []).forEach((el) => el.remove());
-//       });
-
-//       // let div_selector_to_remove = "removeBtnPuppteer";
-//       // await page.evaluate((sel) => {
-//       //   var elements = document.querySelectorAll(sel);
-//       //   for (var i = 0; i < elements.length; i++) {
-//       //     elements[i].parentNode.removeChild(elements[i]);
-//       //   }
-//       // }, div_selector_to_remove);
-
-//       const todayDate = new Date();
-//       const pdfn = await page.pdf({
-//         path: `${path.join(
-//           __dirname,
-//           "../files",
-//           todayDate.getTime() + ".pdf"
-//         )}`,
-//         format: "a4",
-//       });
-//       await browser.close();
-//       const pdfURL = path.join(
-//         __dirname,
-//         "../files",
-//         todayDate.getTime() + ".pdf"
-//       );
-//       res.set({
-//         "Content-Type": "application/pdf",
-//         "Content-Length": pdfn.length,
-//       });
-//       res.sendFile(pdfURL);
-//     } catch (error) {
-//       console.log(error.message);
-//     }
-//   })
-// );
-// router.get(
-//   "/:id/genratePdfCc",
-//   catchAsync(async (req, res) => {
-//     console.log("hi");
-//     try {
-//       console.log("hi");
-//       const browser = await puppeteer.launch({ headless: true });
-//       const page = await browser.newPage();
-//       const url =
-//         `${req.protocol}://${req.get("host")}` +
-//         "/billets/" +
-//         `${req.params.id}` +
-//         "/closeCastTcPdf";
-//       await page.goto(
-//         `${req.protocol}://${req.get("host")}` +
-//           "/billets/" +
-//           `${req.params.id}` +
-//           "/closeCastTcPdf",
-//         {
-//           waitUntil: "networkidle2",
-//         }
-//       );
-
-//       await page.setViewport({ width: 1800, height: 1050 });
-//       const todayDate = new Date();
-//       const pdfn = await page.pdf({
-//         path: `${path.join(
-//           __dirname,
-//           "../files",
-//           todayDate.getTime() + ".pdf"
-//         )}`,
-//         format: "a3",
-//         margin: { right: "0px", left: "0px" },
-//       });
-//       await browser.close();
-//       const pdfURL = path.join(
-//         __dirname,
-//         "../files",
-//         todayDate.getTime() + ".pdf"
-//       );
-//       res.set({
-//         "Content-Type": "application/pdf",
-//         "Content-Length": pdfn.length,
-//       });
-//       res.sendFile(pdfURL);
-//     } catch (error) {
-//       console.log(error.message);
-//     }
-//   })
-// );
 // GENERATE Word File (.docx) OPEN CASTING
 router.get(
   "/:id/generateDocx",
@@ -12057,48 +11863,6 @@ router.get(
     // res.render("billets/closeCastTcPreview", { tc, tcList });
   })
 );
-// // Function for generating pdf
-// const g = async (req, res) => {
-//   try {
-//     const browser = await puppeteer.launch();
-//     const page = await browser.newPage();
-//     await page.goto(
-//       `${req.protocol}://${req.get("host")}` + "/views/billets/tcPdf.ejs",
-//       {
-//         waitUntil: "networkidle2",
-//       }
-//     );
-//     await page.setViewport({ width: 1680, height: 1050 });
-//     const todayDate = new Date();
-//     const pdfn = await page.pdf({
-//       path: `${path.join(__dirname, "../files", todayDate.getTime() + ".pdf")}`,
-//       format: "a4",
-//     });
-//     await browser.close();
-//     const pdfURL = path.join(
-//       __dirname,
-//       "../files",
-//       todayDate.getTime() + ".pdf"
-//     );
-//     res.set({
-//       "Content-Type": "application/pdf",
-//       "Content-Length": pdfn.length,
-//     });
-//     res.sendFile(pdfURL);
-//   } catch (error) {
-//     console.log(error.message);
-//   }
-// };
-// TC PDF
-// router.get(
-//   "/tcPdf",
-//   catchAsync(async (req, res, next) => {
-//     const tc = await Tc.findById(req.params.id).populate("heatNo");
-//     const billet = await Billets.find({});
-//     console.log(tc);
-//     res.redirect("/billets/tcPdf");
-//   })
-// );
 router.get(
   "/tcList",
   catchAsync(async (req, res, next) => {
@@ -12115,16 +11879,7 @@ router.get(
     const queryString = req.query.tc;
     let query = queryString.tcNo.toString();
     let queryList = query.split(" ");
-    // console.log(queryList);
-    // console.log(req.query.heat);
-
-    // for (let query of queryString) {
-    //     //     console.log(typeof queryString);
-    //     console.log(query.itemName);
-    // }
-
     const tcResults = await Tc.find({ tcNo: { $in: queryList } });
-    // console.log(heatss);
     console.log(tcResults);
 
     res.render("billets/tcList", { tcResults });
@@ -12141,8 +11896,6 @@ router.post(
   "/",
   upload.fields([]),
   catchAsync(async (req, res, next) => {
-    // if (!req.body.item) throw new ExpressError("Invalid Item Data", 400);
-
     let billet = new Billets(req.body.billet);
     console.log(req.body.billet.productionDate);
     await billet.save();
