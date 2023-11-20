@@ -14,7 +14,6 @@ const BilletSchema = new mongoose.Schema({
     unique: true,
     ref: "BilletTc",
   },
-  productionDate: String,
   c: String,
   mn: String,
   p: String,
