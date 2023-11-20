@@ -169,11 +169,12 @@
 
 
             </div>
-            <a href="/billets/<%= tc._id %>/generateDocx" onclick="saveInput()" style="font-weight: 600;" class="btn btn-success btn-lg text-light mb-1 removeBtnPuppteer">Download Word File</a>
-
-            <a href="/billets/<%= tc._id %>/tcPreview/closeCast" style="font-weight: 600;" class="btn btn-primary btn-lg text-light mb-1 removeBtnPuppteer">TC for Close Casting</a>
 
         </div>
+        <a href="/billets/<%= tc._id %>/generateDocx" style="font-weight: 600;" class="btn btn-success btn-lg text-light mb-1 removeBtnPuppteer">Generate Word File</a>
+        <a href="/billets/<%= tc._id %>/downloadDocx" style="font-weight: 600;" class="btn btn-primary btn-lg text-light mb-1 removeBtnPuppteer">Download Word File</a>
+
+        <a href="/billets/<%= tc._id %>/tcPreview/closeCast" style="font-weight: 600;" class="btn btn-secondary btn-lg text-light mb-1 removeBtnPuppteer">TC for Close Casting</a>
 
 
 
