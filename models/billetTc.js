@@ -11,6 +11,7 @@ const BilletTc = new mongoose.Schema({
   },
   tcNo: {
     type: String,
+    uppercase: true,
     default: function () {
       return this.billNo;
     },
@@ -18,7 +19,10 @@ const BilletTc = new mongoose.Schema({
 
   tcDate: String,
   poDate: String,
-  poNo: String,
+  poNo: {
+    type: String,
+    uppercase: true,
+  },
   totalQtyMts: Number,
   totalPcs: Number,
   vehicleNo: {

@@ -27,10 +27,10 @@ const BilletSchema = new mongoose.Schema({
   cu: String,
   v: String,
   ce: String,
-  fullLengthQty: String,
-  fullPisLength: [String],
-  shortLengthQty: [String],
-  shortPisLength: [String],
+  // fullLengthQty: String,
+  // fullPisLength: [String],
+  // shortLengthQty: [String],
+  // shortPisLength: [String],
 });
 
 module.exports = mongoose.model("BilletList", BilletSchema);

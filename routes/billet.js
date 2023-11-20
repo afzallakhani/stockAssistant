@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const path = require("path");
+const officegen = require("officegen");
+// const docx = officegen("docx");
+
 const docx = require("docx");
+
 const { promisify } = require("util");
 const puppeteer = require("puppeteer");
 const { urlencoded, query, json } = require("express");
@@ -25,12 +29,16 @@ const bodyParser = require("body-parser");
 const validateItem = require("../utils/validateItem");
 const events = require("events");
 const billetTc = require("../models/billetTc");
+const { date } = require("joi");
 const eventEmitter = new events.EventEmitter();
 
 let upload = multer({ storage: multerStorage });
 // router.get("/list", (req, res) => {
 //   res.render("billets/list");
 // });
+
+// Documents contain sections, you can have multiple sections per document, go here to learn more about sections
+// This simple example will only contain one section
 
 router.get(
   "/list",
@@ -127,7 +135,7 @@ router.get(
 // );
 // DELETE TC
 router.delete(
-  "/:id",
+  "/:id/tc",
   catchAsync(async (req, res) => {
     const { id } = req.params;
     console.log("deleted Heat");
@@ -179,16 +187,5840 @@ router.delete(
 //   }
 // };
 // TC PREVIEW GET
+
+// TC PREVIEW GET
 router.get(
   "/:id/tcPreview",
   catchAsync(async (req, res, next) => {
     const tc = await Tc.findById(req.params.id).populate("heatNo");
+    let tcHeats = tc.heatNo;
+    let heats = tcHeats.map(({ _id, heatNo }) => ({
+      _id,
+      heatNo,
+    }));
+    // let heats = tcHeats.map();
     const tcList = await Tc.find({});
     const billet = await Billets.find({});
-    console.log(tc);
+    // console.log(tc);
+    let heatId = heats.map((heats) => heats._id);
+
+    let heatData = await Billets.find({ _id: { $in: heatId } });
+    console.log(heatData[0].heatNo);
+
+    if (heatData.length == 1) {
+      const doc1 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc1).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 2) {
+      const doc2 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc2).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 3) {
+      const doc3 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc3).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 4) {
+      const doc4 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc4).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 5) {
+      const doc5 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc5).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    }
+
     res.render("billets/tcPreview", { tc, tcList });
   })
 );
+
 // TC READY FOR MAKING PDF OPEN CASTING
 router.get(
   "/:id/tcPdf",
@@ -217,196 +6049,5956 @@ router.get(
     res.render("billets/closeCastTcPdf", { tc, tcList });
   })
 );
+// router.get(
+//   "/:id/genratePdf",
+//   catchAsync(async (req, res) => {
+//     console.log("hi");
+//     try {
+//       console.log("hi");
+//       const browser = await puppeteer.launch({ headless: true });
+//       const page = await browser.newPage();
+//       const url =
+//         `${req.protocol}://${req.get("host")}` +
+//         "/billets/" +
+//         `${req.params.id}` +
+//         "/tcPreview";
+
+//       console.log(url);
+//       await page.goto(
+//         `${req.protocol}://${req.get("host")}` +
+//           "/billets/" +
+//           `${req.params.id}` +
+//           "/tcPreview",
+//         {
+//           waitUntil: "networkidle2",
+//         }
+//       );
+
+//       await page.setViewport({ width: 1600, height: 1050 });
+//       await page.evaluate(() => {
+//         (document.querySelectorAll("a") || []).forEach((el) => el.remove());
+//       });
+
+//       // let div_selector_to_remove = "removeBtnPuppteer";
+//       // await page.evaluate((sel) => {
+//       //   var elements = document.querySelectorAll(sel);
+//       //   for (var i = 0; i < elements.length; i++) {
+//       //     elements[i].parentNode.removeChild(elements[i]);
+//       //   }
+//       // }, div_selector_to_remove);
+
+//       const todayDate = new Date();
+//       const pdfn = await page.pdf({
+//         path: `${path.join(
+//           __dirname,
+//           "../files",
+//           todayDate.getTime() + ".pdf"
+//         )}`,
+//         format: "a4",
+//       });
+//       await browser.close();
+//       const pdfURL = path.join(
+//         __dirname,
+//         "../files",
+//         todayDate.getTime() + ".pdf"
+//       );
+//       res.set({
+//         "Content-Type": "application/pdf",
+//         "Content-Length": pdfn.length,
+//       });
+//       res.sendFile(pdfURL);
+//     } catch (error) {
+//       console.log(error.message);
+//     }
+//   })
+// );
+// router.get(
+//   "/:id/genratePdfCc",
+//   catchAsync(async (req, res) => {
+//     console.log("hi");
+//     try {
+//       console.log("hi");
+//       const browser = await puppeteer.launch({ headless: true });
+//       const page = await browser.newPage();
+//       const url =
+//         `${req.protocol}://${req.get("host")}` +
+//         "/billets/" +
+//         `${req.params.id}` +
+//         "/closeCastTcPdf";
+//       await page.goto(
+//         `${req.protocol}://${req.get("host")}` +
+//           "/billets/" +
+//           `${req.params.id}` +
+//           "/closeCastTcPdf",
+//         {
+//           waitUntil: "networkidle2",
+//         }
+//       );
+
+//       await page.setViewport({ width: 1800, height: 1050 });
+//       const todayDate = new Date();
+//       const pdfn = await page.pdf({
+//         path: `${path.join(
+//           __dirname,
+//           "../files",
+//           todayDate.getTime() + ".pdf"
+//         )}`,
+//         format: "a3",
+//         margin: { right: "0px", left: "0px" },
+//       });
+//       await browser.close();
+//       const pdfURL = path.join(
+//         __dirname,
+//         "../files",
+//         todayDate.getTime() + ".pdf"
+//       );
+//       res.set({
+//         "Content-Type": "application/pdf",
+//         "Content-Length": pdfn.length,
+//       });
+//       res.sendFile(pdfURL);
+//     } catch (error) {
+//       console.log(error.message);
+//     }
+//   })
+// );
+// GENERATE Word File (.docx) OPEN CASTING
 router.get(
-  "/:id/genratePdf",
-  catchAsync(async (req, res) => {
+  "/:id/generateDocx",
+  catchAsync(async (req, res, next) => {
     console.log("hi");
-    try {
-      console.log("hi");
-      const browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
-      const url =
-        `${req.protocol}://${req.get("host")}` +
-        "/billets/" +
-        `${req.params.id}` +
-        "/tcPdf";
+    const tc = await Tc.findById(req.params.id).populate("heatNo");
+    console.log(tc._id);
+    let tcHeats = tc.heatNo;
+    let heats = tcHeats.map(({ _id, heatNo }) => ({
+      _id,
+      heatNo,
+    }));
+    // let heats = tcHeats.map();
+    const tcList = await Tc.find({});
+    const billet = await Billets.find({});
+    // console.log(tc);
+    let heatId = heats.map((heats) => heats._id);
 
-      console.log(url);
-      await page.goto(
-        `${req.protocol}://${req.get("host")}` +
-          "/billets/" +
-          `${req.params.id}` +
-          "/tcPdf",
-        {
-          waitUntil: "networkidle2",
-        }
-      );
+    let heatData = await Billets.find({ _id: { $in: heatId } });
+    console.log(heatData[1].heatNo);
 
-      await page.setViewport({ width: 1600, height: 1050 });
-      const todayDate = new Date();
-      const pdfn = await page.pdf({
-        path: `${path.join(
-          __dirname,
-          "../files",
-          todayDate.getTime() + ".pdf"
-        )}`,
-        format: "a4",
+    if (heatData.length == 1) {
+      const doc1 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
       });
-      await browser.close();
-      const pdfURL = path.join(
-        __dirname,
-        "../files",
-        todayDate.getTime() + ".pdf"
-      );
-      res.set({
-        "Content-Type": "application/pdf",
-        "Content-Length": pdfn.length,
+      docx.Packer.toBuffer(doc1).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
       });
-      res.sendFile(pdfURL);
-    } catch (error) {
-      console.log(error.message);
+    } else if (heatData.length == 2) {
+      const doc2 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc2).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 3) {
+      const doc3 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc3).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 4) {
+      const doc4 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc4).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 5) {
+      const doc5 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc5).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
     }
-  })
-);
-router.get(
-  "/:id/genratePdfCc",
-  catchAsync(async (req, res) => {
-    console.log("hi");
-    try {
-      console.log("hi");
-      const browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
-      const url =
-        `${req.protocol}://${req.get("host")}` +
-        "/billets/" +
-        `${req.params.id}` +
-        "/closeCastTcPdf";
-      await page.goto(
-        `${req.protocol}://${req.get("host")}` +
-          "/billets/" +
-          `${req.params.id}` +
-          "/closeCastTcPdf",
-        {
-          waitUntil: "networkidle2",
-        }
-      );
 
-      await page.setViewport({ width: 1800, height: 1050 });
-      const todayDate = new Date();
-      const pdfn = await page.pdf({
-        path: `${path.join(
-          __dirname,
-          "../files",
-          todayDate.getTime() + ".pdf"
-        )}`,
-        format: "a3",
-        margin: { right: "0px", left: "0px" },
-      });
-      await browser.close();
-      const pdfURL = path.join(
-        __dirname,
-        "../files",
-        todayDate.getTime() + ".pdf"
-      );
-      res.set({
-        "Content-Type": "application/pdf",
-        "Content-Length": pdfn.length,
-      });
-      res.sendFile(pdfURL);
-    } catch (error) {
-      console.log(error.message);
-    }
-  })
-);
-// GENERATE PDF OPEN CASTING
-router.get(
-  "/:id/genratePdf",
-  catchAsync(async (req, res) => {
-    console.log("hi");
-    try {
-      console.log("hi");
-      const browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
-      const url =
-        `${req.protocol}://${req.get("host")}` +
-        "/billets/" +
-        `${req.params.id}` +
-        "/tcPdf";
-
-      console.log(url);
-      await page.goto(
-        `${req.protocol}://${req.get("host")}` +
-          "/billets/" +
-          `${req.params.id}` +
-          "/tcPdf",
-        {
-          waitUntil: "networkidle2",
-        }
-      );
-
-      await page.setViewport({ width: 1600, height: 1050 });
-      const todayDate = new Date();
-      const pdfn = await page.pdf({
-        path: `${path.join(
-          __dirname,
-          "../files",
-          todayDate.getTime() + ".pdf"
-        )}`,
-        format: "a4",
-      });
-      await browser.close();
-      const pdfURL = path.join(
-        __dirname,
-        "../files",
-        todayDate.getTime() + ".pdf"
-      );
-      res.set({
-        "Content-Type": "application/pdf",
-        "Content-Length": pdfn.length,
-      });
-      res.sendFile(pdfURL);
-    } catch (error) {
-      console.log(error.message);
-    }
+    res.render("billets/tcPreview", { tc, tcList });
   })
 );
 router.get(
   "/:id/tcPreview/closeCast",
   catchAsync(async (req, res, next) => {
-    // try {
-    //   const browser = await puppeteer.launch();
-    //   const page = await browser.newPage();
-    //   await page.goto(
-    //     `${req.protocol}://${req.get("host")}` + "/views/billets/:id/tcPdf",
-    //     {
-    //       waitUntil: "networkidle2",
-    //     }
-    //   );
-    //   await page.setViewport({ width: 1680, height: 1050 });
-    //   const todayDate = new Date();
-    //   const pdfn = await page.pdf({
-    //     path: `${path.join(
-    //       __dirname,
-    //       "../files",
-    //       todayDate.getTime() + ".pdf"
-    //     )}`,
-    //     format: "a4",
-    //   });
-    //   await browser.close();
-    //   const pdfURL = path.join(
-    //     __dirname,
-    //     "../files",
-    //     todayDate.getTime() + ".pdf"
-    //   );
-    //   res.set({
-    //     "Content-Type": "application/pdf",
-    //     "Content-Length": pdfn.length,
-    //   });
-    //   res.sendFile(pdfURL);
-    // } catch (error) {
-    //   console.log(error.message);
-    // }
-
     const tc = await Tc.findById(req.params.id).populate("heatNo");
     const tcList = await Tc.find({});
     const billet = await Billets.find({});
@@ -414,39 +12006,5871 @@ router.get(
     res.render("billets/closeCastTcPreview", { tc, tcList });
   })
 );
+router.get(
+  "/:id/generateDocxCc",
+  catchAsync(async (req, res, next) => {
+    console.log("hi");
+    const tc = await Tc.findById(req.params.id).populate("heatNo");
+    console.log(tc._id);
+    let tcHeats = tc.heatNo;
+    let heats = tcHeats.map(({ _id, heatNo }) => ({
+      _id,
+      heatNo,
+    }));
+    // let heats = tcHeats.map();
+    const tcList = await Tc.find({});
+    const billet = await Billets.find({});
+    // console.log(tc);
+    let heatId = heats.map((heats) => heats._id);
 
-// Function for generating pdf
-const g = async (req, res) => {
-  try {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(
-      `${req.protocol}://${req.get("host")}` + "/views/billets/tcPdf.ejs",
-      {
-        waitUntil: "networkidle2",
-      }
-    );
-    await page.setViewport({ width: 1680, height: 1050 });
-    const todayDate = new Date();
-    const pdfn = await page.pdf({
-      path: `${path.join(__dirname, "../files", todayDate.getTime() + ".pdf")}`,
-      format: "a4",
-    });
-    await browser.close();
-    const pdfURL = path.join(
-      __dirname,
-      "../files",
-      todayDate.getTime() + ".pdf"
-    );
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Length": pdfn.length,
-    });
-    res.sendFile(pdfURL);
-  } catch (error) {
-    console.log(error.message);
-  }
-};
+    let heatData = await Billets.find({ _id: { $in: heatId } });
+    console.log(heatData[1].heatNo);
+
+    if (heatData.length == 1) {
+      const doc1 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc1).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 2) {
+      const doc2 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc2).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 3) {
+      const doc3 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc3).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 4) {
+      const doc4 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                      Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc4).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    } else if (heatData.length == 5) {
+      const doc5 = new docx.Document({
+        sections: [
+          {
+            children: [
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "TEST CERTIFICATE FOR CARBON/ALLOY STEEL BILLETS FOR RE-ROLLING INTO GENERAL/STRUCTURAL PURPOSES.",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 2,
+                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                    font: "Calibri",
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Inv. No. ${tc.billNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Date - ${tc.tcDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. No. ${tc.poNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Po. Date - ${tc.poDate}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Qty. - ${tc.totalQtyMts}0`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            children: [
+                              new docx.TextRun({
+                                text: `Vehicle No. - ${tc.vehicleNo}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        columnSpan: 2,
+                        width: {
+                          size: 2500,
+                          type: docx.WidthType.DXA,
+                        },
+                        borders: {
+                          top: {
+                            style: docx.BorderStyle.SINGLE,
+                            size: 1,
+                          },
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                text: `Total Pcs. - ${tc.totalPcs}`,
+                                font: "Calibri",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+                width: {
+                  size: 5000,
+                  type: docx.WidthType.DXA,
+                },
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `BUYER :- ${tc.buyerName}`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 24,
+
+                    underline: {
+                      type: docx.UnderlineType.SINGLE,
+                    },
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: `CHEMICAL COMPOSITION`,
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Table({
+                alignment: docx.AlignmentType.CENTER,
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Size MM",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Heat No.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Qty. Pcs.",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "C %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Mn %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "P %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "S %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Si %",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Grade",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: "Color Code",
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    height: { value: 50 },
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[0].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[1].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[2].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[3].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].sectionSize,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].heatNo,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].totalPcs,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].c,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].mn,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].p,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].s,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].si,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].gradeName,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new docx.TableCell({
+                        verticalAlign: docx.VerticalAlign.CENTER,
+
+                        width: {
+                          size: 1900,
+                          type: docx.WidthType.DXA,
+                        },
+                        children: [
+                          new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                              new docx.TextRun({
+                                font: "Calibri",
+                                text: heatData[4].colorCode,
+                                bold: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 3,
+                  }),
+                  new docx.TextRun({
+                    text: "PHYSICAL PARAMETERS",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                bullet: { level: 0 },
+                children: [
+                  new docx.TextRun({
+                    text: "The material is free from Radioactive Contamination, Lead, Mercury and Surface Defects.",
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                  new docx.TextRun({
+                    text: "Process Route - EIF-CCM",
+                    bold: true,
+                    font: "Calibri",
+                    size: 22,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "                                                                                                                                                     Q.C.",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new docx.TextRun({
+                    break: 1,
+                  }),
+                ],
+              }),
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    break: 1,
+                    text: "ELAF STEEL",
+                    font: "Calibri",
+                    bold: true,
+                    size: 22,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+      docx.Packer.toBuffer(doc5).then((buffer) => {
+        fs.writeFileSync(
+          `${tc.buyerName} ${tc.billNo} ${heatData[0].sectionSize}MM.docx`,
+          buffer
+        );
+      });
+    }
+
+    res.render("billets/closeCastTcPreview", { tc, tcList });
+  })
+);
+// // Function for generating pdf
+// const g = async (req, res) => {
+//   try {
+//     const browser = await puppeteer.launch();
+//     const page = await browser.newPage();
+//     await page.goto(
+//       `${req.protocol}://${req.get("host")}` + "/views/billets/tcPdf.ejs",
+//       {
+//         waitUntil: "networkidle2",
+//       }
+//     );
+//     await page.setViewport({ width: 1680, height: 1050 });
+//     const todayDate = new Date();
+//     const pdfn = await page.pdf({
+//       path: `${path.join(__dirname, "../files", todayDate.getTime() + ".pdf")}`,
+//       format: "a4",
+//     });
+//     await browser.close();
+//     const pdfURL = path.join(
+//       __dirname,
+//       "../files",
+//       todayDate.getTime() + ".pdf"
+//     );
+//     res.set({
+//       "Content-Type": "application/pdf",
+//       "Content-Length": pdfn.length,
+//     });
+//     res.sendFile(pdfURL);
+//   } catch (error) {
+//     console.log(error.message);
+//   }
+// };
 // TC PDF
 // router.get(
 //   "/tcPdf",
