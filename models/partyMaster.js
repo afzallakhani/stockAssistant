@@ -5,6 +5,7 @@ const PartySchema = new mongoose.Schema({
   partyName: {
     type: String,
     uppercase: true,
+    unique: true,
   },
   partyAddress: {
     type: String,

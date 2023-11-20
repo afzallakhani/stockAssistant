@@ -4,7 +4,7 @@
         <h1 class="text-center">Data Entry - Billets Inwards</h1>
         <div class="col-6 offset-3">
 
-            <form action="/billets/<%= billet._id%>?_method=PUT" method="POST" id="" novalidate enctype="application/x-www-form-urlencoded">
+            <form action="/billets/<%= billet._id%>?_method=PUT" method="POST" id="" enctype="application/x-www-form-urlencoded">
 
                 <label class="form-label" for="heatNumber">Heat No.</label>
                 <input class="form-control" type="text" id="heatNumber" name="billet[heatNo]" value="<%= billet.heatNo %>" required>

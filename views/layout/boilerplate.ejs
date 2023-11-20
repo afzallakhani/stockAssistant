@@ -31,6 +31,43 @@
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.min.js" integrity="sha384-nsg8ua9HAw1y0W1btsyWgBklPnCUAFLuTMS2G72MMONqmOymq585AcH49TLBQObG" crossorigin="anonymous"></script> -->
             <!-- <script src="https://unpkg.com/@popperjs/core@2"></script> -->
             <!-- asjdhkalshdiuadudhiuashduiah -->
+            <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+            <script>
+                $(document).ready(function() {
+                    // Capture keydown event on text input fields
+                    $('form').on('keydown', 'input[type="text"]', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault(); // Prevent the default Enter key behavior (submitting the form)
+
+                            // Find the next text input field
+                            var nextInput = $(this).closest('form').find('input[type="text"]:eq(' + ($('input[type="text"]').index(this) + 1) + ')');
+
+                            // If the next text input field is not found, focus on the submit button
+                            if (nextInput.length === 0) {
+                                $(this).closest('form').find('button[type="submit"]').focus();
+                            } else {
+                                nextInput.focus();
+                            }
+                        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault(); // Prevent the default arrow key behavior
+
+                            // Find the index of the current input
+                            var currentIndex = $('input[type="text"]').index(this);
+
+                            // Calculate the index of the next input based on the arrow key
+                            var nextIndex = e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+
+                            // Ensure the index is within bounds
+                            nextIndex = Math.max(0, Math.min(nextIndex, $('input[type="text"]').length - 1));
+
+                            // Focus on the next input
+                            $('input[type="text"]').eq(nextIndex).focus();
+                        }
+                    });
+                });
+            </script>
             <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>
 
