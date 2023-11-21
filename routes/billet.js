@@ -32,7 +32,6 @@ router.get(
     "/list",
     catchAsync(async(req, res) => {
         const list = await Billets.find({});
-        console.log(list);
         res.render("billets/list", { list });
     })
 );
@@ -101,7 +100,7 @@ router.delete(
     "/:id/tc",
     catchAsync(async(req, res) => {
         const { id } = req.params;
-        console.log("deleted Heat");
+        console.log("deleted Tc");
         await Tc.findByIdAndDelete(id);
         res.redirect("/billets/tcList");
     })
@@ -11911,7 +11910,6 @@ router.get(
     catchAsync(async(req, res, next) => {
         const tcList = await Tc.find({}).populate("heatNo");
         const billet = await Billets.find({});
-        console.log(tcList);
         res.render("billets/tcList", { tcList });
     })
 );
@@ -11958,12 +11956,34 @@ router.put(
 );
 // DELETE HEAT
 router.delete(
-    "/:id",
+    "/:id/heat",
     catchAsync(async(req, res) => {
         const { id } = req.params;
+        console.log(req.params);
         console.log("deleted Heat");
         await Billets.findByIdAndDelete(id);
         res.redirect("/billets/list");
+    })
+);
+// DELETE HEAT
+router.post(
+    "/deleteSelected",
+    catchAsync(async(req, res) => {
+        console.log("hihihi");
+        const selectedBillets = req.body.selectedBillets;
+
+        try {
+            // Perform the deletion logic for multiple billets using selectedBillets array
+            for (const id of selectedBillets) {
+                console.log(id);
+                await Billets.findByIdAndDelete(id);
+            }
+
+            res.redirect("/billets/list"); // Redirect to the billets page after deletion
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, error: "Internal Server Error" });
+        }
     })
 );
 module.exports = router;
