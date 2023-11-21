@@ -40,7 +40,10 @@ const BilletTc = new mongoose.Schema({
       ref: "BilletList",
     },
   ],
-  colorCode: [String],
+  colorCode: {
+    type: String,
+    uppercase: true,
+  },
 });
 
 module.exports = mongoose.model("BilletTc", BilletTc);
