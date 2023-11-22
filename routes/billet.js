@@ -63,24 +63,27 @@ router.get(
 router.post(
   "/newTc",
   catchAsync(async (req, res, next) => {
-    // console.log(req.body.tc);
+    console.log(req.body.billet);
     let tc = new Tc(req.body.tc);
 
     let queryList = req.body.billet;
     let heatArray = Object.values(queryList);
     let heatQuery = heatArray.toString().split(" ");
-    console.log(heatQuery);
+    // console.log(heatQuery);
     let heats = await Billets.find({ heatNo: { $in: heatQuery } });
+    if (heats.length === 0) {
+      res.status(404).json({ message: "Please Enter Correct Heat No." });
+    } else {
+      console.log(heats);
 
-    console.log(heats);
-
-    const heatId = heats.map((item) => item._id);
-    tc.heatNo = heatId;
-    console.log(tc);
-    await tc.save();
-    let = currentTc = await Tc.findById(tc._id);
-    console.log(currentTc);
-    res.redirect(`/billets/${tc._id}/tcPreview`);
+      const heatId = heats.map((item) => item._id);
+      tc.heatNo = heatId;
+      // console.log(tc);
+      await tc.save();
+      let = currentTc = await Tc.findById(tc._id);
+      // console.log(currentTc);
+      res.redirect(`/billets/${tc._id}/tcPreview`);
+    }
   })
 );
 
@@ -99,13 +102,17 @@ router.put(
   "/:id/editTc",
   catchAsync(async (req, res, next) => {
     const { id } = req.params;
-    console.log(req.params.id);
-    // await Tc.findByIdAndUpdate(id, { ...req.body.tc });
-    res.redirect("/billets/list");
-    const tc = await Tc.findById(req.params.id).populate(heatNo);
-    // const party = await Party.find({ partyType: { $in: "Buyer" } });
-    console.log(`hiii`);
-    // res.render("billets/editTc", { tc, party });
+    const tc = await Tc.findById(id).populate("heatNo");
+
+    let updatedTc = req.body.tc;
+    let updatedHeatNoList = req.body.billet;
+    let updatedHeatArray = Object.values(updatedHeatNoList);
+    let heatDataQuery = updatedHeatArray.toString().split(" ");
+    let newHeatsData = await Billets.find({ heatNo: { $in: heatDataQuery } });
+    let newHeatsIds = newHeatsData.map((heat) => heat._id);
+    updatedTc.heatNo = newHeatsIds;
+    let editedTc = await Tc.findByIdAndUpdate(id, updatedTc);
+    res.redirect(`/billets/${id}/tcPreview`);
   })
 );
 
@@ -137,7 +144,7 @@ router.get(
     let heatId = heats.map((heats) => heats._id);
 
     let heatData = await Billets.find({ _id: { $in: heatId } });
-    console.log(heatData[0].heatNo);
+    // console.log(heatData[0].heatNo);
 
     res.render("billets/tcPreview", { tc, tcList });
   })
