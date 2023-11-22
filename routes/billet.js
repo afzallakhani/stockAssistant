@@ -15037,6 +15037,7 @@ router.post(
     await billet.save();
     const newBillet = Billets.find({});
     // console.log(newBillet);
+
     res.redirect("/billets/list");
   })
 );
