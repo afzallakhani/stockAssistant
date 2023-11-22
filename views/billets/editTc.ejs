@@ -1,10 +1,10 @@
 <% layout('layout/boilerplate') %>
 
-
-    <form action="/billets/<%= tc._id %>?_method=PUT" method="POST" class="validatedForm" enctype="application/x-www-form-urlencoded">
+    hiiiii
+    <form action="/billets/<%= tc._id %>/editTc?_method=PUT" method="POST" class="" enctype="application/x-www-form-urlencoded">
         <div class="row">
             <h1 class="mb-3">
-                Create Test Certificate.
+                Edit Test Certificate.
             </h1>
 
             <div class="col">
@@ -61,16 +61,21 @@
                 <div class="col">
                     <label class="form-label" for="heatNos">Enter All Heat Numbers</label>
 
-                    <input type="search" class="form-control" name="billet[heatNo]" id="heatNos" value="<% for (let heat of tc.heatNo){%><%= heat.heatNo %><%}%>
+                    <input type="search" class="form-control" name="billet[heatNo]" id="heatNos" value="<% for (let heat of tc.heatNo){%><%=heat.heatNo%><%}%>
                         " aria-label="Heat Numbers" required>
 
 
+                    <div class="col">
+                        <label class="form-label" for="colorCode">Enter Color Code</label>
+                        <input type="text" class="form-control" name="tc[colorCode]" id="colorCode" placeholder="Enter Color Code" value="<%= tc.colorCode %>" aria-label="Color Code">
+
+                    </div>
 
                 </div>
             </div>
-            <div class="row" id="inputContainer">
+            <div class="row" id="">
 
-                <button class="btn btn-info mt-2">Create TC</button>
+                <button type="submit" class="btn btn-info mt-2">Save.</button>
 
             </div>
         </div>
@@ -88,7 +93,7 @@
     </form> -->
 
 
-    <script>
+    <!-- <script>
         const addButton = document.getElementById("addInputButton");
         const inputContainer = document.getElementById("inputContainer");
         // const inputCountField = document.getElementById("totalShortLengthPcs");
@@ -122,4 +127,4 @@
         }
 
         addButton.addEventListener("click", addInputFields);
-    </script>
+    </script> -->
