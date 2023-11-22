@@ -44,25 +44,25 @@
                 <input type="text" name="billet[si]" id="silicon" class="form-control" value="<%= billet.si %>" required>
 
                 <label for="chrome" class="form-label">Chrome %</label>
-                <input type="text" name="billet[cr]" id="chrome" class="form-control" value="<%= billet.cr %>" required>
+                <input type="text" name="billet[cr]" id="chrome" class="form-control" value="<%= billet.cr %>">
 
                 <label for="moly" class="form-label">Moly %</label>
-                <input type="text" name="billet[mo]" id="moly" class="form-control" value="<%= billet.mo %>" required>
+                <input type="text" name="billet[mo]" id="moly" class="form-control" value="<%= billet.mo %>">
 
                 <label for="nickel" class="form-label">Nickel %</label>
-                <input type="text" name="billet[ni]" id="nickel" class="form-control" value="<%= billet.ni %>" required>
+                <input type="text" name="billet[ni]" id="nickel" class="form-control" value="<%= billet.ni %>">
 
                 <label for="aluminium" class="form-label">Aluminium %</label>
-                <input type="text" name="billet[al]" id="aluminium" class="form-control" value="<%= billet.al %>" required>
+                <input type="text" name="billet[al]" id="aluminium" class="form-control" value="<%= billet.al %>">
 
                 <label for="copper" class="form-label">Copper %</label>
-                <input type="text" name="billet[cu]" id="copper" class="form-control" value="<%= billet.cu %>" required>
+                <input type="text" name="billet[cu]" id="copper" class="form-control" value="<%= billet.cu %>">
 
                 <label for="vanadium" class="form-label">Vanadium %</label>
-                <input type="text" name="billet[v]" id="vanadium" class="form-control" value="<%= billet.v %>" required>
+                <input type="text" name="billet[v]" id="vanadium" class="form-control" value="<%= billet.v %>">
 
                 <label for="ce" class="form-label">Ce %</label>
-                <input type="text" name="billet[ce]" id="ce" class="form-control" value="<%= billet.ce %>" required>
+                <input type="text" name="billet[ce]" id="ce" class="form-control" value="<%= billet.ce %>">
 
                 <!-- <label for="totalPcs" class="form-label">Total Pcs</label>
                 <input type="number" name="billet[fullLengthQty]" id="totalPcs" class="form-control" value="<">
@@ -82,6 +82,18 @@
             </form>
         </div>
     </div>
+    <script defer>
+        // Wait for the document to fully load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the first input field by its ID
+            var firstInputField = document.getElementById('heatNumber');
+            console.log(firstInputField);
+            // Focus on the first input field
+            if (firstInputField) {
+                firstInputField.focus();
+            }
+        });
+    </script>
     <!-- <script>
         // Get references to the button and input container
         const addButton = document.getElementById("addInputButton");

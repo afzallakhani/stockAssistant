@@ -6,7 +6,7 @@
 
             <form action="/billets" method="POST" enctype="multipart/form-data" class="validated-form">
                 <label class="form-label" for="heatNumber">Heat No.</label>
-                <input class="form-control" type="text" id="heatNumber" name="billet[heatNo]" required>
+                <input class="form-control inputField1" type="text" id="heatNumber" name="billet[heatNo]" required>
 
                 <label class="form-label" for="grade">Grade</label>
                 <input class="form-control" type="text" id="grade" name="billet[gradeName]" required>
@@ -44,7 +44,7 @@
                 <input type="text" name="billet[si]" id="silicon" class="form-control" placeholder="E.g. 0.31" required>
 
                 <label for="chrome" class="form-label">Chrome - Cr %</label>
-                <input type="text" name="billet[cr]" id="chrome" class="form-control" placeholder="E.g. 0.05, 0.11" required>
+                <input type="text" name="billet[cr]" id="chrome" class="form-control" placeholder="E.g. 0.05, 0.11">
 
                 <label for="moly" class="form-label">Moly - Mo %</label>
                 <input type="text" name="billet[mo]" id="moly" class="form-control" placeholder="E.g. 0.0065">
@@ -75,13 +75,24 @@
                 </div> -->
 
 
-                <button class="btn btn-success my-2" type="submit">Save Heat</button>
+                <button class="btn btn-success my-2" data-bs-toggle="modal" data-bs-target="#addMoreHeatsModal" type="submit">Save Heat</button>
 
 
             </form>
         </div>
     </div>
-
+    <script defer>
+        // Wait for the document to fully load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the first input field by its ID
+            var firstInputField = document.getElementById('heatNumber');
+            console.log(firstInputField);
+            // Focus on the first input field
+            if (firstInputField) {
+                firstInputField.focus();
+            }
+        });
+    </script>
     <!-- <script>
         const addButton = document.getElementById("addInputButton");
         const inputContainer = document.getElementById("inputContainer");

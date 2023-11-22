@@ -87,7 +87,18 @@
         </div>
     </form> -->
 
-
+    <script defer>
+        // Wait for the document to fully load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the first input field by its ID
+            var firstInputField = document.getElementById('billNo');
+            console.log(firstInputField);
+            // Focus on the first input field
+            if (firstInputField) {
+                firstInputField.focus();
+            }
+        });
+    </script>
     <script>
         const addButton = document.getElementById("addInputButton");
         const inputContainer = document.getElementById("inputContainer");
