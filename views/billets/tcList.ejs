@@ -74,3 +74,28 @@
             </tbody>
         </table>
     </div>
+    <script defer>
+        // Function to handle the "Insert" key press
+        function handleKeyPress(event) {
+            // Check if the pressed key is the "Insert" key (key code 45)
+            if (event.keyCode === 45) {
+                // Call the function to redirect to the specified route
+                redirectToSpecifiedRoute();
+            }
+        }
+
+        // Attach the event listener to the document
+        document.addEventListener('keydown', handleKeyPress);
+
+        // Function to redirect to the specified route
+        function redirectToSpecifiedRoute() {
+            // Get the values from the input fields if needed
+
+            // Construct the URL for the specified route, including any parameters
+            var specifiedRoute = "/billets/newTc"
+
+
+            // Redirect to the specified route
+            window.location.href = specifiedRoute;
+        }
+    </script>
