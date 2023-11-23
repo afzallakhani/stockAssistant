@@ -17,8 +17,11 @@ const BilletTc = new mongoose.Schema({
     },
   },
 
-  tcDate: String,
-  poDate: String,
+  tcDate: { type: Date, default: Date.now() },
+  poDate: {
+    type: Date,
+    default: Date.now(),
+  },
   poNo: {
     type: String,
     uppercase: true,
@@ -44,6 +47,30 @@ const BilletTc = new mongoose.Schema({
     type: String,
     uppercase: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
-
+BilletTc.virtual("formattedDate").get(function () {
+  return this.createdAt.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+});
+BilletTc.virtual("formattedTcDate").get(function () {
+  return this.tcDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
+});
+BilletTc.virtual("formattedPoDate").get(function () {
+  return this.poDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
+});
 module.exports = mongoose.model("BilletTc", BilletTc);

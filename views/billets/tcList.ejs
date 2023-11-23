@@ -20,22 +20,29 @@
             <thead>
                 <tr>
                     <th scope="col">#</th>
+                    <th scope="col">Tc Date</th>
+                    <th scope="col">Po Date</th>
                     <th scope="col">Buyer Name</th>
                     <th scope="col">Bill No.</th>
                     <th scope="col">Tc NO.</th>
-                    <th scope="col">Tc Date</th>
-                    <th scope="col">Po Date</th>
+
                     <th scope="col">Total Weight (Mt.)</th>
                     <th scope="col">Vehicle No.</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <% tcList.forEach(function(list, index){%>
+                <% tcList.reverse().forEach(function(list, index){%>
                     <tr>
 
                         <td>
                             <%= index + 1 %>
+                        </td>
+                        <td>
+                            <%= list.formattedTcDate %>
+                        </td>
+                        <td>
+                            <%= list.formattedPoDate %>
                         </td>
                         <td>
                             <%= list.buyerName %>
@@ -46,12 +53,7 @@
                         <td>
                             <%= list.tcNo %>
                         </td>
-                        <td>
-                            <%= list.tcDate %>
-                        </td>
-                        <td>
-                            <%= list.poDate %>
-                        </td>
+
                         <td>
                             <%= list.totalQtyMts%>
                         </td>
