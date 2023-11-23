@@ -15045,28 +15045,62 @@ router.post(
   "/",
   upload.fields([]),
   catchAsync(async (req, res, next) => {
-    // Console.log("HIHIHIHI");
-    // let billet = new Billets(req.body.billet);
-    // console.log(billet.sectionSize);
-    // await billet.save();
-    // const newBillet = Billets.find({});
-    if (req.body.oneMore == "one") {
-      let billet = new Billets(req.body.billet);
-      console.log(billet.sectionSize);
-      await billet.save();
-      const newBillet = Billets.find({});
-      console.log(req.body.billet);
-      res.redirect("/billets/new");
-    } else {
-      let billet = new Billets(req.body.billet);
-      console.log(billet.sectionSize);
-      await billet.save();
-      const newBillet = Billets.find({});
-      console.log(req.body.billet);
-      res.redirect("/billets/list");
+    try {
+      const existingBillet = await Billets.findOne(req.body.billet);
+
+      if (existingBillet) {
+        // If a matching document is found, you can choose to replace it or prompt the user
+        // For simplicity, let's replace it directly
+        await Billets.findOneAndReplace(
+          { _id: existingBillet._id },
+          req.body.billet
+        );
+        console.log("Existing billet replaced:", existingBillet._id);
+      } else {
+        // If no matching document is found, create a new one
+        let newBillet = new Billets(req.body.billet);
+        await newBillet.save();
+        console.log("New billet created:", newBillet._id);
+      }
+
+      if (req.body.oneMore == "one") {
+        res.redirect("/billets/new");
+      } else {
+        res.redirect("/billets/list");
+      }
+    } catch (error) {
+      console.error("Error processing billet:", error);
+      // Handle the error and send an appropriate response
+      res.status(500).send("Internal Server Error");
     }
   })
 );
+// router.post(
+//   "/",
+//   upload.fields([]),
+//   catchAsync(async (req, res, next) => {
+//     // Console.log("HIHIHIHI");
+//     // let billet = new Billets(req.body.billet);
+//     // console.log(billet.sectionSize);
+//     // await billet.save();
+//     // const newBillet = Billets.find({});
+//     if (req.body.oneMore == "one") {
+//       let billet = new Billets(req.body.billet);
+//       console.log(billet.sectionSize);
+//       await billet.save();
+//       const newBillet = Billets.find({});
+//       console.log(req.body.billet);
+//       res.redirect("/billets/new");
+//     } else {
+//       let billet = new Billets(req.body.billet);
+//       console.log(billet.sectionSize);
+//       await billet.save();
+//       const newBillet = Billets.find({});
+//       console.log(req.body.billet);
+//       res.redirect("/billets/list");
+//     }
+//   })
+// );
 
 router.put(
   "/:id",
