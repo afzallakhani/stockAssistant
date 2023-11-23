@@ -15,13 +15,17 @@
                 <label class="form-label" for="tcNo">TC No.</label>
                 <input type="text" class="form-control" name="tc[tcNo]" id="tcNo" placeholder="TC NO." aria-label="TC Number" required>
             </div>
-            <div class="col">
+            <div class="col" id="tcDateContainer">
                 <label class="form-label" for="tcDate">TC Date</label>
-                <input type="text" class="form-control" name="tc[tcDate]" id="tcDate" placeholder="DD/MM/YYY" aria-label="TC Date" required>
+                <i class="bi bi-calendar-minus" id="tcBtnMinus" onclick="decreaseDate()"></i>
+                <i class="bi bi-calendar-plus" id="tcBtnPlus" onclick="increaseDate()"></i>
+                <input type="date" class="form-control" name="tc[tcDate]" id="tcDate" placeholder="DD/MM/YYY" aria-label="TC Date" required>
             </div>
-            <div class="col">
+            <div class="col" id="poDateContainer">
                 <label class="form-label" for="poDate">PO Date</label>
-                <input type="text" class="form-control" name="tc[poDate]" id="poDate" placeholder="DD/MM/YYY" aria-label="PO Date" required>
+                <i class="bi bi-calendar-minus" id="poBtnMinus" onclick="decreaseDate()"></i>
+                <i class="bi bi-calendar-plus" id="poBtnPlus" onclick="increaseDate()"></i>
+                <input type="date" class="form-control" name="tc[poDate]" id="poDate" placeholder="DD/MM/YYY" aria-label="PO Date" required>
             </div>
         </div>
         <div class="row">
@@ -77,6 +81,145 @@
 
 
     </form>
+    <!-- <script defer>
+        // FOR TC DATE
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get today's date in the format yyyy-mm-dd
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("tcDate").value = today;
+
+            document.getElementById("tcBtnMinus").addEventListener("click", decreaseDate);
+            document.getElementById("tcBtnPlus").addEventListener("click", increaseDate);
+            document.getElementById("tcDate").addEventListener("change", updateDateFromInput);
+            document.addEventListener("keydown", handleKeyPress);
+        });
+
+        function decreaseDate() {
+            console.log("Decrease date clicked");
+
+            updateDate(-1);
+        }
+
+        function increaseDate() {
+            updateDate(1);
+        }
+
+        function updateDate(deltaDays) {
+            const tcDate = document.getElementById("tcDate");
+            const currentDate = new Date(tcDate.value);
+            currentDate.setDate(currentDate.getDate() + deltaDays);
+            tcDate.value = currentDate.toISOString().split('T')[0];
+        }
+
+        function updateDateFromInput() {
+            const tcDate = document.getElementById("tcDate");
+            const enteredDate = new Date(tcDate.value);
+            if (!isNaN(enteredDate.getTime())) {
+                // Valid date entered, update the input value
+                tcDate.value = enteredDate.toISOString().split('T')[0];
+            } else {
+                // Invalid date entered, revert to the previous value
+                const currentDate = new Date();
+                tcDate.value = currentDate.toISOString().split('T')[0];
+            }
+        }
+
+        function handleKeyPress(event) {
+            // Check if the key pressed is the up or down arrow
+            if (event.key === "ArrowUp") {
+                increaseDate();
+            } else if (event.key === "ArrowDown") {
+                decreaseDate();
+            }
+        }
+    </script> -->
+    <script defer>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get today's date in the format yyyy-mm-dd
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("tcDate").value = today;
+            document.getElementById("poDate").value = today;
+
+            document.getElementById("tcBtnMinus").addEventListener("click", function() {
+                decreaseDate("tcDate");
+            });
+            document.getElementById("tcBtnPlus").addEventListener("click", function() {
+                increaseDate("tcDate");
+            });
+
+            document.getElementById("poBtnMinus").addEventListener("click", function() {
+                decreaseDate("poDate");
+            });
+            document.getElementById("poBtnPlus").addEventListener("click", function() {
+                increaseDate("poDate");
+            });
+
+            document.getElementById("tcDate").addEventListener("change", updateDateFromInput);
+            document.getElementById("poDate").addEventListener("change", updateDateFromInput);
+            document.addEventListener("keydown", handleKeyPress);
+        });
+
+        function decreaseDate(dateInputId) {
+            updateDate(dateInputId, -1);
+        }
+
+        function increaseDate(dateInputId) {
+            updateDate(dateInputId, 1);
+        }
+
+        function updateDate(dateInputId, deltaDays) {
+            const dateInput = document.getElementById(dateInputId);
+            const currentDate = new Date(dateInput.value);
+            currentDate.setDate(currentDate.getDate() + deltaDays);
+            dateInput.value = currentDate.toISOString().split('T')[0];
+        }
+
+        function updateDateFromInput() {
+            const tcDate = document.getElementById("tcDate");
+            const poDate = document.getElementById("poDate");
+
+            const enteredDate = new Date(tcDate.value);
+            if (!isNaN(enteredDate.getTime())) {
+                // Valid date entered, update the input value
+                tcDate.value = enteredDate.toISOString().split('T')[0];
+            } else {
+                // Invalid date entered, revert to the previous value
+                const currentDate = new Date();
+                tcDate.value = currentDate.toISOString().split('T')[0];
+            }
+
+            const enteredPoDate = new Date(poDate.value);
+            if (!isNaN(enteredPoDate.getTime())) {
+                // Valid date entered, update the input value
+                poDate.value = enteredPoDate.toISOString().split('T')[0];
+            } else {
+                // Invalid date entered, revert to the previous value
+                const currentDate = new Date();
+                poDate.value = currentDate.toISOString().split('T')[0];
+            }
+        }
+
+        function handleKeyPress(event) {
+            const focusedElement = document.activeElement;
+
+            // Check if the key pressed is the up or down arrow
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                if (focusedElement.id === "tcDate") {
+                    if (event.key === "ArrowUp") {
+                        increaseDate("tcDate");
+                    } else if (event.key === "ArrowDown") {
+                        decreaseDate("tcDate");
+                    }
+                } else if (focusedElement.id === "poDate") {
+                    if (event.key === "ArrowUp") {
+                        increaseDate("poDate");
+                    } else if (event.key === "ArrowDown") {
+                        decreaseDate("poDate");
+                    }
+                }
+            }
+        }
+    </script>
 
     <!-- <form action="/billets/newTc" method="get"> -->
     <!-- <div class="row">

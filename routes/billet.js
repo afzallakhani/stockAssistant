@@ -302,7 +302,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -352,7 +352,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -1083,7 +1083,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -1133,7 +1133,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -2062,7 +2062,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -2112,7 +2112,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -3240,7 +3240,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -3290,7 +3290,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -4618,7 +4618,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -4668,7 +4668,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -6276,7 +6276,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -6326,7 +6326,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -7365,7 +7365,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -7415,7 +7415,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -8784,7 +8784,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -8834,7 +8834,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -10537,7 +10537,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -10587,7 +10587,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -12629,7 +12629,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Date - ${tc.tcDate}`,
+                                text: `Date - ${tc.formattedTcDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -12679,7 +12679,7 @@ router.get(
                           new docx.Paragraph({
                             children: [
                               new docx.TextRun({
-                                text: `Po. Date - ${tc.poDate}`,
+                                text: `Po. Date - ${tc.formattedPoDate}`,
                                 font: "Calibri",
                                 bold: true,
                               }),
@@ -15006,6 +15006,18 @@ router.get(
   catchAsync(async (req, res, next) => {
     const tcList = await Tc.find({}).populate("heatNo");
     const billet = await Billets.find({});
+    console.log(tcList);
+    // billetTc.updateMany(
+    //   {},
+    //   { $set: { createdAt: new Date() } },
+    //   (err, result) => {
+    //     if (err) {
+    //       console.error(err);
+    //     } else {
+    //       console.log(`${result.nModified} documents updated`);
+    //     }
+    //   }
+    // );
     res.render("billets/tcList", { tcList });
   })
 );
