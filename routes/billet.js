@@ -25,6 +25,7 @@ const validateItem = require("../utils/validateItem");
 const events = require("events");
 const billetTc = require("../models/billetTc");
 const { date } = require("joi");
+const { Console } = require("console");
 const eventEmitter = new events.EventEmitter();
 let upload = multer({ storage: multerStorage });
 
@@ -15032,13 +15033,26 @@ router.post(
   "/",
   upload.fields([]),
   catchAsync(async (req, res, next) => {
-    let billet = new Billets(req.body.billet);
-    console.log(billet.sectionSize);
-    await billet.save();
-    const newBillet = Billets.find({});
-    // console.log(newBillet);
-
-    res.redirect("/billets/list");
+    // Console.log("HIHIHIHI");
+    // let billet = new Billets(req.body.billet);
+    // console.log(billet.sectionSize);
+    // await billet.save();
+    // const newBillet = Billets.find({});
+    if (req.body.oneMore == "one") {
+      let billet = new Billets(req.body.billet);
+      console.log(billet.sectionSize);
+      await billet.save();
+      const newBillet = Billets.find({});
+      console.log(req.body.billet);
+      res.redirect("/billets/new");
+    } else {
+      let billet = new Billets(req.body.billet);
+      console.log(billet.sectionSize);
+      await billet.save();
+      const newBillet = Billets.find({});
+      console.log(req.body.billet);
+      res.redirect("/billets/list");
+    }
   })
 );
 

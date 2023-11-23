@@ -4,7 +4,7 @@
         <h1 class="text-center">Data Entry - Billets Inwards</h1>
         <div class="col-6 offset-3">
 
-            <form action="/billets" method="POST" enctype="multipart/form-data" class="validated-form">
+            <form action="/billets" method="POST" enctype="multipart/form-data" id="saveHeat" class="validated-form">
                 <label class="form-label" for="heatNumber">Heat No.</label>
                 <input class="form-control inputField1" type="text" id="heatNumber" name="billet[heatNo]" required>
 
@@ -72,13 +72,16 @@
 
                 <div id="inputContainer" class="mt-2">
                     <label for="lengthOfShortPcs" class="form-label">Enter Length of Short Pcs Below</label>
-                </div> -->
+                </div> --><input type="text" name="oneMore" id="oneMore" class="d-none">
+
 
 
                 <button class="btn btn-success my-2" data-bs-toggle="modal" data-bs-target="#addMoreHeatsModal" type="submit">Save Heat</button>
 
 
+                <button id="addOneMoreHeat" class="btn btn-primary">Add One More Heat</button>
             </form>
+
         </div>
     </div>
     <script defer>
@@ -91,7 +94,18 @@
             if (firstInputField) {
                 firstInputField.focus();
             }
+
         });
+    </script>
+    <script>
+        let oneMoreBtn = document.getElementById("addOneMoreHeat")
+        let tag = document.getElementById("oneMore")
+        let saveHeatForm = document.getElementById("saveHeat")
+        oneMoreBtn.addEventListener('click', function() {
+            tag.value = "one";
+            console.log("CLICKED")
+            saveHeatForm.submit()
+        })
     </script>
     <!-- <script>
         const addButton = document.getElementById("addInputButton");
