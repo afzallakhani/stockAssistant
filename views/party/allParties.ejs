@@ -14,9 +14,7 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Name</th>
-                    <th scope="col">Address</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Item</th>
+
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -29,15 +27,7 @@
                         <td>
                             <%= party.partyName %>
                         </td>
-                        <td>
-                            <%= party.partyAddress %>
-                        </td>
-                        <td>
-                            <%= party.partyType %>
-                        </td>
-                        <td>
-                            <%= party.partyItemCategory %>
-                        </td>
+
                         <td>
                             <form action="/partymaster/<%= party._id %>?_method=DELETE" method="post">
                                 <button type="submit" onclick="return confirm('Are you sure you want to delete this item?')" class="btn btn-danger btn-sm d-inline mb-1 bi bi-trash"></button>
