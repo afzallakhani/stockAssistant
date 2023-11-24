@@ -4,16 +4,7 @@
             <h4 class="card-title">
                 <%= searchedParty.partyName %>
             </h4>
-            <p class="card-text">
-                <%= searchedParty.partyAddress %>
 
-            </p>
-            <p class="card-text text-muted">
-                <%= searchedParty.partyItemCategory %>
-            </p>
-            <p class="card-text text-muted">
-                <%= searchedParty.partyType %>
-            </p>
             <!-- <a href="" class="d-inline" method="POST" onclick="return confirm('Are you sure you want to edit this item?')" class="btn  btn-danger mb-1 ">Delete</a> -->
             <form action="/partymaster/<%= searchedParty._id %>?_method=DELETE" method="post">
                 <a href="/partymaster/<%= searchedParty._id %>/edit " class="btn  btn-warning bi bi-pencil-square mb-1"></a>
