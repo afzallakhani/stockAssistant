@@ -83,15 +83,24 @@
 
             </div>
         </div>
+        <input type="hidden" id="tcDt" name="tcDate" value="<%= tc.tcDate %>" />
+        <input type="hidden" id="poDt" name="tcDate" value="<%= tc.poDate %>" />
 
 
     </form>
-    <script defer>
+
+
+
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Get today's date in the format yyyy-mm-dd
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById("tcDate").value = today;
-            document.getElementById("poDate").value = today;
+            let tcDate = document.getElementById("tcDt").value;
+            let tcDateVal = new Date(tcDate).toISOString().split("T")[0]
+            let poDate = document.getElementById("poDt").value;
+            let poDateVal = new Date(poDate).toISOString().split("T")[0]
+
+            document.getElementById("tcDate").value = tcDateVal;
+            document.getElementById("poDate").value = poDateVal;
 
             document.getElementById("tcBtnMinus").addEventListener("click", function() {
                 decreaseDate("tcDate");
