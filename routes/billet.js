@@ -54,7 +54,7 @@ router.get("/search", async (req, res) => {
 router.get(
   "/newTc",
   catchAsync(async (req, res, next) => {
-    const party = await Party.find({ partyType: { $in: "Buyer" } });
+    const party = await Party.find();
     const list = await Billets.find({});
     const tc = await Tc.find({});
     // console.log(tc);
