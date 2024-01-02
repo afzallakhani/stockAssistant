@@ -8,6 +8,10 @@ const BilletSchema = new mongoose.Schema({
     type: String,
     uppercase: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
   heatNo: {
     type: String,
     uppercase: true,
@@ -30,6 +34,14 @@ const BilletSchema = new mongoose.Schema({
   // fullPisLength: [String],
   // shortLengthQty: [String],
   // shortPisLength: [String],
+});
+
+BilletSchema.virtual("formattedHeatDate").get(function () {
+  return this.createdAt.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
 });
 
 module.exports = mongoose.model("BilletList", BilletSchema);

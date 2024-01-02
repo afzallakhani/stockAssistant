@@ -1,6 +1,5 @@
 <% layout('layout/boilerplate') %>
 
-    hiiiii
     <form action="/billets/<%= tc._id %>/editTc?_method=PUT" method="POST" class="" enctype="application/x-www-form-urlencoded">
         <div class="row">
             <h1 class="mb-3">
@@ -96,6 +95,8 @@
             // Get today's date in the format yyyy-mm-dd
             let tcDate = document.getElementById("tcDt").value;
             let tcDateVal = new Date(tcDate).toISOString().split("T")[0]
+            console.log(tcDate)
+            console.log(tcDateVal)
             let poDate = document.getElementById("poDt").value;
             let poDateVal = new Date(poDate).toISOString().split("T")[0]
 

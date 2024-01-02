@@ -15006,7 +15006,7 @@ router.get(
   catchAsync(async (req, res, next) => {
     const tcList = await Tc.find({}).populate("heatNo");
     const billet = await Billets.find({});
-    console.log(tcList);
+    // console.log(tcList);
     // billetTc.updateMany(
     //   {},
     //   { $set: { createdAt: new Date() } },
