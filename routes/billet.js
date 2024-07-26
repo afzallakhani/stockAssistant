@@ -1971,11 +1971,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc2).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc2).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 3) {
       const doc3 = new docx.Document({
@@ -3149,11 +3159,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc3).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc3).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 4) {
       const doc4 = new docx.Document({
@@ -4527,11 +4547,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc4).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc4).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 5) {
       const doc5 = new docx.Document({
@@ -6105,11 +6135,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc5).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc5).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     }
     // let docxUrl = path.join(
@@ -6148,11 +6188,31 @@ router.get(
     let heatId = heats.map((heats) => heats._id);
 
     let heatData = await Billets.find({ _id: { $in: heatId } });
-    let docxUrl = path.join(
-      __dirname,
-      "../",
-      `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`
-    );
+    // let docxUrl = path.join(
+    //   __dirname,
+    //   "../",
+    //   `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`
+    // );
+    // console.log(docxUrl);
+    // console.log("agh");
+    // res.download(docxUrl, function (e) {
+    //   if (e) {
+    //     console.log(e);
+    //   } else {
+    //     console.log("Download Complete!!!");
+    //   }
+    // });
+    // Define the directory where the files are saved
+    const outputDirectory = path.join(__dirname, "..", "output-files docx");
+
+    // Construct the filename and sanitize it
+    const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`;
+    const sanitizedFilename = sanitize(filename);
+
+    // Combine directory and sanitized filename
+    let docxUrl = path.join(outputDirectory, sanitizedFilename);
+
+    // Download the file
     res.download(docxUrl, function (e) {
       if (e) {
         console.log(e);
@@ -7274,11 +7334,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc1Cc).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc1Cc).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 2) {
       const doc2Cc = new docx.Document({
@@ -8693,11 +8763,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc2Cc).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc2Cc).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 3) {
       const doc3Cc = new docx.Document({
@@ -10446,11 +10526,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc3Cc).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc3Cc).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 4) {
       const doc4Cc = new docx.Document({
@@ -12534,11 +12624,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc4Cc).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc4Cc).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 5) {
       const doc5Cc = new docx.Document({
@@ -14961,11 +15061,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc5Cc).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc5Cc).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     }
     // let docxUrl = path.join(
@@ -15003,11 +15113,29 @@ router.get(
     let heatId = heats.map((heats) => heats._id);
 
     let heatData = await Billets.find({ _id: { $in: heatId } });
-    let docxUrl = path.join(
-      __dirname,
-      "../",
-      `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`
-    );
+    // let docxUrl = path.join(
+    //   __dirname,
+    //   "../",
+    //   `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`
+    // );
+    // res.download(docxUrl, function (e) {
+    //   if (e) {
+    //     console.log(e);
+    //   } else {
+    //     console.log("Download Complete!!!");
+    //   }
+    // });
+    // Define the directory where the files are saved
+    const outputDirectory = path.join(__dirname, "..", "output-files docx");
+
+    // Construct the filename and sanitize it
+    const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} CC ${heatData[0].sectionSize}MM.docx`;
+    const sanitizedFilename = sanitize(filename);
+
+    // Combine directory and sanitized filename
+    let docxUrl = path.join(outputDirectory, sanitizedFilename);
+
+    // Download the file
     res.download(docxUrl, function (e) {
       if (e) {
         console.log(e);
