@@ -12,6 +12,7 @@ const methodOverride = require("method-override");
 const multer = require("multer");
 const fs = require("fs");
 require("dotenv/config");
+const sanitize = require("sanitize-filename");
 const ExpressError = require("../utils/ExpressError");
 const Party = require("../models/partyMaster");
 const Items = require("../models/elafStock");
@@ -29,11 +30,17 @@ const { Console } = require("console");
 const eventEmitter = new events.EventEmitter();
 let upload = multer({ storage: multerStorage });
 
+const outputDirectory = path.join(__dirname, "..", "output-files docx");
+
+if (!fs.existsSync(outputDirectory)) {
+  fs.mkdirSync(outputDirectory, { recursive: true });
+}
 router.get(
   "/list",
   catchAsync(async (req, res) => {
     const list = await Billets.find({});
     res.render("billets/list", { list });
+    console.log(outputDirectory);
   })
 );
 router.get("/new", (req, res) => {
@@ -975,11 +982,21 @@ router.get(
           },
         ],
       });
+      // docx.Packer.toBuffer(doc1).then((buffer) => {
+      //   fs.writeFileSync(
+      //     `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
+      //     buffer
+      //   );
+      // });
       docx.Packer.toBuffer(doc1).then((buffer) => {
-        fs.writeFileSync(
-          `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`,
-          buffer
-        );
+        const filename = `${tc.buyerName} ${tc.billNo} ${heatData[0].gradeName} ${heatData[0].sectionSize}MM.docx`;
+        const sanitizedFilename = sanitize(filename);
+
+        // Combine directory and sanitized filename
+        const filePath = path.join(outputDirectory, sanitizedFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        console.log(`File saved as: ${filePath}`);
       });
     } else if (heatData.length == 2) {
       const doc2 = new docx.Document({
