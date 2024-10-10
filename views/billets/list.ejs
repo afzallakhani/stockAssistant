@@ -2,16 +2,14 @@
     <div class="container-fluid align-items-center justify-content-center mb-1">
         <h1 class="font-weight-bold mt-1 mb-1">Billet List</h1>
     </div>
+
     <form action="/billets/search" class="mb-1" method="get">
-        <label for="keyWord" class="d-inline bi bi-search form-label fw-bold mb-1">  Search By Heat No.</label>
+        <label for="keyWord" class="d-inline bi bi-search form-label fw-bold mb-1"> Search By Heat No.</label>
         <input class="form-control" type="search" id="keyWord" name="heat[heatNo]" placeholder="Search Heats" class="mt-2">
-
-
     </form>
+
     <a class="btn btn-primary mt-3 mb-2" href="/billets/new">Add New - Billet Inwards</a>
-
     <a class="btn btn-warning mt-3 mb-2" href="/billets/newTc">Create New TC - Billet Outwards</a>
-
 
     <div class="table-responsive">
         <table class="table table-hover table align-middle text-center" id="dataTable">
@@ -37,12 +35,11 @@
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <% list.reverse().forEach(function(list, index){%>
+            <tbody id="billet-list">
+                <% list.slice(0, 100).forEach(function(list, index) { %>
                     <tr>
                         <td>
                             <%= index + 1 %>
-
                         </td>
                         <td>
                             <%= list.formattedHeatDate %>
@@ -50,14 +47,12 @@
                         <td>
                             <%= list.heatNo %>
                         </td>
-
                         <td>
                             <%= list.gradeName %>
                         </td>
                         <td>
                             <%= list.sectionSize %>
                         </td>
-
                         <td>
                             <%= list.c %>
                         </td>
@@ -94,7 +89,6 @@
                         <td>
                             <%= list.ce %>
                         </td>
-
                         <td>
                             <form action="/billets/<%= list._id %>/heat?_method=DELETE" method="post">
                                 <button type="submit" onclick="return confirm('Are you sure you want to delete this item?')" class="btn btn-danger btn-sm d-inline mb-1 bi bi-trash"></button>
@@ -102,32 +96,7 @@
                             </form>
                         </td>
                     </tr>
-                    <%}) %>
+                    <% }) %>
             </tbody>
         </table>
     </div>
-    <script defer>
-        // Function to handle the "Insert" key press
-        function handleKeyPress(event) {
-            // Check if the pressed key is the "Insert" key (key code 45)
-            if (event.keyCode === 45) {
-                // Call the function to redirect to the specified route
-                redirectToSpecifiedRoute();
-            }
-        }
-
-        // Attach the event listener to the document
-        document.addEventListener('keydown', handleKeyPress);
-
-        // Function to redirect to the specified route
-        function redirectToSpecifiedRoute() {
-            // Get the values from the input fields if needed
-
-            // Construct the URL for the specified route, including any parameters
-            var specifiedRoute = "/billets/new"
-
-
-            // Redirect to the specified route
-            window.location.href = specifiedRoute;
-        }
-    </script>
