@@ -1,7 +1,7 @@
-// const { date, String } = require("joi");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const BilletTc = require("./billetTc");
+
 const BilletSchema = new mongoose.Schema({
   sectionSize: String,
   gradeName: {
@@ -10,7 +10,7 @@ const BilletSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now, // Corrected: use Date.now without parentheses
   },
   heatNo: {
     type: String,
@@ -45,5 +45,3 @@ BilletSchema.virtual("formattedHeatDate").get(function () {
 });
 
 module.exports = mongoose.model("BilletList", BilletSchema);
-// module.exports = mongoose.SchemaTypes("billetList", BilletSchema);
-// module.exports.productionDate = BilletSchema;
