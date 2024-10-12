@@ -15153,11 +15153,15 @@ router.get(
     catchAsync(async(req, res, next) => {
         const queryString = req.query.tc;
         let query = queryString.tcNo.toString();
+        console.log(query);
+
         let queryList = query.split(" ");
+        console.log(queryList);
+
         const tcResults = await Tc.find({ tcNo: { $in: queryList } });
         console.log(tcResults);
 
-        res.render("billets/tcList", { tcResults });
+        res.render("billets/searchTc", { tcResults });
     })
 );
 router.get(
