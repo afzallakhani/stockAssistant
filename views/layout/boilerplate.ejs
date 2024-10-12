@@ -51,6 +51,68 @@
                     $('#datepicker').datepicker();
                 });
             </script>
+            <script>
+                $(document).ready(function() {
+                    // Capture keydown event on text input fields
+                    $('form').on('keydown', 'input[type="text"]', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault(); // Prevent the default Enter key behavior (submitting the form)
+
+                            // Find the next text input field
+                            var nextInput = $(this).closest('form').find('input[type="text"]:eq(' + ($('input[type="text"]').index(this) + 1) + ')');
+
+                            // If the next text input field is not found, focus on the submit button
+                            if (nextInput.length === 0) {
+                                $(this).closest('form').find('button[type="submit"]').focus();
+                            } else {
+                                nextInput.focus();
+                            }
+                        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault(); // Prevent the default arrow key behavior
+
+                            // Find the index of the current input
+                            var currentIndex = $('input[type="text"]').index(this);
+
+                            // Calculate the index of the next input based on the arrow key
+                            var nextIndex = e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+
+                            // Ensure the index is within bounds
+                            nextIndex = Math.max(0, Math.min(nextIndex, $('input[type="text"]').length - 1));
+
+                            // Focus on the next input
+                            $('input[type="text"]').eq(nextIndex).focus();
+                        }
+                    });
+                });
+            </script>
+            <script>
+                // Example starter JavaScript for disabling form submissions if there are invalid fields
+                (function() {
+                    'use strict'
+
+                    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+                    const forms = document.querySelectorAll('.validated-form')
+
+                    // Loop over them and prevent submission
+                    Array.from(forms)
+                        .forEach(function(form) {
+                            form.addEventListener('submit', function(event) {
+                                if (!form.checkValidity()) {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                }
+
+                                form.classList.add('was-validated')
+                            }, false)
+                        })
+                })()
+                // var myModal = document.getElementById('myModal')
+                // var myInput = document.getElementById('myInput')
+
+                // myModal.addEventListener('shown.bs.modal', function() {
+                //     myInput.focus()
+                // })
+            </script>
 </body>
 
 </html>
