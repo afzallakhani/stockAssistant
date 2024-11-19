@@ -22,21 +22,22 @@ const ExpressError = require("./utils/ExpressError");
 // const unlinkAsync = promisify(fs.unlink);
 
 mongoose.connect("mongodb://localhost:27017/stockAssistant", {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
 
-  useFindAndModify: false,
+    useFindAndModify: false,
 });
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
-  console.log("Database Connected");
+    console.log("Database Connected");
+    console.log("MongoDB Version:", mongoose.version);
 });
 
 const app = express();
-
+console.log("Node.js Version:", process.version);
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -48,22 +49,22 @@ app.use("/items", item);
 app.use("/partymaster", party);
 app.use("/billets", billets);
 app.get("/", (req, res) => {
-  res.render("home");
+    res.render("home");
 });
 
 // app.use((req, res) => {
 //     res.status(404).send("NOT FOUND!");
 // });
 app.all("*", (req, res, next) => {
-  next(new ExpressError("Page Not Found!", 404));
+    next(new ExpressError("Page Not Found!", 404));
 });
 
 app.use((err, req, res, next) => {
-  const { statusCode = 500, message = "Something Went Wrong!" } = err;
-  if (!err.message) err.message = "Oh No! Something Went Wrong!";
-  res.status(statusCode).render("error", { err });
+    const { statusCode = 500, message = "Something Went Wrong!" } = err;
+    if (!err.message) err.message = "Oh No! Something Went Wrong!";
+    res.status(statusCode).render("error", { err });
 });
 
 app.listen(3000, () => {
-  console.log("App Running On Port 3000");
+    console.log("App Running On Port 3000");
 });
