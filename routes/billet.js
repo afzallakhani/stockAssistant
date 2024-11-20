@@ -244,8 +244,58 @@ router.get(
                     },
                 },
                 sections: [{
+                    headers: {
+                        default: new docx.Header({
+                            children: [
+                                new docx.Paragraph({
+                                    alignment: docx.AlignmentType.RIGHT,
+children:[
+    new docx.TextRun({
+        text: "IS2830:2012",
+        font: "Calibri",
+        bold: true,
+        size:18,
+    }),
+    new docx.TextRun({
+        text: "CM/L-2809767",
+        font: "Calibri",
+        bold: true,
+        size:18,
+    }),
+],
+                                }),
+                                new docx.Paragraph({
+                                alignment: docx.AlignmentType.RIGHT,
+                                children: [
+                                    new docx.TextRun({
+                                        text: "Is2830:2012",
+                                        font: "Calibri",
+                                    }),
+                                    new docx.ImageRun({
+                                        data: fs.readFileSync('D:\\stockAssistant\\ISI_Mark_Logo_Cdr-Vector-file-.jpg'),
+                                        transformation: {
+                                            width: 50,
+                                            height: 40,
+                                        }
+                                    }),
+                                ],
+                            }),],
+                        }),
+                    },
                     children: [
                         new docx.Paragraph({
+                            children: [
+                                new docx.ImageRun({
+                                    data: fs.readFileSync('D:\\stockAssistant\\ISI_Mark_Logo_Cdr-Vector-file-.jpg'),
+                                    transformation: {
+                                        width: 50,
+                                        height: 50,
+                                    }
+                                }),
+                            ],
+                        }),
+                        new docx.Paragraph({
+                            
                             children: [
                                 new docx.TextRun({
                                     break: 3,
@@ -272,7 +322,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - SA/BIS/2830/2809767.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -2048,7 +2098,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - SA/BIS/2830/2809767.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
