@@ -262,7 +262,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -272,7 +272,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -942,7 +942,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -1051,7 +1051,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -1061,7 +1061,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -1929,7 +1929,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -2038,7 +2038,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -2048,7 +2048,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -3115,7 +3115,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -3224,7 +3224,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -3234,7 +3234,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -4501,7 +4501,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -4610,7 +4610,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -4620,7 +4620,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -6086,7 +6086,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -6296,7 +6296,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -6306,7 +6306,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -7263,7 +7263,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -7393,7 +7393,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -7403,7 +7403,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -8690,7 +8690,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -8820,7 +8820,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -8830,7 +8830,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -10451,7 +10451,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -10581,7 +10581,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -10591,7 +10591,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -12547,7 +12547,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
@@ -12677,7 +12677,7 @@ router.get(
                                 }),
                                 new docx.TextRun({
                                     break: 2,
-                                    text: "It is certified that the material described below fully confirms to IS: 2830: 2012 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
+                                    text: "It is certified that the material described below fully confirms to IS: 14650: 2023 Chemical Composition tested in accordance with scheme of testing and inspection contained in BIS certification marks License.",
                                     font: "Calibri",
                                 }),
                             ],
@@ -12687,7 +12687,7 @@ router.get(
                             children: [
                                 new docx.TextRun({
                                     break: 1,
-                                    text: "License Serial No. - ES/BIS/2830/7600107011.",
+                                    text: "License Serial No. - ES/BIS/14650/7600107011.",
                                     font: "Calibri",
                                     bold: true,
                                     size: 22,
@@ -14982,7 +14982,7 @@ router.get(
                             bullet: { level: 0 },
                             children: [
                                 new docx.TextRun({
-                                    text: "All Physical Properties are as per & within IS 2830:2012 Requirements & Tolerances.",
+                                    text: "All Physical Properties are as per & within IS 14650:2023 Requirements & Tolerances.",
                                     font: "Calibri",
                                     size: 22,
                                 }),
