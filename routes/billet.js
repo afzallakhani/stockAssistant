@@ -15189,7 +15189,7 @@ router.post(
                 // If no matching document is found, create a new one
                 let newBillet = new Billets(req.body.billet);
                 await newBillet.save();
-                console.log("New billet created:", newBillet._id);
+                console.log("New billet created:", newBillet);
             }
 
             if (req.body.oneMore == "one") {
