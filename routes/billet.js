@@ -36,11 +36,32 @@ if (!fs.existsSync(outputDirectory)) {
     fs.mkdirSync(outputDirectory, { recursive: true });
 }
 
+// router.get(
+//     "/list",
+//     catchAsync(async(req, res) => {
+//         const list = await Billets.find({}).sort({ createdAt: -1 }); // Newest to oldest
+//         res.render("billets/list", { list });
+//     })
+// );
 router.get(
     "/list",
     catchAsync(async(req, res) => {
-        const list = await Billets.find({}).sort({ createdAt: -1 }); // Newest to oldest
-        res.render("billets/list", { list });
+        const page = parseInt(req.query.page) || 1;
+        const limit = 100;
+
+        const totalCount = await Billets.countDocuments({});
+        const totalPages = Math.ceil(totalCount / limit);
+
+        const list = await Billets.find({})
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.render("billets/list", {
+            list,
+            currentPage: page,
+            totalPages,
+        });
     })
 );
 
