@@ -1,4 +1,39 @@
 <% layout('layout/boilerplate') %>
+    <style>
+        /* Ensure full width and no shifting */
+        
+        .awesomplete mark {
+            background-color: transparent !important;
+            background: none !important;
+            color: inherit !important;
+            font-weight: bold;
+        }
+        
+        .awesomplete {
+            width: 100% !important;
+        }
+        
+        .awesomplete>ul {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+        
+        .awesomplete ul {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: 1.5;
+        }
+        
+        .awesomplete mark {
+            background: none;
+            font-weight: bold;
+            color: black;
+        }
+        
+        .awesomplete li {
+            display: flex;
+        }
+    </style>
 
     <form action="/billets/<%= tc._id %>/editTc?_method=PUT" method="POST" class="" enctype="application/x-www-form-urlencoded">
         <div class="row">
@@ -47,18 +82,15 @@
         </div>
         <div class="row">
             <div class="col">
-                <label class="form-label" for="buyerName">Buyer</label>
-                <select class="form-select form-select-md" name="tc[buyerName]" id="buyerName" required>
-                    <option selected><%= tc.buyerName %></option>
-                                        <% for(let buyer of party){%>
-            
-                                            <option><%= buyer.partyName %>
-                                            </option>
-                                            <%} %>
-                                        </select>
-
-
-
+                <label for="buyerName" class="form-label">Buyer</label>
+                <input id="buyerName" name="tc[buyerName]" class="form-control w-100 awesomplete" autocomplete="off" placeholder="Type to search party..." value="<%= tc.buyerName %>" />
+                <ul id="buyerList" class="d-none">
+                    <% for (let buyer of party) { %>
+                        <li>
+                            <%= buyer.partyName.trim() %>
+                        </li>
+                        <% } %>
+                </ul>
             </div>
             <div class="row">
                 <div class="col">
@@ -183,6 +215,56 @@
             }
         }
     </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const input = document.getElementById("buyerName");
+            const listItems = Array.from(document.querySelectorAll("#buyerList li")).map(li =>
+                li.textContent.trim()
+            );
+
+            new Awesomplete(input, {
+                list: listItems,
+                minChars: 1,
+                autoFirst: true,
+                filter: function(text, input) {
+                    return text.toUpperCase().includes(input.toUpperCase());
+                },
+                item: function(text, input) {
+                    const index = text.toUpperCase().indexOf(input.toUpperCase());
+
+                    if (index >= 0) {
+                        const prefix = text.substring(0, index);
+                        const match = text.substring(index, index + input.length);
+                        const suffix = text.substring(index + input.length);
+
+                        const li = document.createElement("li");
+                        li.innerHTML = `
+      <span style="white-space: nowrap;">
+        ${prefix}<span style="font-weight: bold;">${match}</span>${suffix}
+      </span>
+    `;
+
+                        return li;
+                    }
+
+                    // fallback if no match
+                    return Awesomplete.ITEM(text, input);
+                }
+
+            });
+
+            // ✅ Trim extra spaces after selection
+            input.addEventListener("awesomplete-selectcomplete", function() {
+                this.value = this.value.trim();
+            });
+        });
+    </script>
+
+
+
+
 
     <script defer>
         // Wait for the document to fully load
