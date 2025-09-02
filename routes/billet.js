@@ -92,15 +92,16 @@ if (!fs.existsSync(outputDirectory)) {
 router.get(
   "/filter",
   catchAsync(async (req, res) => {
-    const { startDate, endDate, heatType } = req.query;
+    const { startDate, endDate, heatType, sectionSize } = req.query;
     let filter = {};
     let heats = [];
     let count = 0;
     let numberOfDays = 0;
     let avgHeatsPerDay = 0;
+    let sectionCounts = {};
 
     // Only filter if at least one filter parameter is provided
-    if (startDate || endDate || heatType) {
+    if (startDate || endDate || heatType || sectionSize) {
       // Date Range Filter
       if (startDate && endDate) {
         const start = new Date(startDate);
@@ -112,28 +113,37 @@ router.get(
           $lte: end,
         };
 
-        // Calculate the number of days in the selected range
         const timeDifference = end.getTime() - start.getTime();
-        // Add 1 to ensure the start and end days are both counted
         numberOfDays = Math.round(timeDifference / (1000 * 3600 * 24)) + 1;
       }
 
-      // Heat Type Filter based on chemical composition
-      // Open Cast heats do not have 'ce' (Carbon Equivalent) values
+      // Heat Type Filter
       if (heatType === "open") {
-        filter.ce = { $in: [null, ""] }; // Assumes 'ce' is null or empty for open cast
+        filter.ce = { $in: [null, ""] };
       } else if (heatType === "close") {
-        filter.ce = { $nin: [null, ""] }; // Assumes 'ce' is present for close cast
+        filter.ce = { $nin: [null, ""] };
       }
 
-      // Execute query and count documents
-      heats = await Billets.find(filter).sort({ createdAt: -1 });
-      count = heats.length; // Use the length of the returned array for an accurate count
+      // Section Size Filter
+      if (sectionSize && sectionSize !== "all") {
+        filter.sectionSize = sectionSize;
+      }
 
-      // Calculate average heats per day if a date range is specified
+      // Execute query
+      heats = await Billets.find(filter).sort({ createdAt: -1 });
+      count = heats.length;
+
+      // Calculate average heats per day
       if (numberOfDays > 0) {
         avgHeatsPerDay = (count / numberOfDays).toFixed(2);
       }
+
+      // Calculate section-wise counts from the results
+      sectionCounts = heats.reduce((acc, heat) => {
+        const size = heat.sectionSize;
+        acc[size] = (acc[size] || 0) + 1;
+        return acc;
+      }, {});
     }
 
     res.render("billets/filter", {
@@ -142,8 +152,10 @@ router.get(
       startDate: startDate || "",
       endDate: endDate || "",
       heatType: heatType || "all",
-      numberOfDays, // Pass the number of days
-      avgHeatsPerDay, // Pass the calculated average
+      sectionSize: sectionSize || "all", // Pass sectionSize to template
+      numberOfDays,
+      avgHeatsPerDay,
+      sectionCounts, // Pass section-wise counts
     });
   })
 );
