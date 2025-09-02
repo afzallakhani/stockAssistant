@@ -1,0 +1,133 @@
+<%- layout('layout/boilerplate') %>
+
+    <h1>Filter Billets</h1>
+
+    <!-- Filter Form -->
+    <form action="/billets/filter" method="GET" class="mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" id="startDate" name="startDate" value="<%= startDate || '' %>" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="endDate" class="form-label">End Date</label>
+                <input type="date" id="endDate" name="endDate" value="<%= endDate || '' %>" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="heatType" class="form-label">Heat Type</label>
+                <select id="heatType" name="heatType" class="form-select">
+                <option value="all" <%= heatType === 'all' ? 'selected' : '' %>>All</option>
+                <option value="open" <%= heatType === 'open' ? 'selected' : '' %>>Open Cast</option>
+                <option value="close" <%= heatType === 'close' ? 'selected' : '' %>>Close Cast</option>
+            </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Display Results -->
+    <% if (heats) { %>
+        <% if (count > 0) { %>
+            <div class="alert alert-info">
+                <h3>Results: Found
+                    <%= count %> Heats</h3>
+                <% if (numberOfDays > 0) { %>
+                    <hr>
+                    <p><strong>Number of Days in Range:</strong>
+                        <%= numberOfDays %>
+                    </p>
+                    <p><strong>Average Heats Per Day:</strong>
+                        <%= avgHeatsPerDay %>
+                    </p>
+                    <% } %>
+            </div>
+            <% } %>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Heat No.</th>
+                                <th>Grade</th>
+                                <th>Section</th>
+                                <th>C %</th>
+                                <th>Mn %</th>
+                                <th>P %</th>
+                                <th>S %</th>
+                                <th>Si %</th>
+                                <th>Cr %</th>
+                                <th>Mo %</th>
+                                <th>Ni %</th>
+                                <th>Al %</th>
+                                <th>Cu %</th>
+                                <th>V %</th>
+                                <th>Nb %</th>
+                                <th>CE %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% heats.forEach((list, index) => { %>
+                                <tr>
+                                    <td>
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td>
+                                        <%= list.formattedHeatDate %>
+                                    </td>
+                                    <td>
+                                        <%= list.heatNo %>
+                                    </td>
+                                    <td>
+                                        <%= list.gradeName %>
+                                    </td>
+                                    <td>
+                                        <%= list.sectionSize %>
+                                    </td>
+                                    <td>
+                                        <%= list.c %>
+                                    </td>
+                                    <td>
+                                        <%= list.mn %>
+                                    </td>
+                                    <td>
+                                        <%= list.p %>
+                                    </td>
+                                    <td>
+                                        <%= list.s %>
+                                    </td>
+                                    <td>
+                                        <%= list.si %>
+                                    </td>
+                                    <td>
+                                        <%= list.cr || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= list.mo || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= list.ni || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= list.al || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= list.cu || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= list.v || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= list.nb || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= list.ce || 'N/A' %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
