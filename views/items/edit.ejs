@@ -22,7 +22,7 @@
                         <option value="PCS">BAGS</option>
                         <option value="BOX">BOX</option>
                         <option value="KGS">KGS</option>
-                        <option value="MTS">MTS</option>
+                        <option value="SETS">SETS</option>
                     </select>
                 </div>
 
@@ -30,7 +30,9 @@
                     <label for="quantity" class="form-label">Item Quantity</label>
                     <input type="text" id="quantity" name="item[itemQty]" class="form-control" value="<%= item.itemQty %>" required>
                 </div>
-
+                <!-- Add the input field for Life -->
+                <label class="form-label" for="life">Daily Consumption</label>
+                <input class="form-control" type="text" id="life" name="item[life]" value="<%= item.life %>" placeholder="e.g, 1 HEATS, 5 HEATS, 1 DAY,">
                 <div class="mb-2">
                     <label for="category" class="form-label">Item Category</label>
                     <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>

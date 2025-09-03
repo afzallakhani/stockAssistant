@@ -48,6 +48,8 @@ app.use(methodOverride("_method"));
 app.use("/items", item);
 app.use("/partymaster", party);
 app.use("/billets", billets);
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("/", (req, res) => {
     res.render("home");
 });
