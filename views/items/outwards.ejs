@@ -1,0 +1,36 @@
+<% layout('layout/boilerplate') %>
+    <div class="row">
+        <h1 class="text-center">Log Items Outwards</h1>
+        <div class="col-8 offset-2">
+            <form action="/items/update-stock" method="POST" novalidate class="validated-form">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Item Name</th>
+                            <th scope="col">Current Stock</th>
+                            <th scope="col">Quantity Outwards</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for(let i = 0; i < items.length; i++) { %>
+                            <tr>
+                                <td>
+                                    <%= items[i].itemName %>
+                                </td>
+                                <td>
+                                    <%= items[i].itemQty %>
+                                        <%= items[i].itemUnit %>
+                                </td>
+                                <td>
+                                    <input type="hidden" name="items[<%= i %>][id]" value="<%= items[i]._id %>">
+                                    <input type="number" class="form-control" name="items[<%= i %>][outwardsQty]" min="0" max="<%= items[i].itemQty %>" value="0" required>
+                                </td>
+                            </tr>
+                            <% } %>
+                    </tbody>
+                </table>
+                <button class="btn btn-success my-2">Update Stock</button>
+            </form>
+        </div>
+    </div>
+    <script src="/javascripts/form-navigation.js"></script>

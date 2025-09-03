@@ -11,17 +11,21 @@
 
     </form>
 
-
+    <a class="btn btn-primary mt-3 mb-2" href="/items/inwards">Item Inwards</a>
+    <a class="btn btn-warning mt-3 mb-2" href="/items/outwards">Item Outwards</a>
+    <a class="btn btn-info mt-3 mb-2" href="/items/transactions">Get Insights</a>
     <div class="tabel-responsive">
         <table class="table table-hover table align-middle text-center" id="dataTable">
             <thead>
                 <tr>
                     <th scope="col">#</th>
+                    <th scope="col">Date</th>
                     <th scope="col">Image</th>
                     <th scope="col">Item Name</th>
                     <th scope="col">Item Category</th>
                     <th scope="col">Item Description</th>
                     <th scope="col">Item Quantity</th>
+                    <th scope="col">Daily Req.</th>
                     <th scope="col">Unit</th>
                     <th scope="col">Actions</th>
                 </tr>
@@ -33,6 +37,9 @@
 
                         <td class="font-weight-bold form-control-sm text-center">
                             New
+                        </td>
+                        <td>
+                            <input type="date" class="form-control" name="item[createdAt]" id="itemDate" placeholder="DD/MM/YYY" aria-label="Date" required>
                         </td>
                         <td>
                             <input class="form-control form-control-sm text-center img-fluid" type="file" id="image" name="item[itemImage]" required>
@@ -57,6 +64,11 @@
                             <input class="form-control form-control-sm" type="text" id="qty" name="item[itemQty]" required>
                         </td>
                         <td>
+                            <!-- Add the input field for Life -->
+                            <input class="form-control" type="text" id="life" name="item[life]" placeholder="e.g, 1 HEATS, 5 HEATS, 1 DAY,">
+                        </td>
+
+                        <td>
                             <select class="form-select form-select-sm" name="item[itemUnit]" id="unit" required>
                                 <option selected>Qty Unit</option>
                                 <option value="NOS">NOS</option>
@@ -65,6 +77,8 @@
                                 <option value="KGS">KGS</option>
                                 <option value="MTS">MTS</option>
                                 <option value="BAGS">BAGS</option>
+                                                        <option value="SETS">SETS</option>
+
                             </select>
                         </td>
                         <td>
@@ -80,6 +94,9 @@
                     <tr>
                         <td>
                             <%= index + 1 %>
+                        </td>
+                        <td>
+                            <%= item.formattedItemDate %>
                         </td>
                         <td class="p-0">
                             <% for(let image of item.itemImage) {%>
@@ -98,6 +115,10 @@
                         </td>
                         <td>
                             <%= item.itemQty %>
+                        </td>
+                        <td>
+                            <%= item.life %>
+                                <%= item.itemUnit %>
                         </td>
                         <td>
                             <%= item.itemUnit %>
@@ -143,6 +164,66 @@
                     rows[i].style.display = "";
                 } else {
                     rows[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+    <script defer>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get today's date in the format yyyy-mm-dd
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("itemDate").value = today;
+
+
+
+
+
+            document.getElementById("itemDate").addEventListener("change", updateDateFromInput);
+            document.addEventListener("keydown", handleKeyPress);
+        });
+
+        function decreaseDate(dateInputId) {
+            updateDate(dateInputId, -1);
+        }
+
+        function increaseDate(dateInputId) {
+            updateDate(dateInputId, 1);
+        }
+
+        function updateDate(dateInputId, deltaDays) {
+            const dateInput = document.getElementById(dateInputId);
+            const currentDate = new Date(dateInput.value);
+            currentDate.setDate(currentDate.getDate() + deltaDays);
+            dateInput.value = currentDate.toISOString().split('T')[0];
+        }
+
+        function updateDateFromInput() {
+            const itemDate = document.getElementById("itemDate");
+
+            const enteredDate = new Date(itemDate.value);
+            if (!isNaN(enteredDate.getTime())) {
+                // Valid date entered, update the input value
+                itemDate.value = enteredDate.toISOString().split('T')[0];
+            } else {
+                // Invalid date entered, revert to the previous value
+                const currentDate = new Date();
+                itemDate.value = currentDate.toISOString().split('T')[0];
+            }
+
+
+        }
+
+        function handleKeyPress(event) {
+            const focusedElement = document.activeElement;
+
+            // Check if the key pressed is the up or down arrow
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                if (focusedElement.id === "itemDate") {
+                    if (event.key === "ArrowUp") {
+                        increaseDate("itemDate");
+                    } else if (event.key === "ArrowDown") {
+                        decreaseDate("itemDate");
+                    }
                 }
             }
         }

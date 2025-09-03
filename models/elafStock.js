@@ -1,30 +1,57 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const Images = require("./images");
+const Transaction = require("./transaction"); // Import the Transaction model
 
 const ItemSchema = new mongoose.Schema({
-  itemName: String,
-  itemUnit: String,
-  itemQty: Number,
-  itemDescription: String,
-  itemImage: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Images",
+    itemName: {
+        type: String,
+        uppercase: true,
     },
-  ],
-  // itemImage: String,
-  itemCategoryName: String,
+    itemUnit: {
+        type: String,
+        uppercase: true,
+    },
+    itemQty: Number,
+    itemDescription: {
+        type: String,
+        uppercase: true,
+    },
+    life: {
+        // Add the new 'life' field
+        type: String,
+        uppercase: true,
+    },
+    itemImage: [{
+        type: Schema.Types.ObjectId,
+        ref: "Images",
+    }, ],
+    // itemImage: String,
+    itemCategoryName: String,
+    createdAt: {
+        type: Date,
+        default: Date.now, // Corrected: use Date.now without parentheses
+    },
 });
 
-ItemSchema.post("findOneAndDelete", async function (item) {
-  if (item) {
-    await Images.deleteMany({
-      _id: {
-        $in: item.itemImage,
-      },
+ItemSchema.post("findOneAndDelete", async function(item) {
+    if (item) {
+        await Images.deleteMany({
+            _id: {
+                $in: item.itemImage,
+            },
+        });
+        // Add this line to delete associated transactions
+        await Transaction.deleteMany({ itemId: item._id });
+    }
+});
+
+ItemSchema.virtual("formattedItemDate").get(function() {
+    return this.createdAt.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
     });
-  }
 });
 
 // const Items = mongoose.model("allItems", ItemSchema);

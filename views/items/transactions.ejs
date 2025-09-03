@@ -1,0 +1,74 @@
+<% layout('layout/boilerplate') %>
+    <div class="container">
+        <h1 class="text-center mb-5">Transaction Log</h1>
+        <!-- Filter Form -->
+        <form action="/items/transactions" method="GET" class="mb-4 p-3 border rounded bg-light">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label for="item" class="form-label">Filter by Item</label>
+                    <select name="item" id="item" class="form-select">
+                <option value="">All Items</option>
+                <% allItems.forEach(item => { %>
+                    <option value="<%= item._id %>" <%= typeof query !== 'undefined' && query.item === item._id.toString() ? 'selected' : '' %>>
+                        <%= item.itemName %>
+                    </option>
+                <% }); %>
+            </select>
+                </div>
+                <div class="col-md">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control" value="<%= typeof query !== 'undefined' ? query.startDate : '' %>">
+                </div>
+                <div class="col-md">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control" value="<%= typeof query !== 'undefined' ? query.endDate : '' %>">
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="/items/transactions" class="btn btn-secondary">Clear</a>
+                </div>
+            </div>
+        </form>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Item Name</th>
+                    <th scope="col">Transaction Type</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Stock Before</th>
+                    <th scope="col">Stock After</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for(let tx of transactions) { %>
+                    <tr>
+                        <td>
+                            <%= new Date(tx.createdAt).toLocaleString() %>
+                        </td>
+                        <td>
+                            <% if (tx.itemId) { %>
+                                <%= tx.itemId.itemName %>
+                                    <% } else { %>
+                                        <span class="text-danger">Item Deleted</span>
+                                        <% } %>
+                        </td>
+                        <td>
+                            <span class="badge bg-<%= tx.type === 'inward' || tx.type === 'initial' ? 'success' : 'danger' %>">
+                            <%= tx.type %>
+                        </span>
+                        </td>
+                        <td>
+                            <%= tx.quantity %>
+                        </td>
+                        <td>
+                            <%= tx.stockBefore %>
+                        </td>
+                        <td>
+                            <%= tx.stockAfter %>
+                        </td>
+                    </tr>
+                    <% } %>
+            </tbody>
+        </table>
+    </div>

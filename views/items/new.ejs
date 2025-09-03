@@ -4,6 +4,10 @@
         <div class="col-6 offset-3">
 
             <form action="/items" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
+                <label class="form-label" for="itemDate">Date</label>
+
+                <input type="date" class="form-control" name="item[createdAt]" id="itemDate" placeholder="DD/MM/YYY" aria-label="Date" required>
+
                 <label class="form-label" for="name">Item Name</label>
                 <input class="form-control" type="text" id="name" name="item[itemName]" required>
 
@@ -21,11 +25,17 @@
                         <option value="KGS">KGS</option>
                         <option value="MTS">MTS</option>
                         <option value="BAGS">BAGS</option>
+                                                <option value="SETS">SETS</option>
+
                         </select>
                 <label class="form-label" for="qty">Item Quantity</label>
                 <input class="form-control" type="number" id="qty" name="item[itemQty]" required>
                 <!-- <label class="form-label" for="category">Item Category</label>
                 <input class="form-control" type="text" id="category" name="item[itemCategoryName]" required> -->
+                <!-- Add the input field for Life -->
+                <label class="form-label" for="life">Daily Consumption</label>
+                <input class="form-control" type="text" id="life" name="item[life]" placeholder="e.g, 1 HEATS, 5 HEATS, 1 DAY,">
+
                 <div class="row">
                     <div class="col">
 
@@ -82,3 +92,63 @@
         </div>
     </div>
     <div class="container ">
+        <script defer>
+            document.addEventListener("DOMContentLoaded", function() {
+                // Get today's date in the format yyyy-mm-dd
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById("itemDate").value = today;
+
+
+
+
+
+                document.getElementById("itemDate").addEventListener("change", updateDateFromInput);
+                document.addEventListener("keydown", handleKeyPress);
+            });
+
+            function decreaseDate(dateInputId) {
+                updateDate(dateInputId, -1);
+            }
+
+            function increaseDate(dateInputId) {
+                updateDate(dateInputId, 1);
+            }
+
+            function updateDate(dateInputId, deltaDays) {
+                const dateInput = document.getElementById(dateInputId);
+                const currentDate = new Date(dateInput.value);
+                currentDate.setDate(currentDate.getDate() + deltaDays);
+                dateInput.value = currentDate.toISOString().split('T')[0];
+            }
+
+            function updateDateFromInput() {
+                const itemDate = document.getElementById("itemDate");
+
+                const enteredDate = new Date(itemDate.value);
+                if (!isNaN(enteredDate.getTime())) {
+                    // Valid date entered, update the input value
+                    itemDate.value = enteredDate.toISOString().split('T')[0];
+                } else {
+                    // Invalid date entered, revert to the previous value
+                    const currentDate = new Date();
+                    itemDate.value = currentDate.toISOString().split('T')[0];
+                }
+
+
+            }
+
+            function handleKeyPress(event) {
+                const focusedElement = document.activeElement;
+
+                // Check if the key pressed is the up or down arrow
+                if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                    if (focusedElement.id === "itemDate") {
+                        if (event.key === "ArrowUp") {
+                            increaseDate("itemDate");
+                        } else if (event.key === "ArrowDown") {
+                            decreaseDate("itemDate");
+                        }
+                    }
+                }
+            }
+        </script>
