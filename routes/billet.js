@@ -140,6 +140,7 @@ router.get(
       // Execute query
       heats = await Billets.find(filter).sort({ createdAt: -1 });
       count = heats.length;
+      console.log(count);
 
       // Calculate average heats per day
       if (numberOfDays > 0) {
