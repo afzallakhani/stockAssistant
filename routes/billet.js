@@ -89,6 +89,87 @@ if (!fs.existsSync(outputDirectory)) {
 //     });
 //   })
 // );
+// router.get(
+//   "/filter",
+//   catchAsync(async (req, res) => {
+//     const { startDate, endDate, heatType, sectionSize, grade } = req.query;
+//     let filter = {};
+//     let heats = [];
+//     let count = 0;
+//     let numberOfDays = 0;
+//     let avgHeatsPerDay = 0;
+//     let sectionCounts = {};
+
+//     // Fetch unique grades to populate the filter dropdown
+//     const uniqueGrades = await Billets.distinct("gradeName");
+
+//     // Only execute the query if at least one filter parameter is provided
+//     if (startDate || endDate || heatType || sectionSize || grade) {
+//       // Date Range Filter
+//       if (startDate && endDate) {
+//         const start = new Date(startDate);
+//         const end = new Date(endDate);
+//         end.setHours(23, 59, 59, 999); // Ensure the end date is inclusive
+
+//         filter.createdAt = {
+//           $gte: start,
+//           $lte: end,
+//         };
+
+//         const timeDifference = end.getTime() - start.getTime();
+//         numberOfDays = Math.round(timeDifference / (1000 * 3600 * 24)) + 1;
+//       }
+
+//       // Heat Type Filter
+//       if (heatType === "open") {
+//         filter.ce = { $in: [null, ""] };
+//       } else if (heatType === "close") {
+//         filter.ce = { $nin: [null, ""] };
+//       }
+
+//       // Section Size Filter
+//       if (sectionSize && sectionSize !== "all") {
+//         filter.sectionSize = sectionSize;
+//       }
+
+//       // Grade Filter
+//       if (grade && grade !== "all") {
+//         filter.gradeName = grade;
+//       }
+
+//       // Execute query
+//       heats = await Billets.find(filter).sort({ createdAt: -1 });
+//       count = heats.length;
+//       console.log(count);
+
+//       // Calculate average heats per day
+//       if (numberOfDays > 0) {
+//         avgHeatsPerDay = (count / numberOfDays).toFixed(2);
+//       }
+
+//       // Calculate section-wise counts from the results
+//       sectionCounts = heats.reduce((acc, heat) => {
+//         const size = heat.sectionSize;
+//         acc[size] = (acc[size] || 0) + 1;
+//         return acc;
+//       }, {});
+//     }
+
+//     res.render("billets/filter", {
+//       heats,
+//       count,
+//       startDate: startDate || "",
+//       endDate: endDate || "",
+//       heatType: heatType || "all",
+//       sectionSize: sectionSize || "all",
+//       grade: grade || "all", // Pass selected grade to template
+//       uniqueGrades, // Pass all unique grades for the dropdown
+//       numberOfDays,
+//       avgHeatsPerDay,
+//       sectionCounts,
+//     });
+//   })
+// );
 router.get(
   "/filter",
   catchAsync(async (req, res) => {
@@ -100,8 +181,19 @@ router.get(
     let avgHeatsPerDay = 0;
     let sectionCounts = {};
 
-    // Fetch unique grades to populate the filter dropdown
-    const uniqueGrades = await Billets.distinct("gradeName");
+    // 1. Fetch all distinct grade names from the database
+    const allGrades = await Billets.distinct("gradeName");
+
+    // 2. Normalize the grades:
+    //    - Filter out any null or empty strings.
+    //    - Trim whitespace from each grade.
+    //    - Convert all grades to uppercase to ensure consistency.
+    const cleanedGrades = allGrades
+      .filter((g) => g && g.trim() !== "") // Handles null/empty values
+      .map((g) => g.trim().toUpperCase()); // Normalizes to uppercase
+
+    // 3. Create a truly unique list using a Set and convert it back to an array
+    const uniqueGrades = [...new Set(cleanedGrades)];
 
     // Only execute the query if at least one filter parameter is provided
     if (startDate || endDate || heatType || sectionSize || grade) {
@@ -134,13 +226,13 @@ router.get(
 
       // Grade Filter
       if (grade && grade !== "all") {
-        filter.gradeName = grade;
+        // Ensure the filter uses the same uppercase format
+        filter.gradeName = grade.toUpperCase();
       }
 
       // Execute query
       heats = await Billets.find(filter).sort({ createdAt: -1 });
       count = heats.length;
-      console.log(count);
 
       // Calculate average heats per day
       if (numberOfDays > 0) {
@@ -162,8 +254,8 @@ router.get(
       endDate: endDate || "",
       heatType: heatType || "all",
       sectionSize: sectionSize || "all",
-      grade: grade || "all", // Pass selected grade to template
-      uniqueGrades, // Pass all unique grades for the dropdown
+      grade: grade || "all",
+      uniqueGrades, // Pass the cleaned, unique list to the template
       numberOfDays,
       avgHeatsPerDay,
       sectionCounts,
