@@ -92,7 +92,7 @@ if (!fs.existsSync(outputDirectory)) {
 router.get(
   "/filter",
   catchAsync(async (req, res) => {
-    const { startDate, endDate, heatType, sectionSize } = req.query;
+    const { startDate, endDate, heatType, sectionSize, grade } = req.query;
     let filter = {};
     let heats = [];
     let count = 0;
@@ -100,8 +100,11 @@ router.get(
     let avgHeatsPerDay = 0;
     let sectionCounts = {};
 
-    // Only filter if at least one filter parameter is provided
-    if (startDate || endDate || heatType || sectionSize) {
+    // Fetch unique grades to populate the filter dropdown
+    const uniqueGrades = await Billets.distinct("gradeName");
+
+    // Only execute the query if at least one filter parameter is provided
+    if (startDate || endDate || heatType || sectionSize || grade) {
       // Date Range Filter
       if (startDate && endDate) {
         const start = new Date(startDate);
@@ -129,6 +132,11 @@ router.get(
         filter.sectionSize = sectionSize;
       }
 
+      // Grade Filter
+      if (grade && grade !== "all") {
+        filter.gradeName = grade;
+      }
+
       // Execute query
       heats = await Billets.find(filter).sort({ createdAt: -1 });
       count = heats.length;
@@ -152,10 +160,12 @@ router.get(
       startDate: startDate || "",
       endDate: endDate || "",
       heatType: heatType || "all",
-      sectionSize: sectionSize || "all", // Pass sectionSize to template
+      sectionSize: sectionSize || "all",
+      grade: grade || "all", // Pass selected grade to template
+      uniqueGrades, // Pass all unique grades for the dropdown
       numberOfDays,
       avgHeatsPerDay,
-      sectionCounts, // Pass section-wise counts
+      sectionCounts,
     });
   })
 );

@@ -4,12 +4,12 @@
 
     <!-- Filter Form -->
     <form action="/billets/filter" method="GET" class="mb-4">
-        <div class="row g-3">
-            <div class="col-md-3">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
                 <label for="startDate" class="form-label">Start Date</label>
                 <input type="date" id="startDate" name="startDate" value="<%= startDate || '' %>" class="form-control">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="endDate" class="form-label">End Date</label>
                 <input type="date" id="endDate" name="endDate" value="<%= endDate || '' %>" class="form-control">
             </div>
@@ -25,13 +25,22 @@
                 <label for="sectionSize" class="form-label">Section Size</label>
                 <select id="sectionSize" name="sectionSize" class="form-select">
                 <option value="all" <%= sectionSize === 'all' ? 'selected' : '' %>>All</option>
-                <option value="100x100" <%= sectionSize === '100x100' ? 'selected' : '' %>>100x100</option>
-                <option value="130x130" <%= sectionSize === '130x130' ? 'selected' : '' %>>130x130</option>
-                <option value="160x160" <%= sectionSize === '160x160' ? 'selected' : '' %>>160x160</option>
-                <option value="200x200" <%= sectionSize === '200x200' ? 'selected' : '' %>>200x200</option>
+                <option value="100X100" <%= sectionSize === '100X100' ? 'selected' : '' %>>100X100</option>
+                <option value="130X130" <%= sectionSize === '130X130' ? 'selected' : '' %>>130X130</option>
+                <option value="160X160" <%= sectionSize === '160X160' ? 'selected' : '' %>>160X160</option>
+                <option value="200X200" <%= sectionSize === '200X200' ? 'selected' : '' %>>200X200</option>
             </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-2">
+                <label for="grade" class="form-label">Grade</label>
+                <select id="grade" name="grade" class="form-select">
+                <option value="all" <%= grade === 'all' ? 'selected' : '' %>>All</option>
+                <% uniqueGrades.sort().forEach(g => { %>
+                    <option value="<%= g %>" <%= grade === g ? 'selected' : '' %>><%= g %></option>
+                <% }) %>
+            </select>
+            </div>
+            <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">Filter</button>
             </div>
         </div>
@@ -67,7 +76,7 @@
                         </p>
                         <% } %>
         </div>
-        <% } else if (startDate || endDate || heatType || sectionSize) { %>
+        <% } else if (startDate || endDate || heatType || sectionSize || grade) { %>
             <div class="alert alert-warning">
                 No heats found for the selected criteria.
             </div>
