@@ -1,84 +1,107 @@
-<% layout('layout/boilerplate') %>
+<%- layout('layout/boilerplate') %>
 
     <style>
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        /* Style for the transaction type badges - smaller */
+        
+        .transaction-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.8em;
+            text-transform: capitalize;
         }
         
-        .table th,
-        .table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+        .bg-inward {
+            background-color: #28a745;
         }
+        /* Green */
         
-        .table th {
-            background-color: #f2f2f2;
-        }
-        
-        .delete-btn {
+        .bg-outward {
             background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
         }
+        /* Red */
         
-        .delete-btn:hover {
-            background-color: #c82333;
+        .bg-initial {
+            background-color: #007bff;
+        }
+        /* Blue */
+        
+        .bg-default {
+            background-color: #6c757d;
+        }
+        /* Gray */
+        /* Vertically align all table cell content to the middle */
+        
+        .table td,
+        .table th {
+            vertical-align: middle;
         }
     </style>
 
     <h1>All Transactions</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Item Name</th>
-                <th>Transaction Type</th>
-                <th>Quantity</th>
-                <th>Stock Before</th>
-                <th>Stock After</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% for(let tx of transactions) { %>
-                <tr>
-                    <td>
-                        <%= new Date(tx.createdAt).toLocaleString('en-GB') %>
-                    </td>
-                    <td>
-                        <% if (tx.itemId) { %>
-                            <%= tx.itemId.itemName %>
-                                <% } else { %> Item Deleted
-                                    <% } %>
-                    </td>
-                    <td>
-                        <%= tx.type %>
-                    </td>
-                    <td>
-                        <%= tx.quantity %>
-                    </td>
-                    <td>
-                        <%= tx.stockBefore %>
-                    </td>
-                    <td>
-                        <%= tx.stockAfter %>
-                    </td>
-                    <td>
-                        <% if (tx.type !== 'initial') { %>
-                            <!-- This form is CRITICAL. It sends the delete request. -->
-                            <form method="POST" action="/items/transactions/<%= tx._id %>?_method=DELETE" style="display:inline;">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
-                            <% } %>
-                    </td>
+    <!-- Filter Form -->
+    <form action="/items/transactions" method="GET" class="mb-3">
+        <!-- Your filter inputs -->
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <!-- Center all header text -->
+                <tr class="text-center">
+                    <th>Date</th>
+                    <th>Item Name</th>
+                    <th>Transaction Type</th>
+                    <th>Quantity</th>
+                    <th>Stock Before</th>
+                    <th>Stock After</th>
+                    <th>Actions</th>
                 </tr>
-                <% } %>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <% for(let tx of transactions) { %>
+                    <!-- Apply text-center to the entire row -->
+                    <tr class="text-center">
+                        <td>
+                            <%= new Date(tx.createdAt).toLocaleString('en-GB') %>
+                        </td>
+                        <td>
+                            <% if (tx.itemId) { %>
+                                <%= tx.itemId.itemName %>
+                                    <% } else { %> <span class="text-danger">Item Deleted</span>
+                                        <% } %>
+                        </td>
+                        <td>
+                            <% 
+                            let badgeClass = 'bg-default';
+                            if (tx.type === 'inward') badgeClass = 'bg-inward';
+                            else if (tx.type === 'outward') badgeClass = 'bg-outward';
+                            else if (tx.type === 'initial') badgeClass = 'bg-initial';
+                        %>
+                                <span class="transaction-badge <%= badgeClass %>">
+                            <%= tx.type %>
+                        </span>
+                        </td>
+                        <td>
+                            <%= tx.quantity %>
+                        </td>
+                        <td>
+                            <%= tx.stockBefore %>
+                        </td>
+                        <td>
+                            <%= tx.stockAfter %>
+                        </td>
+                        <td>
+                            <% if (tx.type !== 'initial') { %>
+                                <form method="POST" action="/items/transactions/<%= tx._id %>?_method=DELETE" class="d-inline">
+                                    <button class="btn btn-danger btn-sm bi bi-trash"></button>
+                                </form>
+                                <% } %>
+                        </td>
+                    </tr>
+                    <% } %>
+            </tbody>
+        </table>
+    </div>
