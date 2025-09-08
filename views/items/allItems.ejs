@@ -146,6 +146,18 @@
             ...
         </div>
     </div>
+    <!-- Scroll Buttons -->
+    <!-- Floating Scroll Buttons -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
+        <button onclick="scrollToTop()" class="btn btn-outline-primary mb-2 rounded-circle shadow" title="Scroll to Top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+        <br>
+        <button onclick="scrollToBottom()" class="btn btn-outline-primary rounded-circle shadow" title="Scroll to Bottom">
+        <i class="bi bi-arrow-down"></i>
+    </button>
+    </div>
+    <div id="bottom"></div>
 
     <script>
         function filterTable() {
@@ -227,5 +239,19 @@
                     }
                 }
             }
+        }
+    </script>
+    <script>
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollToBottom() {
+            document.getElementById("bottom").scrollIntoView({
+                behavior: "smooth"
+            });
         }
     </script>

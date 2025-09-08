@@ -333,36 +333,6 @@ router.get(
     })
 );
 
-router.post(
-    "/",
-    upload.single("item[itemImage]"),
-    validateItem,
-    catchAsync(async(req, res) => {
-        const item = new Items(req.body.item);
-        if (req.file) {
-            const image = new Images({
-                contentType: req.file.mimetype,
-                data: fs.readFileSync(
-                    path.join(__dirname, "..", "views", "images", req.file.filename)
-                ),
-                name: req.file.originalname,
-            });
-            await image.save();
-            item.itemImage.push(image);
-            fs.unlinkSync(req.file.path);
-        }
-        await item.save();
-        const initialStock = item.itemQty || 0;
-        await new Transaction({
-            itemId: item._id,
-            type: "initial",
-            quantity: initialStock,
-            stockBefore: 0,
-            stockAfter: initialStock,
-        }).save();
-        res.redirect("/items");
-    })
-);
 // router.get(
 //     "/transactions",
 //     catchAsync(async(req, res) => {

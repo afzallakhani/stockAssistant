@@ -21,6 +21,7 @@ const ItemSchema = new mongoose.Schema({
         // Add the new 'life' field
         type: String,
         uppercase: true,
+        default: 0,
     },
     itemImage: [{
         type: Schema.Types.ObjectId,
