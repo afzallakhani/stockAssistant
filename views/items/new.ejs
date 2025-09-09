@@ -39,15 +39,15 @@
                 <div class="row">
                     <div class="col">
 
-                        <label for="category" class="form-label-sm">Item Category</label>
-                        <select class="form-select" name="item[itemCategoryName]" id="category" required>
+                        <label for="category" class="form-label">Item Category</label>
+                        <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>
                                 <option selected>Select Item Category</option>
-                                <% for(let item of itemCategories){%>
-            
-                                <option value="Item Category"><%= item.itemCategoryName %>
-                                </option>
-                                <%} %>
-                            </select>
+                        <option value="CCM REFRACTORIES">CCM REFRACTORIES</option>
+                        <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
+                        <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
+                        <option value="FURNACE REFRACTORIES">FURNACE REFRACTORIES</option>
+                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
+                    </select>
                         <!-- Button trigger modal -->
                         <button type="button" class="btn btn-sm btn-primary mt-2 mb-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
     Add New Category

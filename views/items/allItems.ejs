@@ -15,137 +15,55 @@
     <a class="btn btn-secondary mt-3 mb-2" href="/items/outwards">Item Outwards</a>
     <a class="btn btn-warning mt-3 mb-2" href="/items/transactions">Item Transactions</a>
     <a class="btn btn-info mt-3 mb-2" href="/items/insights">Get Insights</a>
-    <div class="tabel-responsive">
-        <table class="table table-hover table align-middle text-center" id="dataTable">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Image</th>
-                    <th scope="col">Item Name</th>
-                    <th scope="col">Item Category</th>
-                    <th scope="col">Item Description</th>
-                    <th scope="col">Item Quantity</th>
-                    <th scope="col">Daily Req.</th>
-                    <th scope="col">Unit</th>
-                    <th scope="col">Actions</th>
-                </tr>
-            </thead>
 
-            <tbody>
-                <tr>
-                    <form action="/items" method="POST" novalidate class="validated-form form-inline" enctype="multipart/form-data">
-
-                        <td class="font-weight-bold form-control-sm text-center">
-                            New
-                        </td>
-                        <td>
-                            <input type="date" class="form-control" name="item[createdAt]" id="itemDate" placeholder="DD/MM/YYY" aria-label="Date" required>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm text-center img-fluid" type="file" id="image" name="item[itemImage]" required>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="text" id="name" name="item[itemName]" required>
-                        </td>
-                        <td>
-                            <select class="form-select form-select-sm" name="item[itemCategoryName]" id="category" required>
-                                <option selected>Category</option>
-                                <option value="CCM REFACTORIES">CCM REFACTORIES</option>
-                                <option value="CCM REFACTORIES">CCM CONSUMABLES</option>
-                                <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
-                                <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
-                                <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="text" id="description" name="item[itemDescription]" required>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="text" id="qty" name="item[itemQty]" required>
-                        </td>
-                        <td>
-                            <!-- Add the input field for Life -->
-                            <input class="form-control" type="text" id="life" name="item[life]" placeholder="e.g, 1 HEATS, 5 HEATS, 1 DAY,">
-                        </td>
-
-                        <td>
-                            <select class="form-select form-select-sm" name="item[itemUnit]" id="unit" required>
-                                <option selected>Qty Unit</option>
-                                <option value="NOS">NOS</option>
-                                <option value="PCS">PCS</option>
-                                <option value="BOX">BOX</option>
-                                <option value="KGS">KGS</option>
-                                <option value="MTS">MTS</option>
-                                <option value="BAGS">BAGS</option>
-                                                        <option value="SETS">SETS</option>
-
-                            </select>
-                        </td>
-                        <td>
-                            <button class="btn btn-success btn-sm my-2 form-control form-control-sm">Save</button>
-                        </td>
-
-                    </form>
-
-                </tr>
-
-                <% items.forEach(function(item, index){%>
-
-                    <tr>
-                        <td>
-                            <%= index + 1 %>
-                        </td>
-                        <td>
-                            <%= item.formattedItemDate %>
-                        </td>
-                        <td class="p-0">
-                            <% for(let image of item.itemImage) {%>
-                                <img src="data:image/<%=image.contentType%>;base64,
-                            <%=image.data.toString('base64')%>" class="img-fluid" style="height: 1000; width: 100px;">
-                                <% }%>
-                        </td>
-                        <td id="itemNameFilter">
-                            <%= item.itemName %>
-                        </td>
-                        <td id="itemCategoryFilter">
-                            <%= item.itemCategoryName %>
-                        </td>
-                        <td>
-                            <%= item.itemDescription %>
-                        </td>
-                        <td>
-                            <%= item.itemQty %>
-                        </td>
-                        <td>
-                            <%= item.life %>
-                                <%= item.itemUnit %>
-                        </td>
-                        <td>
-                            <%= item.itemUnit %>
-                        </td>
-                        <td>
-                            <a href="/items/<%= item._id %>/edit " class="btn btn-warning mb-1 bi bi-pencil-square"></a>
-                            <!-- <a href="" class="d-inline" method="POST" onclick="return confirm('Are you sure you want to edit this item?')" class="btn  btn-danger mb-1 ">Delete</a> -->
-                            <form action="/items/<%= item._id %>?_method=DELETE" method="post">
-                                <button type="submit" onclick="return confirm('Are you sure you want to edit this item?')" class="btn mb-1 bi bi-trash btn-danger"></button>
-                            </form>
-                        </td>
-                    </tr>
-                    <%}) %>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- <button onclick="filterTable()">Filter</button> -->
-    <div class="btn-group">
-        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Filter
-        </button>
-        <div class="dropdown-menu">
-            ...
+    <div class="container mt-4">
+        <h1 class="mb-4 text-center">All Inventory Items</h1>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <% items.forEach((item, index) => { %>
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <% if (item.itemImage && item.itemImage.length > 0) { %>
+                            <img src="data:image/<%= item.itemImage[0].contentType %>;base64,<%= item.itemImage[0].data.toString('base64') %>" class="card-img-top" alt="<%= item.itemName %>" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+                            <% } else { %>
+                                <img src="https://via.placeholder.com/400x300.png?text=No+Image" class="card-img-top" alt="Placeholder Image" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+                                <% } %>
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <%= item.itemName %>
+                                        </h5>
+                                        <h6 class="card-subtitle mb-2 text-muted">
+                                            <%= item.itemCategoryName %>
+                                        </h6>
+                                        <p class="card-text">
+                                            <%= item.itemDescription %>
+                                        </p>
+                                    </div>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item"><strong>Quantity:</strong>
+                                            <%= item.itemQty %>
+                                                <%= item.itemUnit %>
+                                        </li>
+                                        <li class="list-group-item"><strong>Daily Requirement:</strong>
+                                            <%= item.life %>
+                                                <%= item.itemUnit %>
+                                        </li>
+                                        <li class="list-group-item"><strong>Date Added:</strong>
+                                            <%= item.formattedItemDate %>
+                                        </li>
+                                    </ul>
+                                    <div class="card-body">
+                                        <a href="/items/<%= item._id %>/edit" class="btn btn-info btn-sm">Edit</a>
+                                        <form action="/items/<%= item._id %>?_method=DELETE" method="POST" class="d-inline">
+                                            <button class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
+                                    </div>
+                    </div>
+                </div>
+                <% }) %>
         </div>
     </div>
+
+
     <!-- Scroll Buttons -->
     <!-- Floating Scroll Buttons -->
     <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
