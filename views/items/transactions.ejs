@@ -1,107 +1,84 @@
 <%- layout('layout/boilerplate') %>
 
-    <style>
-        /* Style for the transaction type badges - smaller */
-        
-        .transaction-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            color: #fff;
-            font-weight: bold;
-            font-size: 0.8em;
-            text-transform: capitalize;
-        }
-        
-        .bg-inward {
-            background-color: #28a745;
-        }
-        /* Green */
-        
-        .bg-outward {
-            background-color: #dc3545;
-        }
-        /* Red */
-        
-        .bg-initial {
-            background-color: #007bff;
-        }
-        /* Blue */
-        
-        .bg-default {
-            background-color: #6c757d;
-        }
-        /* Gray */
-        /* Vertically align all table cell content to the middle */
-        
-        .table td,
-        .table th {
-            vertical-align: middle;
-        }
-    </style>
-
     <h1>All Transactions</h1>
 
-    <!-- Filter Form -->
-    <form action="/items/transactions" method="GET" class="mb-3">
-        <!-- Your filter inputs -->
-    </form>
+    <!-- Your filter form can remain here -->
+    <!-- Example: -->
+    <!-- 
+<form action="/items/transactions" method="GET" class="row g-3 mb-4 align-items-center">
+    ... your filter inputs for item, start date, and end date ...
+</form>
+-->
 
     <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-                <!-- Center all header text -->
-                <tr class="text-center">
-                    <th>Date</th>
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 15%;">Time</th>
                     <th>Item Name</th>
-                    <th>Transaction Type</th>
+                    <th>Type</th>
                     <th>Quantity</th>
                     <th>Stock Before</th>
                     <th>Stock After</th>
-                    <th>Actions</th>
+                    <th style="width: 10%;">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <% for(let tx of transactions) { %>
-                    <!-- Apply text-center to the entire row -->
-                    <tr class="text-center">
-                        <td>
-                            <%= new Date(tx.createdAt).toLocaleString('en-GB') %>
-                        </td>
-                        <td>
-                            <% if (tx.itemId) { %>
-                                <%= tx.itemId.itemName %>
-                                    <% } else { %> <span class="text-danger">Item Deleted</span>
+                <% if (sortedDates.length > 0) { %>
+                    <% sortedDates.forEach(dateKey => { %>
+                        <!-- Date Group Header -->
+                        <tr class="table-light">
+                            <td colspan="7" class="fw-bold text-center">
+                                <%= new Date(dateKey).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+                            </td>
+                        </tr>
+
+                        <!-- Transactions for this Date -->
+                        <% groupedTransactions[dateKey].forEach(tx => { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(tx.createdAt).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) %>
+                                </td>
+                                <td>
+                                    <% if (tx.itemId) { %>
+                                        <%= tx.itemId.itemName %>
+                                            <% } else { %>
+                                                <span class="text-muted">Item Deleted</span>
+                                                <% } %>
+                                </td>
+                                <td>
+                                    <% 
+                                let badgeClass = 'bg-secondary';
+                                if (tx.type === 'inward') badgeClass = 'bg-success';
+                                else if (tx.type === 'outward') badgeClass = 'bg-danger';
+                                else if (tx.type === 'initial') badgeClass = 'bg-primary';
+                                %>
+                                        <span class="badge <%= badgeClass %> text-capitalize"><%= tx.type %></span>
+                                </td>
+                                <td>
+                                    <%= tx.quantity %>
+                                </td>
+                                <td>
+                                    <%= tx.stockBefore %>
+                                </td>
+                                <td>
+                                    <%= tx.stockAfter %>
+                                </td>
+                                <td>
+                                    <% if (tx.type !== 'initial') { %>
+                                        <form action="/items/transactions/<%= tx._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Are you sure you want to reverse this transaction? This action cannot be undone.');">
+                                            <button class="btn btn-sm btn-outline-danger">Reverse</button>
+                                        </form>
                                         <% } %>
-                        </td>
-                        <td>
-                            <% 
-                            let badgeClass = 'bg-default';
-                            if (tx.type === 'inward') badgeClass = 'bg-inward';
-                            else if (tx.type === 'outward') badgeClass = 'bg-outward';
-                            else if (tx.type === 'initial') badgeClass = 'bg-initial';
-                        %>
-                                <span class="transaction-badge <%= badgeClass %>">
-                            <%= tx.type %>
-                        </span>
-                        </td>
-                        <td>
-                            <%= tx.quantity %>
-                        </td>
-                        <td>
-                            <%= tx.stockBefore %>
-                        </td>
-                        <td>
-                            <%= tx.stockAfter %>
-                        </td>
-                        <td>
-                            <% if (tx.type !== 'initial') { %>
-                                <form method="POST" action="/items/transactions/<%= tx._id %>?_method=DELETE" class="d-inline">
-                                    <button class="btn btn-danger btn-sm bi bi-trash"></button>
-                                </form>
-                                <% } %>
-                        </td>
-                    </tr>
-                    <% } %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="7" class="text-center p-4">No transactions found for the selected criteria.</td>
+                                        </tr>
+                                        <% } %>
             </tbody>
         </table>
     </div>
