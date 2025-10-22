@@ -18,6 +18,7 @@ const ExpressError = require("./ExpressError"); // Import ExpressError
 const itemSchema = Joi.object({
     item: Joi.object({
         itemName: Joi.string().required(),
+        itemSupplier: Joi.string().required(),
         itemUnit: Joi.string().required(),
         life: Joi.string().allow(""),
         itemQty: Joi.number().required().min(0),

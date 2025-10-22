@@ -1,0 +1,44 @@
+<% layout('layout/boilerplate') %>
+    <div class="row">
+        <h1 class="text-center">Add New Supplier</h1>
+        <div class="col-6 offset-3">
+
+            <form action="/supplier" novalidate method="POST" enctype="multipart/form-data">
+                <label class="form-label mt-1" for="supplierName">Enter Supplier Name</label>
+                <input class="form-control" type="text" id="supplierName" name="supplier[supplierName]">
+                <label class="form-label mt-1" for="supplierCity">Enter Supplier City</label>
+                <input class="form-control" type="text" id="supplierCity" name="supplier[supplierCity]">
+                <label class="form-label mt-1" for="supplierState">Enter Supplier State</label>
+                <input class="form-control" type="text" id="supplierState" name="supplier[supplierState]">
+                <label class="form-label mt-1" for="supplierItemCategory">Enter Supplier Item Category</label>
+                <select class="form-select form-select-lg" name="supplier[supplierItemCategory]" id="supplierItemCategory" required>
+                            <option disabled selected>Select Item Category</option>
+                            <% for(let category of itemCategories){%>
+
+            <option>
+                <%= category.itemCategoryName %>
+
+            </option>
+
+            <%} %>
+                                <!-- <option selected>Select Item Category</option>
+                        <option value="CCM REFRACTORIES">CCM REFRACTORIES</option>
+                        <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
+                        <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
+                        <option value="FURNACE REFRACTORIES">FURNACE REFRACTORIES</option>
+                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option> -->
+                    </select> <label class="form-label mt-1" for="supplierEmail">Enter Supplier Email</label>
+                <input class="form-control" type="text" id="supplierEmail" name="supplier[supplierEmail]">
+                <label class="form-label mt-1" for="supplierPhone">Enter Supplier Phone Number</label>
+                <input class="form-control" type="text" id="supplierPhone" name="supplier[supplierPhone]">
+                <label class="form-label mt-1" for="supplierGst">Enter Supplier GST Number</label>
+                <input class="form-control" type="text" id="supplierGst" name="supplier[supplierGst]">
+
+
+
+
+                <button type="submit" class="btn btn-primary mt-3">Add supplier</button>
+            </form>
+        </div>
+    </div>
+    <div class="container">

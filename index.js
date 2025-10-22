@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 // const Items = require("./models/elafStock");
 const item = require("./routes/item");
 const party = require("./routes/party");
+const supplier = require("./routes/supplier");
 const docx = require("docx");
 
 const billets = require("./routes/billet");
@@ -22,18 +23,18 @@ const ExpressError = require("./utils/ExpressError");
 // const unlinkAsync = promisify(fs.unlink);
 
 mongoose.connect("mongodb://localhost:27017/stockAssistant", {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
 
-  useFindAndModify: false,
+    useFindAndModify: false,
 });
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
-  console.log("Database Connected");
-  console.log("MongoDB Version:", mongoose.version);
+    console.log("Database Connected");
+    console.log("MongoDB Version:", mongoose.version);
 });
 
 const app = express();
@@ -47,26 +48,27 @@ app.use(methodOverride("_method"));
 // app.use(bodyParser.json());
 app.use("/items", item);
 app.use("/partymaster", party);
+app.use("/supplier", supplier);
 app.use("/billets", billets);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-  res.render("home");
+    res.render("home");
 });
 
 // app.use((req, res) => {
 //     res.status(404).send("NOT FOUND!");
 // });
 app.all("*", (req, res, next) => {
-  next(new ExpressError("Page Not Found!", 404));
+    next(new ExpressError("Page Not Found!", 404));
 });
 
 app.use((err, req, res, next) => {
-  const { statusCode = 500, message = "Something Went Wrong!" } = err;
-  if (!err.message) err.message = "Oh No! Something Went Wrong!";
-  res.status(statusCode).render("error", { err });
+    const { statusCode = 500, message = "Something Went Wrong!" } = err;
+    if (!err.message) err.message = "Oh No! Something Went Wrong!";
+    res.status(statusCode).render("error", { err });
 });
 
-app.listen(3000, "0.0.0.0", () => {
-  console.log("App Running On Port 3000");
+app.listen(3001, "0.0.0.0", () => {
+    console.log("App Running On Port 3001 TEST");
 });

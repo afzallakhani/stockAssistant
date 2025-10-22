@@ -36,12 +36,21 @@
                 <div class="mb-2">
                     <label for="category" class="form-label">Item Category</label>
                     <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>
-                        <option selected><%= item.itemCategoryName %> </option>
-                        <option value="CCM REFRACTORIES">CCM REFRACTORIES</option>
+                        <option selected disabled><%= item.itemCategoryName %> </option>
+                        <!-- <option disabled selected>Select Item Category</option> -->
+                            <% for(let category of itemCategories){%>
+
+            <option>
+                <%= category.itemCategoryName %>
+
+            </option>
+
+            <%} %>
+                        <!-- <option value="CCM REFRACTORIES">CCM REFRACTORIES</option>
                         <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
                         <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
                         <option value="FURNACE REFRACTORIES">FURNACE REFRACTORIES</option>
-                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
+                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option> -->
                     </select>
                 </div>
                 <% for(image of item.itemImage){%>
