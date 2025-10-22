@@ -1,0 +1,87 @@
+<% layout('layout/boilerplate') %>
+    <div class="container-fluid align-items-center justify-content-center mb-1">
+        <h1 class="font-weight-bold mt-1">supplier Master</h1>
+    </div>
+    <form action="/suppliermaster/search" method="get">
+        <input class="form-control" type="search" id="keyWord" name="supplier[supplierName]" placeholder="Search supplier/Item" class="mt-1">
+
+
+    </form>
+    <a class="btn btn-secondary mt-2 mb-2" href="/supplier/new">Add New supplier</a>
+    <div class="table-responsive">
+        <table class="table table-hover table align-middle text-center" id="dataTable">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Phone</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Gst</th>
+
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% suppliers.forEach(function(supplier, index){%>
+                    <tr>
+                        <td>
+                            <%= index + 1 %>
+                        </td>
+                        <td>
+                            <%= supplier.supplierName %>
+                        </td>
+                        <td>
+                            <%= supplier.supplierItemCategory %>
+                        </td>
+                        <td>
+                            <%= supplier.supplierCity %>,
+                                <%= supplier.supplierState %>
+                        </td>
+                        <td>
+                            <%= supplier.supplierPhone %>
+                        </td>
+                        <td>
+                            <%= supplier.supplierEmail %>
+                        </td>
+                        <td>
+                            <%= supplier.supplierGst %>
+                        </td>
+
+                        <td>
+                            <form action="/supplier/<%= supplier._id %>?_method=DELETE" method="post">
+                                <button type="submit" onclick="return confirm('Are you sure you want to delete this item?')" class="btn btn-danger btn-sm d-inline mb-1 bi bi-trash"></button>
+                                <a href="/supplier/<%= supplier._id %>/edit" class="btn btn-info btn-sm text-light mb-1 bi bi-pencil-square"></a>
+                            </form>
+                        </td>
+                    </tr>
+                    <%}) %>
+            </tbody>
+        </table>
+    </div>
+    <script defer>
+        // Function to handle the "Insert" key press
+        function handleKeyPress(event) {
+            // Check if the pressed key is the "Insert" key (key code 45)
+            if (event.keyCode === 45) {
+                // Call the function to redirect to the specified route
+                redirectToSpecifiedRoute();
+            }
+        }
+
+        // Attach the event listener to the document
+        document.addEventListener('keydown', handleKeyPress);
+
+        // Function to redirect to the specified route
+        function redirectToSpecifiedRoute() {
+            // Get the values from the input fields if needed
+
+            // Construct the URL for the specified route, including any parameters
+            var specifiedRoute = "/supplier/new"
+
+
+            // Redirect to the specified route
+            window.location.href = specifiedRoute;
+        }
+    </script>
