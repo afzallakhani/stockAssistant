@@ -53,6 +53,17 @@
                         <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option> -->
                     </select>
                 </div>
+                <div class="mb-3">
+                    <label for="supplier" class="form-label">Item Supplier</label>
+                    <select class="form-select form-select-lg" name="item[itemSupplier]" id="supplier" required>
+                        <option selected disabled><%= item.itemSupplier %> </option>
+    <% itemSuppliers.forEach(supplier => { %>
+      <option value="<%= supplier.supplierName %>">
+        <%= supplier.supplierName %> (<%= supplier.supplierCity %>)
+      </option>
+    <% }) %>
+  </select>
+                </div>
                 <% for(image of item.itemImage){%>
                     <label class="form-label" for="image"><b>Current Image Name:- <%= image.name %></b></label>
                     <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]">

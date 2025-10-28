@@ -13,8 +13,7 @@
 
                 <label class="form-label" for="description">Item Description</label>
                 <input class="form-control" type="text" id="description" name="item[itemDescription]" required>
-                <label class="form-label" for="supplier">Item Supplier</label>
-                <input class="form-control" type="text" id="supplier" name="item[itemSupplier]" required>
+
 
                 <!-- <label class="form-label" for="unit">Item Quantity Unit</label>
                 <input class="form-control" type="text" id="unit" name="item[itemUnit]" required> -->
@@ -52,17 +51,25 @@
             </option>
 
             <%} %>
-                                <!-- <option selected>Select Item Category</option>
-                        <option value="CCM REFRACTORIES">CCM REFRACTORIES</option>
-                        <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
-                        <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
-                        <option value="FURNACE REFRACTORIES">FURNACE REFRACTORIES</option>
-                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option> -->
                     </select>
                         <!-- Button trigger modal -->
                         <button type="button" class="btn btn-sm btn-primary mt-2 mb-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
     Add New Category
   </button>
+                        <div class="mb-3">
+                            <label for="supplier" class="form-label">Item Supplier</label>
+                            <select class="form-select form-select-lg" name="item[itemSupplier]" id="supplier" required>
+    <option disabled selected>Select Item Supplier</option>
+    <% itemSuppliers.forEach(supplier => { %>
+      <option value="<%= supplier.supplierName %>">
+        <%= supplier.supplierName %> (<%= supplier.supplierCity %>)
+      </option>
+    <% }) %>
+  </select>
+                            <a class="btn btn-secondary mt-2" target="_blank" href="/supplier/new">+ Add New Supplier</a>
+                        </div>
+
+
 
                         <!-- Modal -->
                         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
