@@ -57,7 +57,9 @@ router.get(
   "/new",
   catchAsync(async (req, res) => {
     const itemCategories = await ItemCategories.find({});
-    res.render("items/new", { itemCategories });
+    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+    console.log(itemSuppliers);
+    res.render("items/new", { itemCategories, itemSuppliers });
   })
 );
 // router.get(
@@ -90,23 +92,40 @@ router.get(
 );
 
 // searched items display
+// router.get("/search", async (req, res) => {
+//   const queryString = req.query.item;
+//   const query = queryString.itemName;
+
+//   // for (let query of queryString) {
+//   //     //     console.log(typeof queryString);
+//   //     console.log(query.itemName);
+//   // }
+
+//   const item = await Items.find({
+//     $or: [
+//       { itemName: { $regex: query, $options: "i" } },
+//       { itemCategoryName: { $regex: query, $options: "i" } },
+//     ],
+//   }).populate("itemImage");
+
+//   res.render("items/search", { item });
+// });
 router.get("/search", async (req, res) => {
-  const queryString = req.query.item;
-  const query = queryString.itemName;
+  const query =
+    req.query && req.query.item && req.query.item.itemName
+      ? req.query.item.itemName.trim()
+      : "";
 
-  // for (let query of queryString) {
-  //     //     console.log(typeof queryString);
-  //     console.log(query.itemName);
-  // }
-
-  const item = await Items.find({
+  const items = await Items.find({
     $or: [
       { itemName: { $regex: query, $options: "i" } },
       { itemCategoryName: { $regex: query, $options: "i" } },
+      { itemSupplier: { $regex: query, $options: "i" } },
+      { itemDescription: { $regex: query, $options: "i" } },
     ],
   }).populate("itemImage");
 
-  res.render("items/search", { item });
+  res.render("items/search", { items });
 });
 
 // add new item to database
@@ -436,7 +455,8 @@ router.get(
   catchAsync(async (req, res, next) => {
     const item = await Items.findById(req.params.id).populate("itemImage");
     const itemCategories = await ItemCategories.find({});
-    res.render("items/edit", { item, itemCategories });
+    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+    res.render("items/edit", { item, itemCategories, itemSuppliers });
     // next(e);
   })
 );
@@ -518,5 +538,30 @@ router.delete(
     res.redirect("/items");
   })
 );
+
+// Add this route below other routes in items.js
+
+router.get("/suggestions", async (req, res) => {
+  try {
+    const query = req.query.q || "";
+    if (!query.trim()) return res.json([]);
+
+    const items = await Items.find({
+      $or: [
+        { itemName: { $regex: query, $options: "i" } },
+        { itemCategoryName: { $regex: query, $options: "i" } },
+        { itemSupplier: { $regex: query, $options: "i" } },
+        { itemDescription: { $regex: query, $options: "i" } },
+      ],
+    })
+      .limit(8)
+      .select("itemName itemCategoryName");
+
+    res.json(items);
+  } catch (err) {
+    console.error("Error fetching suggestions:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 module.exports = router;
