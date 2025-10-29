@@ -1,0 +1,32 @@
+<% layout('layout/boilerplate') %>
+
+
+    <h2 class="text-center mb-4">Lend Items to Outsiders</h2>
+    <form action="/items/lend" method="POST">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Available Qty</th>
+                    <th>Lend Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% items.forEach(item => { %>
+                    <tr>
+                        <td>
+                            <%= item.itemName %>
+                        </td>
+                        <td>
+                            <%= item.itemQty %>
+                                <%= item.itemUnit %>
+                        </td>
+                        <td>
+                            <input type="number" min="0" name="items[<%= item._id %>][lendQty]" class="form-control">
+                        </td>
+                    </tr>
+                    <% }) %>
+            </tbody>
+        </table>
+        <button class="btn btn-primary">Record Lending</button>
+    </form>

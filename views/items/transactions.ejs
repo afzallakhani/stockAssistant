@@ -47,13 +47,45 @@
                                                 <% } %>
                                 </td>
                                 <td>
-                                    <% 
-                                let badgeClass = 'bg-secondary';
-                                if (tx.type === 'inward') badgeClass = 'bg-success';
-                                else if (tx.type === 'outward') badgeClass = 'bg-danger';
-                                else if (tx.type === 'initial') badgeClass = 'bg-primary';
-                                %>
-                                        <span class="badge <%= badgeClass %> text-capitalize"><%= tx.type %></span>
+                                    <%
+    let badgeClass = 'bg-secondary';
+    let badgeLabel = tx.type.charAt(0).toUpperCase() + tx.type.slice(1); // Default: Capitalized type
+
+    if (tx.type === 'inward') {
+        badgeClass = 'bg-success';
+        badgeLabel = 'Inward';
+    } else if (tx.type === 'outward') {
+        badgeClass = 'bg-danger';
+        badgeLabel = 'Outward';
+    } else if (tx.type === 'initial') {
+        badgeClass = 'bg-primary';
+        badgeLabel = 'Initial Stock';
+    } else if (tx.type === 'lend') {
+        badgeClass = 'bg-info text-dark'; // 🟦 Light blue
+        badgeLabel = 'Lent Out';
+    } else if (tx.type === 'return') {
+        badgeClass = 'bg-warning text-dark'; // 🟨 Yellow
+        badgeLabel = 'Returned';
+    }
+%>
+                                        <span class="badge <%= badgeClass %> px-3 py-2 rounded-pill">
+    <%= badgeLabel %>
+</span>
+                                        <% if (tx.type === 'lend') { %>
+                                            <% if (!tx.returned) { %>
+                                                <form action="/items/transactions/<%= tx._id %>/return" method="POST" class="d-inline">
+                                                    <input type="hidden" name="quantity" value="<%= tx.quantity %>">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success ms-2">
+        <i class="bi bi-arrow-counterclockwise"></i> Return
+      </button>
+                                                </form>
+                                                <% } else { %>
+                                                    <span class="badge bg-success ms-2">Returned</span>
+                                                    <% } %>
+                                                        <% } %>
+
+
+
                                 </td>
                                 <td>
                                     <%= tx.quantity %>
