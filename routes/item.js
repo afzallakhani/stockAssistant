@@ -29,14 +29,40 @@ const eventEmitter = new events.EventEmitter();
 
 let upload = multer({ storage: multerStorage });
 
+// router.get(
+//   "/",
+//   catchAsync(async (req, res) => {
+//     const items = await Items.find({}).populate("itemImage");
+//     const images = await Images.find({});
+//     const itemCategories = await ItemCategories.find({});
+//     const itemSuppliers = await Supplier.find({});
+//     console.log({
+//       items: items.length,
+//       itemCategories: itemCategories.length,
+//       itemSuppliers: itemSuppliers.length,
+//     });
+//     res.render("items/allItems", { items, itemCategories, itemSuppliers });
+//   })
+// );
 router.get(
   "/",
   catchAsync(async (req, res) => {
     const items = await Items.find({}).populate("itemImage");
     const images = await Images.find({});
-    console.log("hi");
+    const itemCategories = await ItemCategories.find({});
+    const itemSuppliers = await Supplier.find({});
 
-    res.render("items/allItems", { items });
+    console.log({
+      items: items.length,
+      itemCategories: itemCategories.length,
+      itemSuppliers: itemSuppliers.length,
+    });
+
+    res.render("items/allItems", {
+      items,
+      itemCategories: itemCategories || [],
+      itemSuppliers: itemSuppliers || [],
+    });
   })
 );
 

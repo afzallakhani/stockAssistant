@@ -1,62 +1,92 @@
 <% layout('layout/boilerplate') %>
 
+    <div class="container py-4">
 
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="fw-bold mb-2 text-primary">Refractories & Consumables</h1>
+            <p class="text-muted fs-5">Smart inventory management made simple</p>
+        </div>
 
-    <div class="container-fluid align-items-center justify-content-center">
-        <h1 class="font-weight-bold">Refractories And Consumables</h1>
-    </div>
-    <!-- 🔍 Live Search for Items -->
+        <!-- 🔍 Search & Filters -->
+        <div class="bg-white p-4 rounded-4 shadow-sm mb-5">
+            <div class="row g-3 align-items-center">
+                <!-- Search -->
+                <div class="col-lg-6">
+                    <form action="/items/search" method="get" id="itemSearchForm" class="position-relative">
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden">
+                            <span class="input-group-text bg-white border-0 ps-3">
+              <i class="bi bi-search text-muted fs-5"></i>
+            </span>
+                            <input type="search" id="itemSearch" name="item[itemName]" class="form-control border-0" placeholder="Search by item, category, supplier or description..." autocomplete="off" />
+                        </div>
+                    </form>
 
-    <div class="mb-4 position-relative">
-        <form action="/items/search" method="get" id="itemSearchForm" class="position-relative">
-            <input type="search" id="itemSearch" name="item[itemName]" class="form-control form-control-lg shadow-sm" placeholder="Search by item, category, supplier or description..." autocomplete="off" />
-            <!-- 🔽 Suggestions dropdown -->
-            <div id="suggestionsWrapper" class="position-absolute w-100 shadow-sm bg-white rounded-3" style="z-index: 1000; display: none; top: 100%; left: 0;">
-                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-                    <span class="fw-bold text-muted">Suggestions</span>
-                    <button type="button" id="closeSuggestions" class="btn btn-sm btn-light border">
-          <i class="bi bi-x-lg"></i>
-        </button>
+                    <!-- Suggestions dropdown -->
+                    <div id="suggestionsWrapper" class="position-absolute bg-white rounded-3 shadow mt-2 w-100" style="z-index: 1000; display: none;">
+                        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                            <span class="fw-semibold text-secondary">Suggestions</span>
+                            <button type="button" id="closeSuggestions" class="btn btn-sm btn-light border"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                        <ul id="suggestions" class="list-group list-group-flush mb-0"></ul>
+                    </div>
                 </div>
-                <ul id="suggestions" class="list-group list-group-flush mb-0"></ul>
+
+                <!-- Category Filter -->
+                <div class="col-md-3">
+                    <select id="filterCategory" class="form-select shadow-sm border-0">
+          <option value="">All Categories</option>
+          <% itemCategories.forEach(cat => { %>
+            <option value="<%= cat.itemCategoryName %>"><%= cat.itemCategoryName %></option>
+          <% }) %>
+        </select>
+                </div>
+
+                <!-- Supplier Filter -->
+                <div class="col-md-3">
+                    <select id="filterSupplier" class="form-select shadow-sm border-0">
+          <option value="">All Suppliers</option>
+          <% itemSuppliers.forEach(sup => { %>
+            <option value="<%= sup.supplierName %>"><%= sup.supplierName %></option>
+          <% }) %>
+        </select>
+                </div>
             </div>
-        </form>
-    </div>
+        </div>
 
+        <!-- Navigation Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+            <a class="btn btn-primary shadow-sm" href="/items/inwards"><i class="bi bi-box-arrow-in-down"></i> Inwards</a>
+            <a class="btn btn-secondary shadow-sm" href="/items/outwards"><i class="bi bi-box-arrow-up"></i> Outwards</a>
+            <a class="btn btn-warning shadow-sm text-white" href="/items/transactions"><i class="bi bi-clock-history"></i> Transactions</a>
+            <a class="btn btn-info shadow-sm text-white" href="/items/insights"><i class="bi bi-graph-up"></i> Insights</a>
+        </div>
 
-
-
-
-
-    <a class="btn btn-primary mt-3 mb-2" href="/items/inwards">Item Inwards</a>
-    <a class="btn btn-secondary mt-3 mb-2" href="/items/outwards">Item Outwards</a>
-    <a class="btn btn-warning mt-3 mb-2" href="/items/transactions">Item Transactions</a>
-    <a class="btn btn-info mt-3 mb-2" href="/items/insights">Get Insights</a>
-
-    <div class="container mt-4">
-        <h1 class="mb-4 text-center">All Inventory Items</h1>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            <% items.forEach((item, index) => { %>
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
+        <!-- 🗂️ Item Grid -->
+        <h3 class="text-center fw-bold mb-4 text-dark">All Inventory Items</h3>
+        <div id="itemsGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <% items.forEach(item => { %>
+                <div class="col item-card" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition">
                         <% if (item.itemImage && item.itemImage.length > 0) { %>
-                            <img src="data:image/<%= item.itemImage[0].contentType %>;base64,<%= item.itemImage[0].data.toString('base64') %>" class="card-img-top" alt="<%= item.itemName %>" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+                            <img src="data:image/<%= item.itemImage[0].contentType %>;base64,<%= item.itemImage[0].data.toString('base64') %>" alt="<%= item.itemName %>" class="card-img-top p-3 rounded" style="height: 230px; object-fit: contain; background-color: #f8f9fa;">
                             <% } else { %>
-                                <img src="https://via.placeholder.com/400x300.png?text=No+Image" class="card-img-top" alt="Placeholder Image" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+                                <img src="https://via.placeholder.com/400x300.png?text=No+Image" class="card-img-top p-3 rounded" style="height: 230px; object-fit: contain; background-color: #f8f9fa;">
                                 <% } %>
+
                                     <div class="card-body">
-                                        <h5 class="card-title">
+                                        <h5 class="card-title fw-semibold">
                                             <%= item.itemName %>
                                         </h5>
-                                        <h6 class="card-subtitle mb-2 text-muted">
+                                        <p class="card-subtitle text-muted mb-2">
                                             <%= item.itemCategoryName %>
-                                        </h6>
-
-                                        <p class="card-text">
+                                        </p>
+                                        <p class="card-text small text-secondary">
                                             <%= item.itemDescription %>
                                         </p>
                                     </div>
-                                    <ul class="list-group list-group-flush">
+
+                                    <ul class="list-group list-group-flush small">
                                         <li class="list-group-item"><strong>Supplier:</strong>
                                             <%= item.itemSupplier %>
                                         </li>
@@ -64,18 +94,19 @@
                                             <%= item.itemQty %>
                                                 <%= item.itemUnit %>
                                         </li>
-                                        <li class="list-group-item"><strong>Daily Requirement:</strong>
+                                        <li class="list-group-item"><strong>Daily Req.:</strong>
                                             <%= item.life %>
                                                 <%= item.itemUnit %>
                                         </li>
-                                        <li class="list-group-item"><strong>Date Added:</strong>
+                                        <li class="list-group-item"><strong>Added:</strong>
                                             <%= item.formattedItemDate %>
                                         </li>
                                     </ul>
-                                    <div class="card-body">
-                                        <a href="/items/<%= item._id %>/edit" class="btn btn-info btn-sm">Edit</a>
+
+                                    <div class="card-body text-end">
+                                        <a href="/items/<%= item._id %>/edit" class="btn btn-outline-info btn-sm me-1"><i class="bi bi-pencil-square"></i> Edit</a>
                                         <form action="/items/<%= item._id %>?_method=DELETE" method="POST" class="d-inline">
-                                            <button class="btn btn-danger btn-sm">Delete</button>
+                                            <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                                         </form>
                                     </div>
                     </div>
@@ -84,196 +115,38 @@
         </div>
     </div>
 
-
     <!-- Scroll Buttons -->
-    <!-- Floating Scroll Buttons -->
     <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
-        <button onclick="scrollToTop()" class="btn btn-outline-primary mb-2 rounded-circle shadow" title="Scroll to Top">
-        <i class="bi bi-arrow-up"></i>
-    </button>
-        <br>
-        <button onclick="scrollToBottom()" class="btn btn-outline-primary rounded-circle shadow" title="Scroll to Bottom">
-        <i class="bi bi-arrow-down"></i>
-    </button>
+        <button onclick="scrollToTop()" class="btn btn-outline-primary rounded-circle shadow mb-2"><i class="bi bi-arrow-up"></i></button><br>
+        <button onclick="scrollToBottom()" class="btn btn-outline-primary rounded-circle shadow"><i class="bi bi-arrow-down"></i></button>
     </div>
     <div id="bottom"></div>
 
-    <script>
-        function filterTable() {
-            // Get the value of the filter inputs
-            var itemNameFilter = document.getElementById("itemNameFilter").value.toUpperCase();
-            var itemCategoryFilter = document.getElementById("itemCategoryFilter").value.toUpperCase();
-
-            // Get the table rows
-            var rows = document.getElementById("dataTable").getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-
-            // Loop through the rows and hide those that do not match the filter
-            for (var i = 0; i < rows.length; i++) {
-                var itemName = rows[i].getElementsByTagName("td")[0].innerHTML.toUpperCase();
-                var itemCategory = rows[i].getElementsByTagName("td")[5].innerHTML.toUpperCase();
-
-                if (itemName.indexOf(itemNameFilter) > -1 && itemCategory.indexOf(itemCategoryFilter) > -1) {
-                    rows[i].style.display = "";
-                } else {
-                    rows[i].style.display = "none";
-                }
-            }
-        }
-    </script>
-    <script defer>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Get today's date in the format yyyy-mm-dd
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById("itemDate").value = today;
-
-
-
-
-
-            document.getElementById("itemDate").addEventListener("change", updateDateFromInput);
-            document.addEventListener("keydown", handleKeyPress);
-        });
-
-        function decreaseDate(dateInputId) {
-            updateDate(dateInputId, -1);
-        }
-
-        function increaseDate(dateInputId) {
-            updateDate(dateInputId, 1);
-        }
-
-        function updateDate(dateInputId, deltaDays) {
-            const dateInput = document.getElementById(dateInputId);
-            const currentDate = new Date(dateInput.value);
-            currentDate.setDate(currentDate.getDate() + deltaDays);
-            dateInput.value = currentDate.toISOString().split('T')[0];
-        }
-
-        function updateDateFromInput() {
-            const itemDate = document.getElementById("itemDate");
-
-            const enteredDate = new Date(itemDate.value);
-            if (!isNaN(enteredDate.getTime())) {
-                // Valid date entered, update the input value
-                itemDate.value = enteredDate.toISOString().split('T')[0];
-            } else {
-                // Invalid date entered, revert to the previous value
-                const currentDate = new Date();
-                itemDate.value = currentDate.toISOString().split('T')[0];
-            }
-
-
-        }
-
-        function handleKeyPress(event) {
-            const focusedElement = document.activeElement;
-
-            // Check if the key pressed is the up or down arrow
-            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-                if (focusedElement.id === "itemDate") {
-                    if (event.key === "ArrowUp") {
-                        increaseDate("itemDate");
-                    } else if (event.key === "ArrowDown") {
-                        decreaseDate("itemDate");
-                    }
-                }
-            }
-        }
-    </script>
-    <script>
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        function scrollToBottom() {
-            document.getElementById("bottom").scrollIntoView({
-                behavior: "smooth"
-            });
-        }
-    </script>
-
-    <!-- <script>
-        const searchInput = document.getElementById("itemSearch");
-        const suggestionsBox = document.getElementById("suggestions");
-
-        searchInput.addEventListener("input", function() {
-            const query = this.value.trim();
-            if (query.length < 1) {
-                suggestionsBox.style.display = "none";
-                return;
-            }
-
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", `/items/suggestions?q=${encodeURIComponent(query)}`, true);
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    const suggestions = JSON.parse(xhr.responseText);
-                    displaySuggestions(suggestions, query);
-                }
-            };
-            xhr.send();
-        });
-
-        function displaySuggestions(suggestions, query) {
-            suggestionsBox.innerHTML = "";
-            if (!suggestions.length) {
-                suggestionsBox.style.display = "none";
-                return;
-            }
-
-            suggestions.forEach((item) => {
-                const li = document.createElement("li");
-                li.className = "list-group-item list-group-item-action";
-
-                const regex = new RegExp(`(${query})`, "ig");
-                const highlightedName = item.itemName.replace(
-                    regex,
-                    "<strong>$1</strong>"
-                );
-
-                li.innerHTML = `${highlightedName} <small class="text-muted d-block">${item.itemCategoryName || ""}</small>`;
-
-                li.addEventListener("click", function() {
-                    searchInput.value = item.itemName;
-                    suggestionsBox.style.display = "none";
-                    document.getElementById("itemSearchForm").submit();
-                });
-
-                suggestionsBox.appendChild(li);
-            });
-
-            suggestionsBox.style.display = "block";
-        }
-
-        // Hide dropdown when clicking outside
-        document.addEventListener("click", (e) => {
-            if (!e.target.closest("#suggestions") && e.target !== searchInput) {
-                suggestionsBox.style.display = "none";
-            }
-        });
-    </script> -->
+    <!-- Scripts -->
     <script>
         const searchInput = document.getElementById("itemSearch");
         const suggestionsBox = document.getElementById("suggestions");
         const suggestionsWrapper = document.getElementById("suggestionsWrapper");
         const closeBtn = document.getElementById("closeSuggestions");
+        const filterCategory = document.getElementById("filterCategory");
+        const filterSupplier = document.getElementById("filterSupplier");
+        const itemCards = document.querySelectorAll(".item-card");
 
-        searchInput.addEventListener("input", function() {
-            const query = this.value.trim();
+        // 🔍 Live Search Suggestions
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.trim();
             if (query.length < 1) {
                 suggestionsWrapper.style.display = "none";
+                filterItems();
                 return;
             }
 
             fetch(`/items/suggestions?q=${encodeURIComponent(query)}`)
-                .then((res) => res.json())
-                .then((suggestions) => {
-                    displaySuggestions(suggestions, query);
-                })
-                .catch((err) => console.error("Error fetching suggestions:", err));
+                .then(res => res.json())
+                .then(suggestions => displaySuggestions(suggestions, query))
+                .catch(console.error);
+
+            filterItems();
         });
 
         function displaySuggestions(suggestions, query) {
@@ -285,60 +158,78 @@
             }
 
             const regex = new RegExp(`(${query})`, "ig");
-            suggestions.forEach((item) => {
+            suggestions.forEach(item => {
                 const li = document.createElement("li");
                 li.className = "list-group-item list-group-item-action";
-
-                const highlighted = item.itemName.replace(regex, "<strong>$1</strong>");
+                const highlighted = item.itemName.replace(regex, "<mark>$1</mark>");
                 li.innerHTML = `${highlighted}<br><small class="text-muted">${item.itemCategoryName || ""}</small>`;
-
-                li.addEventListener("click", function() {
+                li.addEventListener("click", () => {
                     searchInput.value = item.itemName;
                     suggestionsWrapper.style.display = "none";
                     document.getElementById("itemSearchForm").submit();
                 });
-
                 suggestionsBox.appendChild(li);
             });
-
             suggestionsWrapper.style.display = "block";
         }
 
-        // Close dropdown when clicking "×" button
-        closeBtn.addEventListener("click", () => {
-            suggestionsWrapper.style.display = "none";
+        closeBtn.addEventListener("click", () => (suggestionsWrapper.style.display = "none"));
+        document.addEventListener("click", e => {
+            if (!e.target.closest("#suggestionsWrapper") && e.target !== searchInput)
+                suggestionsWrapper.style.display = "none";
         });
 
-        // Hide dropdown when clicking outside
-        document.addEventListener("click", (e) => {
-            if (!searchInput.contains(e.target) &&
-                !suggestionsWrapper.contains(e.target)
-            ) {
-                suggestionsWrapper.style.display = "none";
-            }
-        });
+        // 🧭 Filters
+        filterCategory.addEventListener("change", filterItems);
+        filterSupplier.addEventListener("change", filterItems);
+
+        function filterItems() {
+            const searchVal = searchInput.value.toLowerCase();
+            const catVal = filterCategory.value.toLowerCase();
+            const supVal = filterSupplier.value.toLowerCase();
+
+            itemCards.forEach(card => {
+                const name = card.querySelector(".card-title").textContent.toLowerCase();
+                const category = card.dataset.category.toLowerCase();
+                const supplier = card.dataset.supplier.toLowerCase();
+
+                const match =
+                    (!searchVal || name.includes(searchVal)) &&
+                    (!catVal || category === catVal) &&
+                    (!supVal || supplier === supVal);
+
+                card.style.display = match ? "" : "none";
+            });
+        }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        function scrollToBottom() {
+            document.getElementById("bottom").scrollIntoView({
+                behavior: "smooth"
+            });
+        }
     </script>
 
+    <!-- Styles -->
     <style>
-        #suggestions li:hover {
-            background-color: #f8f9fa;
-            cursor: pointer;
+        .hover-shadow:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
         }
         
-        #closeSuggestions i {
-            font-size: 0.9rem;
+        .transition {
+            transition: all 0.3s ease;
         }
-    </style>
-
-    <style>
+        
         mark {
-            background-color: #ffed9b;
+            background-color: #fff3cd;
             padding: 0 2px;
             border-radius: 2px;
-        }
-        
-        #itemSuggestions li:hover {
-            background-color: #f8f9fa;
-            cursor: pointer;
         }
     </style>
