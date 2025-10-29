@@ -56,11 +56,31 @@
 
         <!-- Navigation Buttons -->
         <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
-            <a class="btn btn-primary shadow-sm" href="/items/inwards"><i class="bi bi-box-arrow-in-down"></i> Inwards</a>
-            <a class="btn btn-secondary shadow-sm" href="/items/outwards"><i class="bi bi-box-arrow-up"></i> Outwards</a>
-            <a class="btn btn-warning shadow-sm text-white" href="/items/transactions"><i class="bi bi-clock-history"></i> Transactions</a>
-            <a class="btn btn-info shadow-sm text-white" href="/items/insights"><i class="bi bi-graph-up"></i> Insights</a>
+            <a class="btn btn-primary shadow-sm" href="/items/inwards">
+                <i class="bi bi-box-arrow-in-down"></i> Inwards
+            </a>
+            <a class="btn btn-secondary shadow-sm" href="/items/outwards">
+                <i class="bi bi-box-arrow-up"></i> Outwards
+            </a>
+            <a class="btn btn-info shadow-sm text-white" href="/items/lend">
+                <i class="bi bi-arrow-left-right"></i> Lend Item
+            </a>
+            <a class="btn btn-warning shadow-sm text-white" href="/items/transactions">
+                <i class="bi bi-clock-history"></i> Transactions
+            </a>
+            <a class="btn btn-success shadow-sm text-white" href="/items/insights">
+                <i class="bi bi-graph-up"></i> Insights
+            </a>
+            <a class="btn btn-outline-dark shadow-sm" href="/items/consumption">
+                <i class="bi bi-bar-chart-line"></i> Consumption Summary
+            </a>
+            <a href="#" class="btn btn-danger" id="exportStockBtn">
+                <i class="bi bi-file-earmark-pdf"></i> Export Stock PDF
+            </a>
+            >
+
         </div>
+
 
         <!-- 🗂️ Item Grid -->
         <h3 class="text-center fw-bold mb-4 text-dark">All Inventory Items</h3>
@@ -215,6 +235,23 @@
             });
         }
     </script>
+    <script>
+        document.getElementById("exportStockBtn").addEventListener("click", function(e) {
+            e.preventDefault();
+
+            const category = document.getElementById("filterCategory").value.trim();
+            const supplier = document.getElementById("filterSupplier").value.trim();
+
+            // Build URL dynamically
+            const params = new URLSearchParams();
+            if (category) params.append("category", category);
+            if (supplier) params.append("supplier", supplier);
+
+            const url = `/items/report/stock?${params.toString()}`;
+            window.open(url, "_blank");
+        });
+    </script>
+
 
     <!-- Styles -->
     <style>

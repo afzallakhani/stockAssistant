@@ -1,0 +1,180 @@
+<% layout('layout/boilerplate') %>
+
+    <a href="/items/report/consumption?category=<%= query.category || '' %>&supplier=<%= query.supplier || '' %>&startDate=<%= query.startDate || '' %>&endDate=<%= query.endDate || '' %>&mode=<%= query.mode || '' %>" class="btn btn-warning">
+        <i class="bi bi-file-earmark-pdf"></i> Export Consumption PDF
+    </a>
+    <div class="container py-4">
+        <h2 class="fw-bold text-center mb-4">Consumption Summary</h2>
+
+        <!-- Filters -->
+        <form class="row g-3 align-items-end mb-4">
+            <div class="col-md-3">
+                <label class="form-label">Item</label>
+                <select class="form-select" name="itemId">
+        <option value="">All Items</option>
+        <% items.forEach(function(i){ %>
+          <option value="<%= i._id %>" <%= query.itemId === i._id.toString() ? "selected" : "" %>>
+            <%= i.itemName %>
+          </option>
+        <% }) %>
+      </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Category</label>
+                <select class="form-select" name="category">
+        <option value="">All Categories</option>
+        <% categories.forEach(function(c){ %>
+          <option value="<%= c.itemCategoryName %>" <%= query.category === c.itemCategoryName ? "selected" : "" %>>
+            <%= c.itemCategoryName %>
+          </option>
+        <% }) %>
+      </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Supplier</label>
+                <select class="form-select" name="supplier">
+        <option value="">All Suppliers</option>
+        <% suppliers.forEach(function(s){ %>
+          <option value="<%= s.supplierName %>" <%= query.supplier === s.supplierName ? "selected" : "" %>>
+            <%= s.supplierName %>
+          </option>
+        <% }) %>
+      </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Mode</label>
+                <select class="form-select" name="mode">
+        <option value="">Since Start</option>
+        <option value="sinceLastInward" <%= query.mode === 'sinceLastInward' ? 'selected' : '' %>>
+          Since Last Inward
+        </option>
+      </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Heat Type</label>
+                <select class="form-select" name="heatType">
+    <option value="">All Heats</option>
+    <option value="open" <%= query.heatType === 'open' ? 'selected' : '' %>>Open Cast</option>
+    <option value="close" <%= query.heatType === 'close' ? 'selected' : '' %>>Close Cast</option>
+  </select>
+            </div>
+
+
+            <div class="col-md-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" name="startDate" value="<%= query.startDate || '' %>">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-control" name="endDate" value="<%= query.endDate || '' %>">
+            </div>
+
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100"><i class="bi bi-funnel"></i> Apply Filters</button>
+            </div>
+        </form>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4 text-center">
+            <div class="col-md-3">
+                <div class="card bg-light shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Total Heats</h6>
+                        <h4>
+                            <%= totalHeats %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Open Casting</h6>
+                        <h4>
+                            <%= openHeats %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Close Casting</h6>
+                        <h4>
+                            <%= closeHeats %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Avg. Life / Heat</h6>
+                        <h4>
+                            <%= avgPerHeat %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <% if (transactions.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Supplier</th>
+                            <th>Current Stock</th>
+                            <th>Total Used</th>
+                            <th>Last Used</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% transactions.forEach(function(tx){ %>
+                            <tr>
+                                <td>
+                                    <%= tx.itemName %>
+                                </td>
+                                <td>
+                                    <%= tx.category %>
+                                </td>
+                                <td>
+                                    <%= tx.supplier %>
+                                </td>
+                                <td>
+                                    <%= tx.currentStock %>
+                                </td>
+                                <td>
+                                    <%= tx.totalUsed %>
+                                </td>
+                                <td>
+                                    <%= new Date(tx.lastUsed).toLocaleDateString('en-GB') %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+            <% } else { %>
+                <p class="text-center text-muted mt-5">No consumption data found for selected filters.</p>
+                <% } %>
+    </div>
+
+
+    <style>
+        .table th,
+        .table td {
+            vertical-align: middle;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+    </style>
