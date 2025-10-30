@@ -1,0 +1,71 @@
+<% layout('layout/boilerplate') %>
+    <div class="container py-4">
+        <h2 class="text-center mb-4 text-primary fw-bold">
+            <%= item.itemName %>
+        </h2>
+        <p class="text-center text-muted mb-5">
+            <%= item.itemDescription %>
+        </p>
+
+        <div class="row g-4 justify-content-center">
+            <% if (item.itemImage.length > 0) { %>
+                <% item.itemImage.forEach(img => { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm border-0">
+                            <img src="data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>" class="card-img-top zoomable rounded-4" alt="<%= item.itemName %>" style="cursor: zoom-in; height: 250px; object-fit: contain; background:#f8f9fa;">
+                            <div class="card-body text-center">
+                                <a href="data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>" download="<%= img.name %>" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="shareImage('<%= img.name %>', 'data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>')">
+                <i class="bi bi-share"></i> Share
+              </button>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                        <% } else { %>
+                            <p class="text-center text-muted">No images available</p>
+                            <% } %>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="/items" class="btn btn-outline-dark"><i class="bi bi-arrow-left"></i> Back</a>
+        </div>
+    </div>
+
+    <!-- Fullscreen modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+            <div class="modal-content bg-dark">
+                <div class="modal-body p-0 text-center">
+                    <img id="modalImage" class="img-fluid" style="max-height: 95vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.zoomable').forEach(img => {
+            img.addEventListener('click', () => {
+                document.getElementById('modalImage').src = img.src;
+                const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+                modal.show();
+            });
+        });
+
+        async function shareImage(filename, imageUrl) {
+            if (navigator.share) {
+                const blob = await fetch(imageUrl).then(r => r.blob());
+                const file = new File([blob], filename, {
+                    type: blob.type
+                });
+                navigator.share({
+                    title: filename,
+                    files: [file],
+                }).catch(console.error);
+            } else {
+                alert('Sharing not supported on this device');
+            }
+        }
+    </script>

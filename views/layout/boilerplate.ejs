@@ -18,26 +18,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
 
     <style>
+        html,
         body {
-            min-height: 100vh;
+            height: 100%;
+        }
+        
+        body {
             display: flex;
             flex-direction: column;
         }
         
-        footer {
-            color: #D3D3D3;
-            /* Light grey color */
+        main.content {
+            flex: 1 0 auto;
+            padding-top: 80px;
+            /* space for fixed navbar */
         }
         
-        .content {
-            flex: 1;
+        footer {
+            flex-shrink: 0;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            text-align: center;
+            padding: 12px 0;
+            border-top: 1px solid #dee2e6;
         }
     </style>
+
 </head>
 
-<body class="d-flex flex-column vh-100">
+<body class="">
     <%- include('../partials/navbar') %>
-        <main class="container mt-5 content">
+        <main class="container pt-5 mt-4 content" style="padding-top: 80px;">
             <%- body %>
         </main>
 

@@ -63,12 +63,60 @@
       </option>
     <% }) %>
   </select>
+                    <a class="btn btn-primary mt-2" href="/supplier/new">+ Add New Supplier</a>
+
                 </div>
-                <% for(image of item.itemImage){%>
-                    <label class="form-label" for="image"><b>Current Image Name:- <%= image.name %></b></label>
-                    <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]">
-                    <button class="btn btn-success my-2" onclick="return confirm('Are you sure you want to edit this item?')">Save Item</button>
-                    <%} %>
+                <div class="mb-3">
+                    <label class="form-label">Current Images</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <% if (item.itemImage.length > 0) { %>
+                            <% item.itemImage.forEach(img => { %>
+                                <div class="text-center">
+                                    <img src="data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>" alt="<%= img.name %>" class="img-thumbnail zoomable" style="width:120px; height:120px; object-fit:contain; cursor: zoom-in;">
+                                    <div class="mt-1">
+                                        <a href="data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>" download="<%= img.name %>" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <a href="/items/<%= item._id %>/view" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                    <% } else { %>
+                                        <p class="text-muted">No images uploaded.</p>
+                                        <% } %>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="image" class="form-label">Add / Replace Images</label>
+                    <input class="form-control" type="file" id="image" name="item[itemImage]" multiple>
+                </div>
+
+                <button class="btn btn-success my-3" onclick="return confirm('Save changes?')">Save Item</button>
+
+                <!-- Fullscreen modal for image preview -->
+                <div class="modal fade" id="imageModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-body p-0 text-center">
+                                <img id="modalImage" class="img-fluid" style="max-height: 95vh;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.querySelectorAll('.zoomable').forEach(img => {
+                        img.addEventListener('click', () => {
+                            document.getElementById('modalImage').src = img.src;
+                            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+                            modal.show();
+                        });
+                    });
+                </script>
+
 
             </form>
         </div>
