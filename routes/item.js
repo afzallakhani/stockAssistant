@@ -106,13 +106,21 @@ router.get(
 // GET route to display the outwards form
 router.get("/outwards", async (req, res) => {
   try {
-    const items = await Items.find({}); // Fetch all items from the database
-    res.render("items/outwards", { items }); // Render the form and pass the items
+    const items = await Items.find({}).populate("itemImage");
+    const itemCategories = await ItemCategories.find({});
+    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+
+    res.render("items/outwards", {
+      items,
+      itemCategories,
+      itemSuppliers,
+    });
   } catch (error) {
     console.error("Error fetching items for outwards log:", error);
     res.status(500).send("Error fetching items.");
   }
 });
+
 // GET: Lend items page
 router.get("/lend", async (req, res) => {
   try {
@@ -202,52 +210,105 @@ router.get("/search", async (req, res) => {
 });
 
 // add new item to database
+// router.post(
+//   "/",
+//   upload.array("item[itemImage]"),
+//   validateItem,
+//   catchAsync(async (req, res, next) => {
+//     // if (!req.body.item) throw new ExpressError("Invalid Item Data", 400);
+
+//     let item = new Items(req.body.item);
+//     let image = new Images();
+//     image.contentType = req.file.mimetype;
+//     image.data = fs.readFileSync(
+//       path.join(__dirname, "..", "views", "images", req.file.filename)
+//     );
+//     image.path = req.file.path;
+//     image.name = req.file.originalname;
+//     const imagePath = req.file.path;
+//     await item.save();
+//     const currentItem = await Items.findById(item.id);
+//     currentItem.itemImage.push(image);
+//     await image.save();
+//     await currentItem.save();
+//     await fs.unlink(imagePath, (err) => {
+//       if (err) {
+//         console.error(err);
+//         return;
+//       } else {
+//         return;
+//       }
+//     });
+//     const initialStock = item.itemQty;
+//     await new Transaction({
+//       itemId: item._id,
+//       type: "initial",
+//       quantity: initialStock,
+//       stockBefore: 0, // Stock is 0 before creation
+//       stockAfter: initialStock,
+//     }).save();
+//     res.redirect("/items");
+//   })
+// );
 router.post(
   "/",
-  upload.single("item[itemImage]"),
+  upload.array("item[itemImage]"),
   validateItem,
-  catchAsync(async (req, res, next) => {
-    // if (!req.body.item) throw new ExpressError("Invalid Item Data", 400);
-
+  catchAsync(async (req, res) => {
     let item = new Items(req.body.item);
-    let image = new Images();
-    image.contentType = req.file.mimetype;
-    image.data = fs.readFileSync(
-      path.join(__dirname, "..", "views", "images", req.file.filename)
-    );
-    image.path = req.file.path;
-    image.name = req.file.originalname;
-    const imagePath = req.file.path;
     await item.save();
-    const currentItem = await Items.findById(item.id);
-    currentItem.itemImage.push(image);
-    await image.save();
-    await currentItem.save();
-    await fs.unlink(imagePath, (err) => {
-      if (err) {
-        console.error(err);
-        return;
-      } else {
-        return;
+
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const image = new Images({
+          contentType: file.mimetype,
+          data: fs.readFileSync(
+            path.join(__dirname, "..", "views", "images", file.filename)
+          ),
+          path: file.path,
+          name: file.originalname,
+        });
+        await image.save();
+        item.itemImage.push(image);
+        fs.unlink(file.path, () => {});
       }
-    });
+      await item.save();
+    }
+
     const initialStock = item.itemQty;
     await new Transaction({
       itemId: item._id,
       type: "initial",
       quantity: initialStock,
-      stockBefore: 0, // Stock is 0 before creation
+      stockBefore: 0,
       stockAfter: initialStock,
     }).save();
+
     res.redirect("/items");
   })
 );
+router.get(
+  "/:id/view",
+  catchAsync(async (req, res) => {
+    const item = await Items.findById(req.params.id).populate("itemImage");
+    if (!item) return res.status(404).send("Item not found");
+    res.render("items/viewItem", { item });
+  })
+);
+
 // GET route to display the inwards form
 router.get(
   "/inwards",
   catchAsync(async (req, res) => {
-    const items = await Items.find({}); // Fetch all items
-    res.render("items/inwards", { items });
+    const items = await Items.find({}).populate("itemImage");
+    const itemCategories = await ItemCategories.find({});
+    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+
+    res.render("items/inwards", {
+      items,
+      itemCategories,
+      itemSuppliers,
+    });
   })
 );
 
@@ -1091,36 +1152,37 @@ router.get(
 );
 router.put(
   "/:id",
-  upload.single("item[itemImage]"),
-  catchAsync(async (req, res, next) => {
+  upload.array("item[itemImage]"),
+  catchAsync(async (req, res) => {
     const { id } = req.params;
     const item = await Items.findById(id).populate("itemImage");
-    const imageId = item.itemImage[0].id;
-    let image = await Images.findById(imageId);
-    if (req.file) {
-      image.contentType = req.file.mimetype;
-      image.data = fs.readFileSync(
-        path.join(__dirname, "..", "views", "images", req.file.filename)
-      );
-      image.path = req.file.path;
-      image.name = req.file.originalname;
-      await Items.findByIdAndUpdate(id, { ...req.body.item });
-      await Images.findByIdAndUpdate(imageId, image);
-      const imagePath = req.file.path;
-      await fs.unlink(imagePath, (err) => {
-        if (err) {
-          console.error(err);
-          return;
-        } else {
-          return;
-        }
-      });
-    } else {
-      await Items.findByIdAndUpdate(id, { ...req.body.item });
+
+    // ✅ Update basic item fields
+    Object.assign(item, req.body.item);
+    await item.save();
+
+    // ✅ Handle new image uploads (add on top of existing)
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const image = new Images({
+          contentType: file.mimetype,
+          data: fs.readFileSync(
+            path.join(__dirname, "..", "views", "images", file.filename)
+          ),
+          path: file.path,
+          name: file.originalname,
+        });
+        await image.save();
+        item.itemImage.push(image);
+        fs.unlink(file.path, () => {}); // remove temp file
+      }
+      await item.save();
     }
-    res.redirect("/items");
+
+    res.redirect(`/items`);
   })
 );
+
 // Replace your existing POST "/update-stock" route with this
 
 router.post(

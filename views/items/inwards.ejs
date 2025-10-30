@@ -1,8 +1,52 @@
 <% layout('layout/boilerplate') %>
+
     <div class="row">
-        <h1 class="text-center">Log Items Inwards</h1>
-        <div class="col-8 offset-2">
-            <form action="/items/inward-stock" method="POST" novalidate class="validated-form">
+        <h1 class="text-center mb-4 mt-3">Log Items Inwards</h1>
+
+        <!-- 🔍 Search + Filter Section -->
+        <div class="container mb-4 px-0">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-md-11 col-sm-12">
+
+                    <!-- Search Bar -->
+                    <div class="mb-3 position-relative">
+                        <input type="text" id="itemSearch" class="form-control form-control-lg shadow-sm" placeholder="🔍 Search by item, category, or supplier...">
+                        <ul id="suggestionList" class="list-group position-absolute w-100" style="z-index: 1000; display:none;"></ul>
+                    </div>
+
+                    <!-- Filters Row -->
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-6">
+                            <select id="filterCategory" class="form-select form-select-lg shadow-sm">
+              <option value="">All Categories</option>
+              <% itemCategories.forEach(cat => { %>
+                <option value="<%= cat.itemCategoryName %>"><%= cat.itemCategoryName %></option>
+              <% }) %>
+            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <select id="filterSupplier" class="form-select form-select-lg shadow-sm">
+              <option value="">All Suppliers</option>
+              <% itemSuppliers.forEach(sup => { %>
+                <option value="<%= sup.supplierName %>"><%= sup.supplierName %></option>
+              <% }) %>
+            </select>
+                        </div>
+
+                        <!-- Reset Button -->
+                        <div class="col-12 text-end mt-2">
+                            <button id="resetFilters" class="btn btn-outline-secondary btn-sm">Reset Filters</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 📦 Items Table -->
+        <div class="col-lg-10 col-md-11 col-sm-12 mx-auto">
+            <form action="/items/inwards" method="POST" novalidate class="validated-form">
                 <table class="table">
                     <thead>
                         <tr>
@@ -12,25 +56,132 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% for(let i = 0; i < items.length; i++) { %>
-                            <tr>
+                        <% items.forEach((item, i) => { %>
+                            <tr class="item-row" data-name="<%= item.itemName %>" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
                                 <td>
-                                    <%= items[i].itemName %>
+                                    <%= item.itemName %>
                                 </td>
                                 <td>
-                                    <%= items[i].itemQty %>
-                                        <%= items[i].itemUnit %>
+                                    <%= item.itemQty %>
+                                        <%= item.itemUnit %>
                                 </td>
                                 <td>
-                                    <input type="hidden" name="items[<%= i %>][id]" value="<%= items[i]._id %>">
+                                    <input type="hidden" name="items[<%= i %>][id]" value="<%= item._id %>">
                                     <input type="number" class="form-control" name="items[<%= i %>][inwardsQty]" min="0" value="0" required>
                                 </td>
                             </tr>
-                            <% } %>
+                            <% }) %>
                     </tbody>
                 </table>
-                <button class="btn btn-primary my-2">Add to Stock</button>
+
+                <button class="btn btn-success my-2">Update Stock</button>
             </form>
         </div>
     </div>
+
+    <!-- 🧠 JavaScript for Live Search + Filters -->
+    <script>
+        const searchInput = document.getElementById('itemSearch');
+        const suggestionList = document.getElementById('suggestionList');
+        const categoryFilter = document.getElementById('filterCategory');
+        const supplierFilter = document.getElementById('filterSupplier');
+        const resetBtn = document.getElementById('resetFilters');
+        const allRows = document.querySelectorAll('.item-row');
+
+        // 🔍 Live suggestions as user types
+        searchInput.addEventListener('input', async function() {
+            const query = this.value.trim();
+            if (!query) {
+                suggestionList.style.display = 'none';
+                filterTable();
+                return;
+            }
+
+            const res = await fetch(`/items/suggestions?q=${encodeURIComponent(query)}`);
+            const items = await res.json();
+
+            suggestionList.innerHTML = '';
+            if (items.length === 0) {
+                suggestionList.style.display = 'none';
+                return;
+            }
+
+            items.forEach(it => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-action';
+                li.textContent = `${it.itemName} (${it.itemCategoryName} - ${it.itemSupplier})`;
+                li.addEventListener('click', () => {
+                    searchInput.value = it.itemName;
+                    suggestionList.style.display = 'none';
+                    filterTable();
+                });
+                suggestionList.appendChild(li);
+            });
+
+            suggestionList.style.display = 'block';
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', e => {
+            if (!suggestionList.contains(e.target) && e.target !== searchInput) {
+                suggestionList.style.display = 'none';
+            }
+        });
+
+        // Apply filters dynamically
+        [searchInput, categoryFilter, supplierFilter].forEach(el => {
+            el.addEventListener('input', filterTable);
+            el.addEventListener('change', filterTable);
+        });
+
+        function filterTable() {
+            const search = searchInput.value.trim().toLowerCase();
+            const category = categoryFilter.value.trim().toLowerCase();
+            const supplier = supplierFilter.value.trim().toLowerCase();
+
+            allRows.forEach(row => {
+                const name = row.dataset.name.toLowerCase();
+                const cat = row.dataset.category.toLowerCase();
+                const sup = row.dataset.supplier.toLowerCase();
+
+                const matchesSearch = !search || name.includes(search) || cat.includes(search) || sup.includes(search);
+                const matchesCategory = !category || cat === category;
+                const matchesSupplier = !supplier || sup === supplier;
+
+                row.style.display = (matchesSearch && matchesCategory && matchesSupplier) ? '' : 'none';
+            });
+        }
+
+        // Reset Filters Button
+        resetBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            categoryFilter.value = '';
+            supplierFilter.value = '';
+            filterTable();
+        });
+    </script>
+
+    <!-- 📜 External Form Navigation Script -->
     <script src="/javascripts/form-navigation.js"></script>
+
+    <!-- 💅 Styles -->
+    <style>
+        #itemSearch {
+            font-size: 1rem;
+            padding: 12px 14px;
+            border-radius: 8px;
+        }
+        
+        .form-select {
+            border-radius: 8px;
+        }
+        
+        #suggestionList li {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        #suggestionList li:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
