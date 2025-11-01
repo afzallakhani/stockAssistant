@@ -1157,12 +1157,30 @@ router.put(
     const { id } = req.params;
     const item = await Items.findById(id).populate("itemImage");
 
-    // ✅ Update basic item fields
+    // ✅ Update text fields
     Object.assign(item, req.body.item);
-    await item.save();
 
-    // ✅ Handle new image uploads (add on top of existing)
+    // ✅ DELETE selected old images
+    if (req.body.deleteImages) {
+      const idsToDelete = Array.isArray(req.body.deleteImages)
+        ? req.body.deleteImages
+        : [req.body.deleteImages];
+
+      // Remove from DB
+      await Images.deleteMany({ _id: { $in: idsToDelete } });
+
+      // Remove references from item
+      item.itemImage = item.itemImage.filter(
+        (img) => !idsToDelete.includes(img._id.toString())
+      );
+    }
+
+    // ✅ ADD / REPLACE uploaded images
     if (req.files && req.files.length > 0) {
+      // (Optional) clear all existing images if you want full replacement
+      // await Images.deleteMany({ _id: { $in: item.itemImage } });
+      // item.itemImage = [];
+
       for (const file of req.files) {
         const image = new Images({
           contentType: file.mimetype,
@@ -1174,12 +1192,14 @@ router.put(
         });
         await image.save();
         item.itemImage.push(image);
-        fs.unlink(file.path, () => {}); // remove temp file
+        fs.unlink(file.path, () => {}); // cleanup temp file
       }
-      await item.save();
     }
 
-    res.redirect(`/items`);
+    await item.save();
+    // req.flash("success", "Item updated successfully!");
+
+    res.redirect("/items");
   })
 );
 
