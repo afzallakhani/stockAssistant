@@ -155,6 +155,7 @@ router.post(
             quantity: lendQty,
             stockBefore,
             stockAfter,
+            remarks: items[id].remarks || "",
           }).save();
         }
       }
@@ -336,8 +337,9 @@ router.post(
             itemId: item._id,
             type: "inward",
             quantity: inwardsQty,
-            stockBefore: stockBefore,
-            stockAfter: stockAfter,
+            stockBefore,
+            stockAfter,
+            remarks: itemData.remarks || "",
           }).save();
         }
       }
@@ -1230,8 +1232,9 @@ router.post(
             itemId: item._id,
             type: "outward",
             quantity: outwardsQty,
-            stockBefore: stockBefore,
-            stockAfter: stockAfter,
+            stockBefore,
+            stockAfter,
+            remarks: itemData.remarks || "",
           }).save();
         }
       }

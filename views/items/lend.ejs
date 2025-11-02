@@ -9,6 +9,8 @@
                     <th>Item</th>
                     <th>Available Qty</th>
                     <th>Lend Qty</th>
+                    <th>Remarks</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -24,6 +26,10 @@
                         <td>
                             <input type="number" min="0" name="items[<%= item._id %>][lendQty]" class="form-control">
                         </td>
+                        <td>
+                            <input type="text" name="items[<%= item._id %>][remarks]" class="form-control" placeholder="Optional remarks">
+                        </td>
+
                     </tr>
                     <% }) %>
             </tbody>

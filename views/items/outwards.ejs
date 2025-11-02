@@ -50,6 +50,8 @@
                             <th scope="col">Item Name</th>
                             <th scope="col">Current Stock</th>
                             <th scope="col">Quantity Outwards</th>
+                            <th scope="col">Remarks</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -67,6 +69,10 @@
                                     <input type="hidden" name="items[<%= i %>][id]" value="<%= items[i]._id %>">
                                     <input type="number" class="form-control" name="items[<%= i %>][outwardsQty]" min="0" max="<%= items[i].itemQty %>" value="0" required>
                                 </td>
+                                <td>
+                                    <input type="text" class="form-control" name="items[<%= i %>][remarks]" placeholder="Optional remarks">
+                                </td>
+
                             </tr>
                             <% } %>
                     </tbody>
