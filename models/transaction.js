@@ -30,6 +30,35 @@ const Schema = mongoose.Schema;
 //     },
 // });
 
+// const transactionSchema = new Schema({
+//   itemId: {
+//     type: Schema.Types.ObjectId,
+//     ref: "allItems",
+//     required: true,
+//   },
+//   type: {
+//     type: String,
+//     enum: ["initial", "inward", "outward", "lend", "return", "adjustment"], // ✅ Added lend & return
+//     required: true,
+//   },
+//   quantity: {
+//     type: Number,
+//     required: true,
+//   },
+//   stockBefore: Number,
+//   stockAfter: Number,
+//   borrower: String,
+
+//   returned: {
+//     type: Boolean,
+//     default: false, // ✅ new field
+//   },
+//   createdAt: {
+//     type: Date,
+//     default: Date.now,
+//   },
+// });
+
 const transactionSchema = new Schema({
   itemId: {
     type: Schema.Types.ObjectId,
@@ -38,7 +67,7 @@ const transactionSchema = new Schema({
   },
   type: {
     type: String,
-    enum: ["initial", "inward", "outward", "lend", "return", "adjustment"], // ✅ Added lend & return
+    enum: ["initial", "inward", "outward", "lend", "return", "adjustment"],
     required: true,
   },
   quantity: {
@@ -48,10 +77,14 @@ const transactionSchema = new Schema({
   stockBefore: Number,
   stockAfter: Number,
   borrower: String,
-
   returned: {
     type: Boolean,
-    default: false, // ✅ new field
+    default: false,
+  },
+  remarks: {
+    type: String,
+    trim: true,
+    default: "",
   },
   createdAt: {
     type: Date,

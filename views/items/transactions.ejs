@@ -20,6 +20,8 @@
                     <th>Quantity</th>
                     <th>Stock Before</th>
                     <th>Stock After</th>
+                    <th>Remarks</th>
+
                     <th style="width: 10%;">Actions</th>
                 </tr>
             </thead>
@@ -28,7 +30,7 @@
                     <% sortedDates.forEach(dateKey => { %>
                         <!-- Date Group Header -->
                         <tr class="table-light">
-                            <td colspan="7" class="fw-bold text-center">
+                            <td colspan="8" class="fw-bold text-center">
                                 <%= new Date(dateKey).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
                             </td>
                         </tr>
@@ -96,6 +98,10 @@
                                 <td>
                                     <%= tx.stockAfter %>
                                 </td>
+                                <td>
+                                    <%= tx.remarks || '-' %>
+                                </td>
+
                                 <td>
                                     <% if (tx.type !== 'initial') { %>
                                         <form action="/items/transactions/<%= tx._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Are you sure you want to reverse this transaction? This action cannot be undone.');">
