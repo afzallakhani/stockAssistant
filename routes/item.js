@@ -314,7 +314,7 @@ router.get(
 
 // POST route to handle inward stock updates
 router.post(
-  "/inward-stock",
+  "/inward",
   catchAsync(async (req, res) => {
     const { items } = req.body;
 
