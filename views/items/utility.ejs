@@ -1,0 +1,92 @@
+<% layout('layout/boilerplate') %>
+
+    <div class="container py-4">
+        <h2 class="text-center mb-4">🧰 Database Utilities</h2>
+        <% if (success && success.length) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= success %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% } %>
+
+                <% if (error && error.length) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= error %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <% } %>
+
+                        <!-- Backup Actions -->
+                        <div class="card shadow mb-4">
+                            <div class="card-body text-center">
+                                <form action="/items/utility/backup" method="POST" class="d-inline">
+                                    <button class="btn btn-success btn-lg">
+    <i class="bi bi-hdd-stack"></i> Backup Now
+  </button>
+                                </form>
+
+                            </div>
+                        </div>
+
+                        <!-- Backup List -->
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5 class="mb-0">Available Backups</h5>
+                                <a href="/items/utility" class="btn btn-outline-secondary mb-3">
+                                    <i class="bi bi-arrow-repeat"></i> Refresh List
+                                </a>
+
+                            </div>
+                            <div class="card-body">
+                                <% if (backups.length === 0) { %>
+                                    <p class="text-center text-muted">No backups found.</p>
+                                    <% } else { %>
+                                        <table class="table table-hover align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>Backup Folder</th>
+                                                    <th>Date Modified</th>
+                                                    <th class="text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% if (backups.length === 0) { %>
+                                                    <tr>
+                                                        <td colspan="3" class="text-center text-muted">No backups found.</td>
+                                                    </tr>
+                                                    <% } else { %>
+                                                        <% backups.forEach(b => { %>
+                                                            <tr>
+                                                                <td>
+                                                                    <%= b.name %>
+                                                                        <% if (!b.hasDBFolder) { %>
+                                                                            <span class="text-danger">(missing DB folder)</span>
+                                                                            <% } %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= new Date(b.date).toLocaleString('en-GB') %>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <form action="/items/utility/restore" method="POST" class="d-inline" onsubmit="return confirm('⚠️ Restoring will overwrite ALL current data.\nAre you sure you want to continue?');">
+                                                                        <input type="hidden" name="backupFolder" value="<%= b.name %>">
+                                                                        <button class="btn btn-sm btn-outline-primary">
+    <i class="bi bi-arrow-clockwise"></i> Restore
+  </button>
+                                                                    </form>
+                                                                    <form action="/items/utility/delete" method="POST" class="d-inline" onsubmit="return confirm('❌ Delete this backup permanently?');">
+                                                                        <input type="hidden" name="backupFolder" value="<%= b.name %>">
+                                                                        <button class="btn btn-sm btn-outline-danger">
+    <i class="bi bi-trash"></i> Delete
+  </button>
+                                                                    </form>
+                                                                </td>
+                                                            </tr>
+                                                            <% }) %>
+                                                                <% } %>
+                                            </tbody>
+
+                                        </table>
+                                        <% } %>
+                            </div>
+                        </div>
+    </div>

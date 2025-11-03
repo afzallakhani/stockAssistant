@@ -4,6 +4,8 @@ const path = require("path");
 const { promisify } = require("util");
 const { urlencoded, query, json } = require("express");
 // const unlinkAsync = promisify(fs.unlink);
+const runBackup = require("../utils/backupHelper");
+
 const catchAsync = require("../utils/catchAsync");
 const methodOverride = require("method-override");
 const multer = require("multer");
@@ -30,7 +32,8 @@ const mongoose = require("mongoose");
 const validateItem = require("../utils/validateItem");
 const events = require("events");
 const eventEmitter = new events.EventEmitter();
-
+const DB_NAME = "stockAssistant";
+const BACKUP_DIR = path.join(__dirname, "../backups");
 let upload = multer({ storage: multerStorage });
 
 // router.get(
@@ -48,6 +51,116 @@ let upload = multer({ storage: multerStorage });
 //     res.render("items/allItems", { items, itemCategories, itemSuppliers });
 //   })
 // );
+router.get("/backup-now", (req, res) => {
+  runBackup("manual");
+  res.send("Backup triggered successfully!");
+});
+// // ✅ Manual Backup Trigger (this is what "Backup Now" button calls)
+// router.post("/utility/backup", (req, res) => {
+//   runBackup("manual");
+//   res.redirect("/items/utility");
+// });
+
+// // ✅ Restore from a selected backup folder
+// router.post("/utility/restore", (req, res) => {
+//   const { backupFolder } = req.body;
+//   if (!backupFolder) return res.send("⚠️ No backup folder selected!");
+
+//   const restorePath = path.join(BACKUP_DIR, backupFolder, DB_NAME);
+//   const cmd = `mongorestore --db=${DB_NAME} --gzip "${restorePath}" --drop`;
+
+//   console.log(`♻️ Restoring from ${restorePath}...`);
+//   exec(cmd, (error) => {
+//     if (error) {
+//       console.error(`❌ Restore failed: ${error.message}`);
+//       return res.send("❌ Restore failed. Check console for details.");
+//     }
+//     console.log(`✅ Restore completed from ${backupFolder}`);
+//     res.send(`✅ Database restored successfully from backup: ${backupFolder}`);
+//   });
+// });
+
+// // ✅ Delete a selected backup folder
+// router.post("/utility/delete", (req, res) => {
+//   const { backupFolder } = req.body;
+//   if (!backupFolder) return res.send("⚠️ No backup selected!");
+//   const deletePath = path.join(BACKUP_DIR, backupFolder);
+//   fs.rmSync(deletePath, { recursive: true, force: true });
+//   res.redirect("/items/utility");
+// });
+// Manual Backup Trigger
+router.post("/utility/backup", (req, res) => {
+  runBackup("manual");
+  req.flash("success", "✅ Backup started successfully!");
+  res.redirect("/items/utility");
+});
+
+// Restore Backup
+router.post("/utility/restore", (req, res) => {
+  const { backupFolder } = req.body;
+  if (!backupFolder) {
+    req.flash("error", "⚠️ No backup selected!");
+    return res.redirect("/items/utility");
+  }
+
+  const restorePath = path.join(BACKUP_DIR, backupFolder, DB_NAME);
+  const cmd = `mongorestore --db=${DB_NAME} --gzip "${restorePath}" --drop`;
+
+  console.log(`♻️ Restoring from ${restorePath}...`);
+  exec(cmd, (error) => {
+    if (error) {
+      console.error(`❌ Restore failed: ${error.message}`);
+      req.flash("error", "❌ Restore failed! Check console for details.");
+      return res.redirect("/items/utility");
+    }
+    console.log(`✅ Restore completed from ${backupFolder}`);
+    req.flash("success", `✅ Database restored from ${backupFolder}`);
+    res.redirect("/items/utility");
+  });
+});
+
+// Delete Backup
+router.post("/utility/delete", (req, res) => {
+  const { backupFolder } = req.body;
+  if (!backupFolder) {
+    req.flash("error", "⚠️ No backup selected!");
+    return res.redirect("/items/utility");
+  }
+  const deletePath = path.join(BACKUP_DIR, backupFolder);
+  fs.rmSync(deletePath, { recursive: true, force: true });
+  console.log(`🗑️ Deleted backup: ${backupFolder}`);
+  req.flash("success", `🗑️ Deleted backup: ${backupFolder}`);
+  res.redirect("/items/utility");
+});
+
+// Utility Dashboard Page
+router.get("/utility", (req, res) => {
+  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+
+  const backups = fs
+    .readdirSync(BACKUP_DIR)
+    .filter((folder) =>
+      fs.lstatSync(path.join(BACKUP_DIR, folder)).isDirectory()
+    )
+    .map((folder) => {
+      const fullPath = path.join(BACKUP_DIR, folder);
+      const innerDBPath = path.join(fullPath, DB_NAME);
+
+      // confirm it actually contains your DB folder (e.g. "stockAssistant")
+      const hasDBFolder = fs.existsSync(innerDBPath);
+      const stats = fs.statSync(fullPath);
+
+      return {
+        name: folder,
+        hasDBFolder,
+        date: stats.mtime,
+      };
+    })
+    .sort((a, b) => b.date - a.date);
+
+  res.render("items/utility", { backups });
+});
+
 router.get(
   "/",
   catchAsync(async (req, res) => {
