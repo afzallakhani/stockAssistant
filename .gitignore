@@ -11,3 +11,6 @@ files/1695131662245.pdf
 *.jpeg
 *.png
 *.jpg
+# Ignore the backup folder
+backups/
+

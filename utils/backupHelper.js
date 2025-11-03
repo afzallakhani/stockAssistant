@@ -56,7 +56,8 @@ function doBackup(trigger) {
   if (!fs.existsSync(BACKUP_PATH))
     fs.mkdirSync(BACKUP_PATH, { recursive: true });
 
-  const cmd = `mongodump --db=${DB_NAME} --out="${OUT_PATH}" --gzip`;
+  const MONGO_TOOLS = `"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongodump.exe"`;
+  const cmd = `${MONGO_TOOLS} --db=${DB_NAME} --out="${OUT_PATH}" --gzip`;
 
   console.log(`🟡 Backup started (${trigger})...`);
   exec(cmd, (error) => {
