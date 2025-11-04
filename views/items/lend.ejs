@@ -1,38 +1,185 @@
 <% layout('layout/boilerplate') %>
+    <div class="row">
+        <h1 class="text-center mb-4 mt-3">Lend Items</h1>
+
+        <!-- 🔍 Search & Filters -->
+        <div class="container mb-4 px-0">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-md-11 col-sm-12">
+
+                    <!-- Search Bar -->
+                    <div class="mb-3 position-relative">
+                        <input type="text" id="itemSearch" class="form-control form-control-lg shadow-sm" placeholder="🔍 Search by item, category, or supplier...">
+                        <ul id="suggestionList" class="list-group position-absolute w-100" style="z-index: 1000; display:none;"></ul>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <select id="filterCategory" class="form-select form-select-lg shadow-sm">
+              <option value="">All Categories</option>
+              <% itemCategories.forEach(cat => { %>
+                <option value="<%= cat.itemCategoryName %>"><%= cat.itemCategoryName %></option>
+              <% }) %>
+            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <select id="filterSupplier" class="form-select form-select-lg shadow-sm">
+              <option value="">All Suppliers</option>
+              <% itemSuppliers.forEach(sup => { %>
+                <option value="<%= sup.supplierName %>"><%= sup.supplierName %></option>
+              <% }) %>
+            </select>
+                            <div class="col-12 text-end mt-2">
+                                <button id="resetFilters" class="btn btn-outline-secondary btn-sm">Reset Filters</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 📦 Items Table -->
+        <div class="col-lg-10 col-md-11 col-sm-12 mx-auto">
+            <form action="/items/lend" method="POST" novalidate class="validated-form">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Current Stock</th>
+                            <th>Quantity to Lend</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% items.forEach((item, i) => { %>
+                            <tr class="item-row" data-name="<%= item.itemName %>" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
+                                <td>
+                                    <%= item.itemName %>
+                                </td>
+                                <td>
+                                    <%= item.itemQty %>
+                                        <%= item.itemUnit %>
+                                </td>
+                                <td>
+                                    <input type="hidden" name="items[<%= i %>][id]" value="<%= item._id %>">
+                                    <input type="number" class="form-control" name="items[<%= i %>][lendQty]" min="0" max="<%= item.itemQty %>" value="0" required>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="items[<%= i %>][remarks]" placeholder="Optional remarks">
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+                <button class="btn btn-primary my-2">Lend Items</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🧠 Copy JS from outwards.ejs -->
+    <script src="/javascripts/filter-search.js"></script>
+    <script>
+        const searchInput = document.getElementById('itemSearch');
+        const suggestionList = document.getElementById('suggestionList');
+        const categoryFilter = document.getElementById('filterCategory');
+        const supplierFilter = document.getElementById('filterSupplier');
+        const allRows = document.querySelectorAll('.item-row'); // assuming each item row has class 'item-row'
+
+        // 🟢 Live suggestions as user types
+        searchInput.addEventListener('input', async function() {
+            const query = this.value.trim();
+            if (!query) {
+                suggestionList.style.display = 'none';
+                filterTable();
+                return;
+            }
+
+            const res = await fetch(`/items/suggestions?q=${encodeURIComponent(query)}`);
+            const items = await res.json();
+
+            suggestionList.innerHTML = '';
+            if (items.length === 0) {
+                suggestionList.style.display = 'none';
+                return;
+            }
+
+            items.forEach(it => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-action';
+                li.textContent = `${it.itemName} (${it.itemCategoryName} - ${it.itemSupplier})`;
+                li.addEventListener('click', () => {
+                    searchInput.value = it.itemName;
+                    suggestionList.style.display = 'none';
+                    filterTable();
+                });
+                suggestionList.appendChild(li);
+            });
+
+            suggestionList.style.display = 'block';
+        });
+
+        // 🟢 Hide suggestions when clicking outside
+        document.addEventListener('click', e => {
+            if (!suggestionList.contains(e.target) && e.target !== searchInput) {
+                suggestionList.style.display = 'none';
+            }
+        });
+
+        // 🟢 Apply filters dynamically
+        [searchInput, categoryFilter, supplierFilter].forEach(el => {
+            el.addEventListener('input', filterTable);
+            el.addEventListener('change', filterTable);
+        });
+
+        function filterTable() {
+            const search = searchInput.value.trim().toLowerCase();
+            const category = categoryFilter.value.trim().toLowerCase();
+            const supplier = supplierFilter.value.trim().toLowerCase();
+
+            allRows.forEach(row => {
+                const name = row.dataset.name.toLowerCase();
+                const cat = row.dataset.category.toLowerCase();
+                const sup = row.dataset.supplier.toLowerCase();
+
+                const matchesSearch = !search || name.includes(search) || cat.includes(search) || sup.includes(search);
+                const matchesCategory = !category || cat === category;
+                const matchesSupplier = !supplier || sup === supplier;
+
+                row.style.display = (matchesSearch && matchesCategory && matchesSupplier) ? '' : 'none';
+            });
+        }
+        document.getElementById('resetFilters').addEventListener('click', () => {
+            searchInput.value = '';
+            categoryFilter.value = '';
+            supplierFilter.value = '';
+            filterTable();
+        });
+    </script>
+
+    <script src="/javascripts/form-navigation.js"></script>
 
 
-    <h2 class="text-center mb-4">Lend Items to Outsiders</h2>
-    <form action="/items/lend" method="POST">
-        <table class="table table-bordered table-hover">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Available Qty</th>
-                    <th>Lend Qty</th>
-                    <th>Remarks</th>
 
-                </tr>
-            </thead>
-            <tbody>
-                <% items.forEach(item => { %>
-                    <tr>
-                        <td>
-                            <%= item.itemName %>
-                        </td>
-                        <td>
-                            <%= item.itemQty %>
-                                <%= item.itemUnit %>
-                        </td>
-                        <td>
-                            <input type="number" min="0" name="items[<%= item._id %>][lendQty]" class="form-control">
-                        </td>
-                        <td>
-                            <input type="text" name="items[<%= item._id %>][remarks]" class="form-control" placeholder="Optional remarks">
-                        </td>
-
-                    </tr>
-                    <% }) %>
-            </tbody>
-        </table>
-        <button class="btn btn-primary">Record Lending</button>
-    </form>
+    <style>
+        #itemSearch {
+            font-size: 1rem;
+            padding: 12px 14px;
+            border-radius: 8px;
+        }
+        
+        .form-select {
+            border-radius: 8px;
+        }
+        
+        #suggestionList li {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        #suggestionList li:hover {
+            background-color: #f8f9fa;
+        }
+    </style>

@@ -235,15 +235,20 @@ router.get("/outwards", async (req, res) => {
 });
 
 // GET: Lend items page
-router.get("/lend", async (req, res) => {
-  try {
-    const items = await Items.find({});
-    res.render("items/lend", { items });
-  } catch (error) {
-    console.error("Error loading lend page:", error);
-    res.status(500).send("Error loading lend page");
-  }
-});
+router.get(
+  "/lend",
+  catchAsync(async (req, res) => {
+    const items = await Items.find({}).populate("itemImage");
+    const itemCategories = await ItemCategories.find({});
+    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+
+    res.render("items/lend", {
+      items,
+      itemCategories,
+      itemSuppliers,
+    });
+  })
+);
 
 // POST: Handle lend transaction
 router.post(
