@@ -1602,4 +1602,10 @@ router.get(
     })
 );
 
+router.post("/utility/backup-drive", (req, res) => {
+    runBackup("manual-drive");
+    req.flash("success", "☁️ Google Drive backup started!");
+    res.redirect("/items/utility");
+});
+
 module.exports = router;

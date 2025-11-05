@@ -40,14 +40,14 @@ db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
     console.log("Database Connected");
     console.log("MongoDB Version:", mongoose.version);
-    // const changeStream = db.watch();
+    const changeStream = db.watch();
 
-    // changeStream.on("change", (change) => {
-    //   console.log("📦 Database change detected:", change.operationType);
-    //   runBackup("auto");
-    // });
+    changeStream.on("change", (change) => {
+        console.log("📦 Database change detected:", change.operationType);
+        runBackup("auto");
+    });
 
-    // console.log("👀 Auto-backup watcher started...");
+    console.log("👀 Auto-backup watcher started...");
 });
 
 const app = express();
