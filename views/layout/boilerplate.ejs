@@ -18,37 +18,64 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
 
     <style>
-        html,
-        body {
-            height: 100%;
-        }
+        /* --- Base mobile-first rules --- */
         
         body {
-            display: flex;
-            flex-direction: column;
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        main.content {
-            flex: 1 0 auto;
+        .container,
+        .row {
+            margin: 0 auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        /* Better touch targets for buttons/inputs */
+        
+        button,
+        .btn,
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-radius: 0.6rem;
+        }
+        /* Cards stack vertically on small screens */
+        
+        .card {
+            border-radius: 1rem;
+        }
+        /* Smaller padding on mobile */
+        
+        @media (max-width: 576px) {
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            .table {
+                font-size: 0.9rem;
+            }
+            h1,
+            h2,
+            h3 {
+                font-size: 1.3rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+        }
+        
+        .content {
             padding-top: 80px;
-            /* space for fixed navbar */
-        }
-        
-        footer {
-            flex-shrink: 0;
-            background-color: #f8f9fa;
-            color: #6c757d;
-            text-align: center;
-            padding: 12px 0;
-            border-top: 1px solid #dee2e6;
         }
     </style>
 
 </head>
 
-<body class="">
+<body class="d-flex flex-column min-vh-100">
     <%- include('../partials/navbar') %>
-        <main class="container pt-5 mt-4 content" style="padding-top: 80px;">
+        <main class="flex-fill container pt-5 mt-4 content">
             <%- body %>
         </main>
 
