@@ -1,4 +1,3 @@
-node_modules/
 .env
 npm-debug.log*
 yarn-debug.log*
@@ -11,6 +10,11 @@ files/1695131662245.pdf
 *.jpeg
 *.png
 *.jpg
+node_modules/
+
+# Google Drive credentials and tokens
+credentials.json
+token.json
 # Ignore the backup folder
 backups/
 

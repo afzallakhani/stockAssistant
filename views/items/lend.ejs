@@ -47,15 +47,28 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>Image</th>
                             <th>Item Name</th>
                             <th>Current Stock</th>
-                            <th>Quantity to Lend</th>
+                            <th>Quantity</th>
                             <th>Remarks</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         <% items.forEach((item, i) => { %>
+
                             <tr class="item-row" data-name="<%= item.itemName %>" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
+                                <td style="width: 80px;">
+                                    <% if (item.itemImage && item.itemImage.length > 0) { %>
+                                        <img src="<%= item.base64Image %>" class="img-thumbnail clickable-image" style="height:60px;width:60px;object-fit:contain;cursor:pointer;" onclick="openImage('<%= item.base64Image %>', '<%= item.itemName %>.jpg')">
+
+                                        <% } else { %>
+                                            <img src='https://via.placeholder.com/60x60.png?text=No+Image' class='img-thumbnail clickable-image' style='height:60px; width:60px; object-fit:contain; background:#f8f9fa; border-radius:6px; cursor:pointer;' onclick="openImage('https://via.placeholder.com/600x600.png?text=No+Image', 'NoImage.jpg')">
+                                            <% } %>
+                                </td>
+
+
                                 <td>
                                     <%= item.itemName %>
                                 </td>
@@ -77,6 +90,15 @@
                 <button class="btn btn-primary my-2">Lend Items</button>
             </form>
         </div>
+        <!-- 🖼️ Fullscreen Image Viewer Modal -->
+        <div id="imagePreviewModal" class="fullscreen-overlay" style="display:none;">
+            <span class="close-btn" onclick="closeImage()">&times;</span>
+            <a id="downloadBtn" class="download-btn" download>
+                <i class="bi bi-download"></i> Download
+            </a>
+            <img id="previewImage" src="" alt="Item Image">
+        </div>
+
     </div>
 
     <!-- 🧠 Copy JS from outwards.ejs -->
@@ -160,6 +182,30 @@
     </script>
 
     <script src="/javascripts/form-navigation.js"></script>
+    <script>
+        let scrollPosition = 0;
+
+        function openImage(imgSrc, fileName) {
+            const modal = document.getElementById("imagePreviewModal");
+            const preview = document.getElementById("previewImage");
+            const download = document.getElementById("downloadBtn");
+
+            scrollPosition = window.scrollY; // Save position
+            preview.src = imgSrc;
+            download.href = imgSrc;
+            download.download = fileName || "image.jpg";
+            modal.style.display = "flex";
+
+            document.body.style.overflow = "hidden"; // Prevent scrolling
+        }
+
+        function closeImage() {
+            const modal = document.getElementById("imagePreviewModal");
+            modal.style.display = "none";
+            document.body.style.overflow = ""; // Restore scroll
+            window.scrollTo(0, scrollPosition); // Return to last position
+        }
+    </script>
 
 
 
@@ -181,5 +227,69 @@
         
         #suggestionList li:hover {
             background-color: #f8f9fa;
+        }
+        
+        .img-thumbnail {
+            border: 1px solid #dee2e6;
+            padding: 2px;
+            background-color: #fff;
+        }
+        
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            flex-direction: column;
+        }
+        
+        .fullscreen-overlay img {
+            max-width: 90%;
+            max-height: 85%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+            z-index: 2100;
+        }
+        
+        .download-btn {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: #198754;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 2100;
+        }
+        
+        .download-btn:hover {
+            background: #157347;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .clickable-image:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
         }
     </style>
