@@ -84,7 +84,7 @@
 
         <!-- 🗂️ Item Grid -->
         <h3 class="text-center fw-bold mb-4 text-dark">All Inventory Items</h3>
-        <div id="itemsGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div id="itemsGrid" class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3">
             <% items.forEach(item => { %>
                 <div class="col item-card" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
                     <div class="card h-100 border-0 shadow-sm hover-shadow transition">
@@ -322,5 +322,26 @@
         
         .carousel-item img {
             object-fit: cover;
+        }
+        
+        @media (max-width: 576px) {
+            .card img {
+                height: 180px !important;
+                object-fit: contain;
+            }
+            .card-body {
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .card-body.text-end {
+                text-align: center !important;
+            }
+            .card-body .btn {
+                display: block;
+                width: 100%;
+                margin: 0.25rem 0;
+            }
         }
     </style>
