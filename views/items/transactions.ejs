@@ -1,122 +1,233 @@
-<%- layout('layout/boilerplate') %>
+<% layout('layout/boilerplate') %>
 
-    <h1>All Transactions</h1>
+    <div class="container py-3">
+        <h2 class="fw-bold text-primary text-center mb-3">🧾 All Transactions</h2>
 
-    <!-- Your filter form can remain here -->
-    <!-- Example: -->
-    <!-- 
-<form action="/items/transactions" method="GET" class="row g-3 mb-4 align-items-center">
-    ... your filter inputs for item, start date, and end date ...
-</form>
--->
+        <!-- 🔍 Filters -->
+        <form action="/items/transactions" method="GET" class="bg-white p-3 rounded-4 shadow-sm mb-4 row g-3 align-items-end">
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Item</label>
+                <select class="form-select" name="itemId">
+        <option value="">All Items</option>
+        <% items.forEach(i => { %>
+          <option value="<%= i._id %>" <%= query.itemId === i._id.toString() ? "selected" : "" %>><%= i.itemName %></option>
+        <% }) %>
+      </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Type</label>
+                <select class="form-select" name="type">
+        <option value="">All Types</option>
+        <option value="inward" <%= query.type === 'inward' ? 'selected' : '' %>>Inward</option>
+        <option value="outward" <%= query.type === 'outward' ? 'selected' : '' %>>Outward</option>
+        <option value="lend" <%= query.type === 'lend' ? 'selected' : '' %>>Lent</option>
+        <option value="return" <%= query.type === 'return' ? 'selected' : '' %>>Returned</option>
+      </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Start Date</label>
+                <input type="date" class="form-control" name="startDate" value="<%= query.startDate || '' %>">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">End Date</label>
+                <input type="date" class="form-control" name="endDate" value="<%= query.endDate || '' %>">
+            </div>
+            <div class="col-12 col-md-3 d-grid">
+                <button class="btn btn-primary"><i class="bi bi-funnel"></i> Apply Filters</button>
+            </div>
+        </form>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th style="width: 15%;">Time</th>
-                    <th>Item Name</th>
-                    <th>Type</th>
-                    <th>Quantity</th>
-                    <th>Stock Before</th>
-                    <th>Stock After</th>
-                    <th>Remarks</th>
+        <% if (sortedDates.length > 0) { %>
+            <% sortedDates.forEach((dateKey, i) => { %>
+                <div class="mb-4">
+                    <!-- 📅 Date Header -->
+                    <div class="bg-primary text-white fw-semibold rounded-pill px-3 py-2 mb-2 d-flex justify-content-between align-items-center">
+                        <span><%= new Date(dateKey).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                        <button class="btn btn-sm btn-light toggle-day" type="button" data-bs-toggle="collapse" data-bs-target="#day-<%= i %>" aria-expanded="true">
+            <i class="bi bi-chevron-up"></i>
+          </button>
+                    </div>
 
-                    <th style="width: 10%;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (sortedDates.length > 0) { %>
-                    <% sortedDates.forEach(dateKey => { %>
-                        <!-- Date Group Header -->
-                        <tr class="table-light">
-                            <td colspan="8" class="fw-bold text-center">
-                                <%= new Date(dateKey).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
-                            </td>
-                        </tr>
+                    <!-- 💳 Transaction Cards -->
+                    <div id="day-<%= i %>" class="collapse show">
+                        <div class="row g-3">
+                            <% groupedTransactions[dateKey].forEach(tx => { %>
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                                        <div class="card-body pb-2">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <h6 class="fw-bold mb-0 text-truncate">
+                                                    <%= tx.itemId ? tx.itemId.itemName : 'Item Deleted' %>
+                                                </h6>
 
-                        <!-- Transactions for this Date -->
-                        <% groupedTransactions[dateKey].forEach(tx => { %>
-                            <tr>
-                                <td>
-                                    <%= new Date(tx.createdAt).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) %>
-                                </td>
-                                <td>
-                                    <% if (tx.itemId) { %>
-                                        <%= tx.itemId.itemName %>
-                                            <% } else { %>
-                                                <span class="text-muted">Item Deleted</span>
-                                                <% } %>
-                                </td>
-                                <td>
-                                    <%
-    let badgeClass = 'bg-secondary';
-    let badgeLabel = tx.type.charAt(0).toUpperCase() + tx.type.slice(1); // Default: Capitalized type
+                                                <% 
+                        let badgeClass = 'bg-secondary';
+                        let label = tx.type;
+                        if (tx.type === 'inward') { badgeClass = 'bg-success'; label = 'Inward'; }
+                        else if (tx.type === 'outward') { badgeClass = 'bg-danger'; label = 'Outward'; }
+                        else if (tx.type === 'initial') { badgeClass = 'bg-primary'; label = 'Initial'; }
+                        else if (tx.type === 'lend') { badgeClass = 'bg-info text-dark'; label = 'Lent'; }
+                        else if (tx.type === 'return') { badgeClass = 'bg-warning text-dark'; label = 'Returned'; }
+                      %>
+                                                    <span class="badge <%= badgeClass %> px-3 py-2 rounded-pill"><%= label %></span>
+                                            </div>
 
-    if (tx.type === 'inward') {
-        badgeClass = 'bg-success';
-        badgeLabel = 'Inward';
-    } else if (tx.type === 'outward') {
-        badgeClass = 'bg-danger';
-        badgeLabel = 'Outward';
-    } else if (tx.type === 'initial') {
-        badgeClass = 'bg-primary';
-        badgeLabel = 'Initial Stock';
-    } else if (tx.type === 'lend') {
-        badgeClass = 'bg-info text-dark'; // 🟦 Light blue
-        badgeLabel = 'Lent Out';
-    } else if (tx.type === 'return') {
-        badgeClass = 'bg-warning text-dark'; // 🟨 Yellow
-        badgeLabel = 'Returned';
-    }
-%>
-                                        <span class="badge <%= badgeClass %> px-3 py-2 rounded-pill">
-    <%= badgeLabel %>
-</span>
-                                        <% if (tx.type === 'lend') { %>
-                                            <% if (!tx.returned) { %>
-                                                <form action="/items/transactions/<%= tx._id %>/return" method="POST" class="d-inline">
-                                                    <input type="hidden" name="quantity" value="<%= tx.quantity %>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-success ms-2">
-        <i class="bi bi-arrow-counterclockwise"></i> Return
-      </button>
-                                                </form>
-                                                <% } else { %>
-                                                    <span class="badge bg-success ms-2">Returned</span>
-                                                    <% } %>
+                                            <p class="text-muted small mb-2">
+                                                <i class="bi bi-clock"></i>
+                                                <%= new Date(tx.createdAt).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }) %>
+                                            </p>
+
+                                            <ul class="list-group list-group-flush small mb-2">
+                                                <li class="list-group-item"><strong>Quantity:</strong>
+                                                    <%= tx.quantity %>
+                                                </li>
+                                                <li class="list-group-item"><strong>Stock Before:</strong>
+                                                    <%= tx.stockBefore %>
+                                                </li>
+                                                <li class="list-group-item"><strong>Stock After:</strong>
+                                                    <%= tx.stockAfter %>
+                                                </li>
+                                                <li class="list-group-item"><strong>Remarks:</strong>
+                                                    <%= tx.remarks || '-' %>
+                                                </li>
+                                            </ul>
+
+                                            <div class="text-end mt-2">
+                                                <% if (tx.type === 'lend' && !tx.returned) { %>
+                                                    <form action="/items/transactions/<%= tx._id %>/return" method="POST" class="d-inline">
+                                                        <input type="hidden" name="quantity" value="<%= tx.quantity %>">
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-arrow-counterclockwise"></i> Return
+                          </button>
+                                                    </form>
+                                                    <% } else if (tx.type === 'lend' && tx.returned) { %>
+                                                        <span class="badge bg-success">Returned</span>
                                                         <% } %>
 
-
-
-                                </td>
-                                <td>
-                                    <%= tx.quantity %>
-                                </td>
-                                <td>
-                                    <%= tx.stockBefore %>
-                                </td>
-                                <td>
-                                    <%= tx.stockAfter %>
-                                </td>
-                                <td>
-                                    <%= tx.remarks || '-' %>
-                                </td>
-
-                                <td>
-                                    <% if (tx.type !== 'initial') { %>
-                                        <form action="/items/transactions/<%= tx._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Are you sure you want to reverse this transaction? This action cannot be undone.');">
-                                            <button class="btn btn-sm btn-outline-danger">Reverse</button>
-                                        </form>
-                                        <% } %>
-                                </td>
-                            </tr>
-                            <% }) %>
+                                                            <% if (tx.type !== 'initial') { %>
+                                                                <form action="/items/transactions/<%= tx._id %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to reverse this transaction?');">
+                                                                    <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-arrow-90deg-left"></i> Reverse
+                          </button>
+                                                                </form>
+                                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <% }) %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="7" class="text-center p-4">No transactions found for the selected criteria.</td>
-                                        </tr>
-                                        <% } %>
-            </tbody>
-        </table>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+                    <% } else { %>
+                        <p class="text-center text-muted mt-5">No transactions found for selected filters.</p>
+                        <% } %>
+
+                            <!-- Floating Scroll Buttons -->
+                            <div class="floating-buttons">
+                                <button type="button" class="btn btn-primary shadow-lg rounded-circle scroll-btn" onclick="scrollToTop()">
+      <i class="bi bi-arrow-up"></i>
+    </button>
+                                <button type="button" class="btn btn-primary shadow-lg rounded-circle scroll-btn" onclick="scrollToBottom()">
+      <i class="bi bi-arrow-down"></i>
+    </button>
+                            </div>
+                            <div id="bottom"></div>
     </div>
+
+    <!-- JS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Attach listeners for Bootstrap collapse events
+            document.querySelectorAll(".toggle-day").forEach(btn => {
+                const targetSelector = btn.getAttribute("data-bs-target");
+                const target = document.querySelector(targetSelector);
+                const icon = btn.querySelector("i");
+
+                // When collapse is shown (expanded)
+                target.addEventListener("shown.bs.collapse", function() {
+                    icon.classList.remove("bi-chevron-down");
+                    icon.classList.add("bi-chevron-up");
+                });
+
+                // When collapse is hidden (collapsed)
+                target.addEventListener("hidden.bs.collapse", function() {
+                    icon.classList.remove("bi-chevron-up");
+                    icon.classList.add("bi-chevron-down");
+                });
+            });
+        });
+
+        // Smooth scroll buttons
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        function scrollToBottom() {
+            document.getElementById("bottom").scrollIntoView({
+                behavior: "smooth"
+            });
+        }
+    </script>
+
+
+    <!-- Styles -->
+    <style>
+        .card {
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15)!important;
+        }
+        
+        .floating-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: end;
+            gap: 10px;
+            z-index: 1050;
+        }
+        
+        .scroll-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .bg-primary span {
+            font-size: 0.95rem;
+        }
+        
+        .list-group-item {
+            background: none;
+            border: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        @media (max-width:576px) {
+            h2 {
+                font-size: 1.3rem;
+            }
+            .card-body {
+                padding: 10px 14px;
+            }
+            .list-group-item {
+                font-size: 0.9rem;
+            }
+            .bg-primary {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
