@@ -1,238 +1,266 @@
 <% layout('layout/boilerplate') %>
-    <div class="row">
-        <h1 class="text-center mb-4 mt-3">Lend Items</h1>
+
+    <div class="container py-3">
+        <h2 class="text-center fw-bold text-primary mb-3 mt-2">🤝 Lend Items</h2>
 
         <!-- 🔍 Search & Filters -->
-        <div class="container mb-4 px-0">
-            <div class="row justify-content-center">
-                <div class="col-lg-10 col-md-11 col-sm-12">
+        <div class="bg-white p-3 rounded-4 shadow-sm mb-4">
+            <div class="mb-3 position-relative">
+                <input type="text" id="itemSearch" class="form-control form-control-lg shadow-sm rounded-pill" placeholder="Search by item, category, or supplier...">
+                <ul id="suggestionList" class="list-group position-absolute w-100" style="z-index:1000;display:none;"></ul>
+            </div>
 
-                    <!-- Search Bar -->
-                    <div class="mb-3 position-relative">
-                        <input type="text" id="itemSearch" class="form-control form-control-lg shadow-sm" placeholder="🔍 Search by item, category, or supplier...">
-                        <ul id="suggestionList" class="list-group position-absolute w-100" style="z-index: 1000; display:none;"></ul>
-                    </div>
-
-                    <!-- Filters -->
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <select id="filterCategory" class="form-select form-select-lg shadow-sm">
-              <option value="">All Categories</option>
-              <% itemCategories.forEach(cat => { %>
-                <option value="<%= cat.itemCategoryName %>"><%= cat.itemCategoryName %></option>
-              <% }) %>
-            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <select id="filterSupplier" class="form-select form-select-lg shadow-sm">
-              <option value="">All Suppliers</option>
-              <% itemSuppliers.forEach(sup => { %>
-                <option value="<%= sup.supplierName %>"><%= sup.supplierName %></option>
-              <% }) %>
-            </select>
-                            <div class="col-12 text-end mt-2">
-                                <button id="resetFilters" class="btn btn-outline-secondary btn-sm">Reset Filters</button>
-                            </div>
-                        </div>
-                    </div>
-
+            <div class="row g-2">
+                <div class="col-6">
+                    <select id="filterCategory" class="form-select shadow-sm">
+          <option value="">All Categories</option>
+          <% itemCategories.forEach(cat => { %>
+            <option value="<%= cat.itemCategoryName %>"><%= cat.itemCategoryName %></option>
+          <% }) %>
+        </select>
+                </div>
+                <div class="col-6">
+                    <select id="filterSupplier" class="form-select shadow-sm">
+          <option value="">All Suppliers</option>
+          <% itemSuppliers.forEach(sup => { %>
+            <option value="<%= sup.supplierName %>"><%= sup.supplierName %></option>
+          <% }) %>
+        </select>
+                </div>
+                <div class="col-12 text-end">
+                    <button id="resetFilters" class="btn btn-outline-secondary btn-sm mt-2">Reset Filters</button>
                 </div>
             </div>
         </div>
 
-        <!-- 📦 Items Table -->
-        <div class="col-lg-10 col-md-11 col-sm-12 mx-auto">
-            <form action="/items/lend" method="POST" novalidate class="validated-form">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Item Name</th>
-                            <th>Current Stock</th>
-                            <th>Quantity</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
+        <!-- 🧾 Item Cards -->
+        <form id="lendForm" action="/items/lend" method="POST" novalidate>
+            <div class="row g-3">
+                <% items.forEach((item, i) => { %>
+                    <div class="col-12 col-sm-6 col-md-4 item-card" data-name="<%= item.itemName %>" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                            <div class="position-relative">
+                                <% if (item.itemImage && item.itemImage.length > 0) { %>
+                                    <img src="<%= item.base64Image %>" alt="<%= item.itemName %>" class="card-img-top clickable-image" style="height:160px;object-fit:contain;cursor:pointer;" onclick="openImage('<%= item.base64Image %>', '<%= item.itemName %>.jpg')">
+                                    <% } else { %>
+                                        <img src="https://via.placeholder.com/600x400.png?text=No+Image" alt="No Image" class="card-img-top clickable-image" style="height:160px;object-fit:contain;cursor:pointer;" onclick="openImage('https://via.placeholder.com/600x600.png?text=No+Image','NoImage.jpg')">
+                                        <% } %>
+                            </div>
 
-                    <tbody>
-                        <% items.forEach((item, i) => { %>
-
-                            <tr class="item-row" data-name="<%= item.itemName %>" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
-                                <td style="width: 80px;">
-                                    <% if (item.itemImage && item.itemImage.length > 0) { %>
-                                        <img src="<%= item.base64Image %>" class="img-thumbnail clickable-image" style="height:60px;width:60px;object-fit:contain;cursor:pointer;" onclick="openImage('<%= item.base64Image %>', '<%= item.itemName %>.jpg')">
-
-                                        <% } else { %>
-                                            <img src='https://via.placeholder.com/60x60.png?text=No+Image' class='img-thumbnail clickable-image' style='height:60px; width:60px; object-fit:contain; background:#f8f9fa; border-radius:6px; cursor:pointer;' onclick="openImage('https://via.placeholder.com/600x600.png?text=No+Image', 'NoImage.jpg')">
-                                            <% } %>
-                                </td>
-
-
-                                <td>
+                            <div class="card-body pb-2">
+                                <h5 class="fw-semibold mb-1 text-truncate">
                                     <%= item.itemName %>
-                                </td>
-                                <td>
+                                </h5>
+                                <p class="text-muted small mb-2">
+                                    <%= item.itemCategoryName %> —
+                                        <%= item.itemSupplier %>
+                                </p>
+                                <p class="fw-semibold text-success mb-1">Available:
                                     <%= item.itemQty %>
                                         <%= item.itemUnit %>
-                                </td>
-                                <td>
-                                    <input type="hidden" name="items[<%= i %>][id]" value="<%= item._id %>">
-                                    <input type="number" class="form-control" name="items[<%= i %>][lendQty]" min="0" max="<%= item.itemQty %>" value="0" required>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control" name="items[<%= i %>][remarks]" placeholder="Optional remarks">
-                                </td>
-                            </tr>
-                            <% }) %>
-                    </tbody>
-                </table>
-                <button class="btn btn-primary my-2">Lend Items</button>
-            </form>
-        </div>
-        <!-- 🖼️ Fullscreen Image Viewer Modal -->
-        <div id="imagePreviewModal" class="fullscreen-overlay" style="display:none;">
-            <span class="close-btn" onclick="closeImage()">&times;</span>
-            <a id="downloadBtn" class="download-btn" download>
-                <i class="bi bi-download"></i> Download
-            </a>
-            <img id="previewImage" src="" alt="Item Image">
-        </div>
+                                </p>
 
+                                <input type="hidden" name="items[<%= i %>][id]" value="<%= item._id %>">
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Quantity to Lend</label>
+                                    <input type="number" name="items[<%= i %>][lendQty]" class="form-control form-control-sm" min="0" max="<%= item.itemQty %>" value="0" required>
+                                </div>
+                                <div>
+                                    <label class="form-label small mb-1">Remarks</label>
+                                    <input type="text" name="items[<%= i %>][remarks]" class="form-control form-control-sm" placeholder="Optional remarks">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <!-- ✅ Floating Action Buttons -->
+            <div class="floating-buttons">
+                <button type="button" id="submitLend" class="btn btn-success shadow-lg rounded-pill px-4 py-2">
+        <i class="bi bi-check2-circle"></i> Lend Items
+      </button>
+                <button type="button" class="btn btn-primary shadow-lg rounded-circle scroll-btn" onclick="scrollToTop()">
+        <i class="bi bi-arrow-up"></i>
+      </button>
+            </div>
+        </form>
     </div>
 
-    <!-- 🧠 Copy JS from outwards.ejs -->
-    <script src="/javascripts/filter-search.js"></script>
+    <!-- 🔔 Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1080;">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">✅ Items lent successfully!</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⚠️ Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow-lg">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-danger" id="confirmModalLabel">Confirm Lending</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">Are you sure you want to lend selected items?</div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmSubmitBtn">Yes, Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🖼️ Image Preview Modal -->
+    <div id="imagePreviewModal" class="fullscreen-overlay" style="display:none;">
+        <span class="close-btn" onclick="closeImage()">&times;</span>
+        <a id="downloadBtn" class="download-btn" download><i class="bi bi-download"></i> Download</a>
+        <img id="previewImage" src="" alt="Item Image">
+    </div>
+
+    <!-- JS -->
     <script>
-        const searchInput = document.getElementById('itemSearch');
-        const suggestionList = document.getElementById('suggestionList');
-        const categoryFilter = document.getElementById('filterCategory');
-        const supplierFilter = document.getElementById('filterSupplier');
-        const allRows = document.querySelectorAll('.item-row'); // assuming each item row has class 'item-row'
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchInput = document.getElementById('itemSearch');
+            const suggestionList = document.getElementById('suggestionList');
+            const categoryFilter = document.getElementById('filterCategory');
+            const supplierFilter = document.getElementById('filterSupplier');
+            const allCards = document.querySelectorAll('.item-card');
+            const form = document.getElementById('lendForm');
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            const toastEl = document.getElementById('successToast');
+            const toast = new bootstrap.Toast(toastEl, {
+                delay: 3000
+            });
 
-        // 🟢 Live suggestions as user types
-        searchInput.addEventListener('input', async function() {
-            const query = this.value.trim();
-            if (!query) {
-                suggestionList.style.display = 'none';
-                filterTable();
-                return;
-            }
-
-            const res = await fetch(`/items/suggestions?q=${encodeURIComponent(query)}`);
-            const items = await res.json();
-
-            suggestionList.innerHTML = '';
-            if (items.length === 0) {
-                suggestionList.style.display = 'none';
-                return;
-            }
-
-            items.forEach(it => {
-                const li = document.createElement('li');
-                li.className = 'list-group-item list-group-item-action';
-                li.textContent = `${it.itemName} (${it.itemCategoryName} - ${it.itemSupplier})`;
-                li.addEventListener('click', () => {
-                    searchInput.value = it.itemName;
+            searchInput.addEventListener('input', async function() {
+                const query = this.value.trim();
+                if (!query) {
                     suggestionList.style.display = 'none';
-                    filterTable();
+                    filterItems();
+                    return;
+                }
+
+                const res = await fetch(`/items/suggestions?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                suggestionList.innerHTML = '';
+                if (!data.length) {
+                    suggestionList.style.display = 'none';
+                    return;
+                }
+
+                data.forEach(it => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item list-group-item-action';
+                    li.textContent = `${it.itemName} (${it.itemCategoryName} - ${it.itemSupplier})`;
+                    li.addEventListener('click', () => {
+                        searchInput.value = it.itemName;
+                        suggestionList.style.display = 'none';
+                        filterItems();
+                    });
+                    suggestionList.appendChild(li);
                 });
-                suggestionList.appendChild(li);
+                suggestionList.style.display = 'block';
             });
 
-            suggestionList.style.display = 'block';
-        });
+            document.addEventListener('click', e => {
+                if (!suggestionList.contains(e.target) && e.target !== searchInput) suggestionList.style.display = 'none';
+            });
 
-        // 🟢 Hide suggestions when clicking outside
-        document.addEventListener('click', e => {
-            if (!suggestionList.contains(e.target) && e.target !== searchInput) {
-                suggestionList.style.display = 'none';
+            [searchInput, categoryFilter, supplierFilter].forEach(el => {
+                el.addEventListener('input', filterItems);
+                el.addEventListener('change', filterItems);
+            });
+
+            function filterItems() {
+                const s = searchInput.value.toLowerCase();
+                const c = categoryFilter.value.toLowerCase();
+                const sp = supplierFilter.value.toLowerCase();
+                allCards.forEach(card => {
+                    const name = card.dataset.name.toLowerCase();
+                    const cat = card.dataset.category.toLowerCase();
+                    const sup = card.dataset.supplier.toLowerCase();
+                    const match = (!s || name.includes(s) || cat.includes(s) || sup.includes(s)) &&
+                        (!c || cat === c) &&
+                        (!sp || sup === sp);
+                    card.style.display = match ? '' : 'none';
+                });
+            }
+
+            document.getElementById('resetFilters').addEventListener('click', () => {
+                searchInput.value = '';
+                categoryFilter.value = '';
+                supplierFilter.value = '';
+                filterItems();
+            });
+
+            document.getElementById('submitLend').addEventListener('click', () => confirmModal.show());
+            document.getElementById('confirmSubmitBtn').addEventListener('click', () => {
+                confirmModal.hide();
+                form.submit();
+            });
+
+            if (window.location.search.includes('updated=true')) toast.show();
+
+            let scrollPosition = 0;
+            window.openImage = function(src, name) {
+                const modal = document.getElementById('imagePreviewModal');
+                const preview = document.getElementById('previewImage');
+                const download = document.getElementById('downloadBtn');
+                scrollPosition = window.scrollY;
+                preview.src = src;
+                download.href = src;
+                download.download = name;
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+            window.closeImage = function() {
+                const modal = document.getElementById('imagePreviewModal');
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+                window.scrollTo(0, scrollPosition);
+            }
+            window.scrollToTop = function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
             }
         });
-
-        // 🟢 Apply filters dynamically
-        [searchInput, categoryFilter, supplierFilter].forEach(el => {
-            el.addEventListener('input', filterTable);
-            el.addEventListener('change', filterTable);
-        });
-
-        function filterTable() {
-            const search = searchInput.value.trim().toLowerCase();
-            const category = categoryFilter.value.trim().toLowerCase();
-            const supplier = supplierFilter.value.trim().toLowerCase();
-
-            allRows.forEach(row => {
-                const name = row.dataset.name.toLowerCase();
-                const cat = row.dataset.category.toLowerCase();
-                const sup = row.dataset.supplier.toLowerCase();
-
-                const matchesSearch = !search || name.includes(search) || cat.includes(search) || sup.includes(search);
-                const matchesCategory = !category || cat === category;
-                const matchesSupplier = !supplier || sup === supplier;
-
-                row.style.display = (matchesSearch && matchesCategory && matchesSupplier) ? '' : 'none';
-            });
-        }
-        document.getElementById('resetFilters').addEventListener('click', () => {
-            searchInput.value = '';
-            categoryFilter.value = '';
-            supplierFilter.value = '';
-            filterTable();
-        });
     </script>
 
-    <script src="/javascripts/form-navigation.js"></script>
-    <script>
-        let scrollPosition = 0;
-
-        function openImage(imgSrc, fileName) {
-            const modal = document.getElementById("imagePreviewModal");
-            const preview = document.getElementById("previewImage");
-            const download = document.getElementById("downloadBtn");
-
-            scrollPosition = window.scrollY; // Save position
-            preview.src = imgSrc;
-            download.href = imgSrc;
-            download.download = fileName || "image.jpg";
-            modal.style.display = "flex";
-
-            document.body.style.overflow = "hidden"; // Prevent scrolling
-        }
-
-        function closeImage() {
-            const modal = document.getElementById("imagePreviewModal");
-            modal.style.display = "none";
-            document.body.style.overflow = ""; // Restore scroll
-            window.scrollTo(0, scrollPosition); // Return to last position
-        }
-    </script>
-
-
-
+    <!-- Styles -->
     <style>
-        #itemSearch {
-            font-size: 1rem;
-            padding: 12px 14px;
-            border-radius: 8px;
+        .card {
+            border-radius: 16px;
+            transition: all 0.3s ease;
         }
         
-        .form-select {
-            border-radius: 8px;
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15)!important;
         }
         
-        #suggestionList li {
-            cursor: pointer;
-            transition: background-color 0.2s;
+        .floating-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: end;
+            gap: 10px;
+            z-index: 1050;
         }
         
-        #suggestionList li:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .img-thumbnail {
-            border: 1px solid #dee2e6;
-            padding: 2px;
-            background-color: #fff;
+        .scroll-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         .fullscreen-overlay {
@@ -241,12 +269,12 @@
             left: 0;
             width: 100%;
             height: 100%;
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
             flex-direction: column;
+            z-index: 2000;
         }
         
         .fullscreen-overlay img {
@@ -263,7 +291,6 @@
             font-size: 40px;
             color: white;
             cursor: pointer;
-            z-index: 2100;
         }
         
         .download-btn {
@@ -275,21 +302,28 @@
             padding: 10px 16px;
             border-radius: 6px;
             text-decoration: none;
-            font-size: 16px;
             display: flex;
             align-items: center;
             gap: 6px;
-            z-index: 2100;
         }
         
         .download-btn:hover {
             background: #157347;
-            text-decoration: none;
             color: white;
         }
         
-        .clickable-image:hover {
-            transform: scale(1.1);
-            transition: transform 0.2s ease;
+        @media (max-width:576px) {
+            h2 {
+                font-size: 1.3rem;
+            }
+            .card img {
+                height: 140px!important;
+            }
+            .card-body {
+                padding: 10px 14px;
+            }
+            .form-control-sm {
+                font-size: 0.9rem;
+            }
         }
     </style>
