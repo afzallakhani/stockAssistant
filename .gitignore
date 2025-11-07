@@ -17,4 +17,5 @@ credentials.json
 token.json
 # Ignore the backup folder
 backups/
+logs/
 
