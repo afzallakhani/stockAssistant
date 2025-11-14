@@ -19,4 +19,5 @@ token.json
 # Ignore the backup folder
 backups/
 logs/
+node_modules/
 
