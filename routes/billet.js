@@ -36,14 +36,30 @@ if (!fs.existsSync(outputDirectory)) {
   fs.mkdirSync(outputDirectory, { recursive: true });
 }
 
+// router.get(
+//   "/list",
+//   catchAsync(async (req, res) => {
+//     const list = await Billets.find({}).sort({ createdAt: -1 }); // Newest to oldest
+//     res.render("billets/list", { list });
+//   })
+// );
 router.get(
   "/list",
   catchAsync(async (req, res) => {
-    const list = await Billets.find({}).sort({ createdAt: -1 }); // Newest to oldest
-    res.render("billets/list", { list });
+    const perPage = 100;
+    const currentPage = parseInt(req.query.page) || 1;
+
+    const totalItems = await Billets.countDocuments();
+    const totalPages = Math.ceil(totalItems / perPage);
+
+    const list = await Billets.find({})
+      .sort({ createdAt: -1 })
+      .skip((currentPage - 1) * perPage)
+      .limit(perPage);
+
+    res.render("billets/list", { list, currentPage, totalPages });
   })
 );
-
 router.get("/new", (req, res) => {
   res.render("billets/new");
 });
