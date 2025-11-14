@@ -1,6 +1,23 @@
-
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 *.docx
 *.pdf
 *.pdf
 files/1695131662245.pdf
 *.pdf
+*.jpeg
+*.png
+*.jpg
+*.log
+node_modules/
+
+# Google Drive credentials and tokens
+credentials.json
+token.json
+# Ignore the backup folder
+backups/
+logs/
+node_modules/
+

@@ -1,0 +1,263 @@
+<% layout('layout/boilerplate') %>
+
+    <div class="container py-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+            <h2 class="fw-bold text-primary mb-2">📊 Consumption Summary</h2>
+            <a href="/items/report/consumption?category=<%= query.category || '' %>&supplier=<%= query.supplier || '' %>&startDate=<%= query.startDate || '' %>&endDate=<%= query.endDate || '' %>&mode=<%= query.mode || '' %>" class="btn btn-warning shadow-sm">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </a>
+        </div>
+
+        <!-- Filters -->
+        <form class="bg-white p-3 rounded-4 shadow-sm mb-4 row g-3 align-items-end" method="get">
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Item</label>
+                <select class="form-select" name="itemId">
+        <option value="">All Items</option>
+        <% items.forEach(i => { %>
+          <option value="<%= i._id %>" <%= query.itemId === i._id.toString() ? "selected" : "" %>><%= i.itemName %></option>
+        <% }) %>
+      </select>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Category</label>
+                <select class="form-select" name="category">
+        <option value="">All Categories</option>
+        <% categories.forEach(c => { %>
+          <option value="<%= c.itemCategoryName %>" <%= query.category === c.itemCategoryName ? "selected" : "" %>><%= c.itemCategoryName %></option>
+        <% }) %>
+      </select>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Supplier</label>
+                <select class="form-select" name="supplier">
+        <option value="">All Suppliers</option>
+        <% suppliers.forEach(s => { %>
+          <option value="<%= s.supplierName %>" <%= query.supplier === s.supplierName ? "selected" : "" %>><%= s.supplierName %></option>
+        <% }) %>
+      </select>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Mode</label>
+                <select class="form-select" name="mode">
+        <option value="">Since Start</option>
+        <option value="sinceLastInward" <%= query.mode === 'sinceLastInward' ? 'selected' : '' %>>Since Last Inward</option>
+      </select>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Heat Type</label>
+                <select class="form-select" name="heatType">
+        <option value="">All Heats</option>
+        <option value="open" <%= query.heatType === 'open' ? 'selected' : '' %>>Open Cast</option>
+        <option value="close" <%= query.heatType === 'close' ? 'selected' : '' %>>Close Cast</option>
+      </select>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Start Date</label>
+                <input type="date" class="form-control" name="startDate" value="<%= query.startDate || '' %>">
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">End Date</label>
+                <input type="date" class="form-control" name="endDate" value="<%= query.endDate || '' %>">
+            </div>
+
+            <div class="col-6 col-md-3 d-grid">
+                <button class="btn btn-primary"><i class="bi bi-funnel"></i> Apply</button>
+            </div>
+        </form>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 text-center mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card bg-light border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Total Heats</h6>
+                        <h4 class="fw-bold">
+                            <%= totalHeats %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-light border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Open Casting</h6>
+                        <h4 class="fw-bold">
+                            <%= openHeats %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-light border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Close Casting</h6>
+                        <h4 class="fw-bold">
+                            <%= closeHeats %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-light border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Avg. Life / Heat</h6>
+                        <h4 class="fw-bold">
+                            <%= avgPerHeat %>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <% if (transactions.length > 0) { %>
+            <div class="row g-3">
+                <% transactions.forEach(tx => { %>
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                            <div class="position-relative">
+                                <img src="<%= tx.base64Image || 'https://via.placeholder.com/400x300.png?text=No+Image' %>" alt="<%= tx.itemName %>" class="card-img-top clickable-image" style="height:160px;object-fit:contain;cursor:pointer;" onclick="openImage('<%= tx.base64Image || 'https://via.placeholder.com/600x600.png?text=No+Image' %>', '<%= tx.itemName %>.jpg')">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="fw-semibold mb-1">
+                                    <%= tx.itemName %>
+                                </h5>
+                                <p class="text-muted small mb-2">
+                                    <%= tx.category %> —
+                                        <%= tx.supplier %>
+                                </p>
+                                <ul class="list-group list-group-flush small">
+                                    <li class="list-group-item"><strong>Current Stock:</strong>
+                                        <%= tx.currentStock %>
+                                    </li>
+                                    <li class="list-group-item"><strong>Total Used:</strong>
+                                        <%= tx.totalUsed %>
+                                    </li>
+                                    <li class="list-group-item"><strong>Last Used:</strong>
+                                        <%= new Date(tx.lastUsed).toLocaleDateString('en-GB') %>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+            <% } else { %>
+                <p class="text-center text-muted mt-5">No consumption data found for selected filters.</p>
+                <% } %>
+    </div>
+
+    <!-- 🖼️ Image Preview Modal -->
+    <div id="imagePreviewModal" class="fullscreen-overlay" style="display:none;">
+        <span class="close-btn" onclick="closeImage()">&times;</span>
+        <a id="downloadBtn" class="download-btn" download><i class="bi bi-download"></i> Download</a>
+        <img id="previewImage" src="" alt="Item Image">
+    </div>
+
+    <!-- JS -->
+    <script>
+        let scrollPosition = 0;
+
+        function openImage(src, name) {
+            const modal = document.getElementById('imagePreviewModal');
+            const preview = document.getElementById('previewImage');
+            const download = document.getElementById('downloadBtn');
+            scrollPosition = window.scrollY;
+            preview.src = src;
+            download.href = src;
+            download.download = name;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImage() {
+            const modal = document.getElementById('imagePreviewModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+            window.scrollTo(0, scrollPosition);
+        }
+    </script>
+
+    <!-- Styles -->
+    <style>
+        .card {
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15)!important;
+        }
+        
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 2000;
+        }
+        
+        .fullscreen-overlay img {
+            max-width: 90%;
+            max-height: 85%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .download-btn {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: #198754;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .download-btn:hover {
+            background: #157347;
+            color: white;
+        }
+        
+        @media (max-width:576px) {
+            h2 {
+                font-size: 1.3rem;
+            }
+            .card img {
+                height: 140px!important;
+            }
+            .card-body {
+                padding: 10px 14px;
+            }
+            .form-control-sm {
+                font-size: 0.9rem;
+            }
+        }
+    </style>

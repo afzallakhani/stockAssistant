@@ -22,6 +22,8 @@
                     <th scope="col">#</th>
                     <th scope="col">Tc Date</th>
                     <th scope="col">Po Date</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Section</th>
                     <th scope="col">Buyer Name</th>
                     <th scope="col">Bill No.</th>
                     <th scope="col">Tc NO.</th>
@@ -45,8 +47,15 @@
                             <%= list.formattedPoDate %>
                         </td>
                         <td>
+                            <%= list.heatNo[0].gradeName %>
+                        </td>
+                        <td>
+                            <%= list.heatNo[0].sectionSize %>
+                        </td>
+                        <td>
                             <%= list.buyerName %>
                         </td>
+
                         <td>
                             <%= list.billNo %>
                         </td>

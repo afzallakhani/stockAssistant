@@ -1,53 +1,254 @@
 <% layout('layout/boilerplate') %>
-    <div class="row">
-        <h1 class="text-center">Edit Item</h1>
-        <div class="col-6 offset-3">
-            <form action="/items/<%= item._id %>?_method=PUT" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
-                <div class="mb-2">
-                    <label for="name" class="form-label">Item Name</label>
-                    <input type="text" id="name" name="item[itemName]" class="form-control" value="<%= item.itemName %>" required>
-                </div>
 
-                <div class="mb-2">
-                    <label for="description" class="form-label">Item Description</label>
-                    <input type="text" id="description" name="item[itemDescription]" class="form-control" value="<%= item.itemDescription %>" required>
-                </div>
+    <div class="container my-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-warning text-dark text-center py-3 rounded-top">
+                <h4 class="mb-0 fw-semibold">
+                    <i class="bi bi-pencil-square"></i> Edit Item
+                </h4>
+            </div>
 
-                <div class="mb-2">
-                    <label for="unit" class="form-label">Item Quantity Unit</label>
-                    <select class="form-select form-select-lg" name="item[itemUnit]" id="unit" required>
-                        <option selected><%= item.itemUnit %> </option>
-                        <option value="NOS">NOS</option>
-                        <option value="PCS">PCS</option>
-                        <option value="PCS">BAGS</option>
-                        <option value="BOX">BOX</option>
-                        <option value="KGS">KGS</option>
-                        <option value="MTS">MTS</option>
-                    </select>
-                </div>
+            <div class="card-body">
+                <form action="/items/<%= item._id %>?_method=PUT" method="POST" class="needs-validation" novalidate enctype="multipart/form-data">
+                    <!-- ===== Item Details ===== -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Item Name</label>
+                            <input type="text" id="name" name="item[itemName]" class="form-control" value="<%= item.itemName %>" required />
+                        </div>
 
-                <div class="mb-2">
-                    <label for="quantity" class="form-label">Item Quantity</label>
-                    <input type="text" id="quantity" name="item[itemQty]" class="form-control" value="<%= item.itemQty %>" required>
-                </div>
+                        <div class="col-md-6">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" id="description" name="item[itemDescription]" class="form-control" value="<%= item.itemDescription %>" required />
+                        </div>
+                    </div>
 
-                <div class="mb-2">
-                    <label for="category" class="form-label">Item Category</label>
-                    <select class="form-select form-select-lg" name="item[itemCategoryName]" id="category" required>
-                        <option selected><%= item.itemCategoryName %> </option>
-                        <option value="CCM REFRACTORIES">CCM REFRACTORIES</option>
-                        <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
-                        <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
-                        <option value="FURNACE REFRACTORIES">FURNACE REFRACTORIES</option>
-                        <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
-                    </select>
-                </div>
-                <% for(image of item.itemImage){%>
-                    <label class="form-label" for="image"><b>Current Image Name:- <%= image.name %></b></label>
-                    <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]">
-                    <button class="btn btn-success my-2" onclick="return confirm('Are you sure you want to edit this item?')">Save Item</button>
-                    <%} %>
+                    <!-- ===== Quantity & Unit ===== -->
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <label for="unit" class="form-label">Quantity Unit</label>
+                            <select class="form-select" name="item[itemUnit]" id="unit" required>
+              <option selected><%= item.itemUnit %></option>
+              <option value="NOS">NOS</option>
+              <option value="PCS">PCS</option>
+              <option value="BOX">BOX</option>
+              <option value="KGS">KGS</option>
+              <option value="MTS">MTS</option>
+              <option value="BAGS">BAGS</option>
+              <option value="SETS">SETS</option>
+              <option value="MTRS">MTRS</option>
+            </select>
+                        </div>
 
-            </form>
+                        <div class="col-md-4">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" id="quantity" name="item[itemQty]" class="form-control" value="<%= item.itemQty %>" required />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="life" class="form-label">Daily Consumption</label>
+                            <input type="text" id="life" name="item[life]" class="form-control" value="<%= item.life %>" placeholder="e.g., 1 HEAT, 5 HEATS, 1 DAY" />
+                        </div>
+                    </div>
+
+                    <!-- ===== Category & Supplier (Aligned) ===== -->
+                    <div class="row g-3 mt-3 align-items-end">
+                        <!-- Category -->
+                        <div class="col-md-8">
+                            <label for="category" class="form-label">Item Category</label>
+                            <div class="input-group">
+                                <select class="form-select" id="category" name="item[itemCategoryName]" required>
+                <option selected><%= item.itemCategoryName %></option>
+                <% for (let category of itemCategories) { %>
+                <option><%= category.itemCategoryName %></option>
+                <% } %>
+              </select>
+                                <button type="button" class="btn btn-outline-secondary px-3" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+                            </div>
+                        </div>
+
+                        <!-- Supplier -->
+                        <div class="col-md-4">
+                            <label for="supplierName" class="form-label">Item Supplier</label>
+                            <div class="input-group">
+                                <input id="supplierName" name="item[itemSupplier]" type="text" class="form-control awesomplete" placeholder="Type to search supplier..." autocomplete="off" value="<%= item.itemSupplier %>" required />
+                                <a href="/supplier/new" target="_blank" class="btn btn-outline-primary px-3">
+                                    <i class="bi bi-person-plus"></i>
+                                </a>
+                            </div>
+
+                            <ul id="supplierList" class="d-none">
+                                <% for (let supplier of itemSuppliers) { %>
+                                    <li>
+                                        <%= supplier.supplierName.trim() %> (
+                                            <%= supplier.supplierCity.trim() %>)
+                                    </li>
+                                    <% } %>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- ===== Current Images ===== -->
+                    <div class="mt-4">
+                        <label class="form-label">Current Images</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            <% if (item.itemImage.length > 0) { %>
+                                <% item.itemImage.forEach(img => { %>
+                                    <div class="text-center border rounded p-2 shadow-sm bg-light">
+                                        <img src="data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>" alt="<%= img.name %>" class="img-thumbnail zoomable" style="width:120px; height:120px; object-fit:contain; cursor:zoom-in;" />
+                                        <div class="mt-2 d-flex justify-content-center gap-2">
+                                            <a href="data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>" download="<%= img.name %>" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                            <label class="form-check-label text-danger small">
+                  <input type="checkbox" name="deleteImages[]" value="<%= img._id %>" />
+                  Delete
+                </label>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <p class="text-muted">No images uploaded.</p>
+                                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- ===== Upload New Images ===== -->
+                    <div class="mt-3">
+                        <label for="image" class="form-label">Add / Replace Images</label>
+                        <input type="file" id="image" name="item[itemImage]" class="form-control" multiple />
+                        <small class="text-muted">
+            You can delete specific old images above or upload new ones to add / replace.
+          </small>
+                    </div>
+
+                    <!-- ===== Submit Button ===== -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-success px-4 py-2 fw-semibold" onclick="return confirm('Save changes?')">
+            <i class="bi bi-save"></i> Update Item
+          </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+
+    <!-- ===== Modal: Add New Category ===== -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addCategoryModalLabel">
+                        <i class="bi bi-tags"></i> Add New Category
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/items/category" method="POST" novalidate>
+                        <label for="newItemCategory" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="newItemCategory" name="category[itemCategoryName]" required />
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check2-circle"></i> Add
+            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Image Preview Modal ===== -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+            <div class="modal-content bg-dark">
+                <div class="modal-body p-0 text-center">
+                    <img id="modalImage" class="img-fluid" style="max-height:95vh;" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Awesomplete ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Awesomplete Setup
+            const input = document.getElementById("supplierName");
+            const listItems = Array.from(document.querySelectorAll("#supplierList li")).map(
+                (li) => li.textContent.trim()
+            );
+            new Awesomplete(input, {
+                list: listItems,
+                minChars: 1,
+                autoFirst: true,
+                filter: (text, input) => text.toUpperCase().includes(input.toUpperCase()),
+                item: (text, input) => {
+                    const i = text.toUpperCase().indexOf(input.toUpperCase());
+                    if (i >= 0) {
+                        const prefix = text.substring(0, i);
+                        const match = text.substring(i, i + input.length);
+                        const suffix = text.substring(i + input.length);
+                        const li = document.createElement("li");
+                        li.innerHTML = `<span>${prefix}<strong>${match}</strong>${suffix}</span>`;
+                        return li;
+                    }
+                    return Awesomplete.ITEM(text, input);
+                },
+            });
+
+            input.addEventListener("awesomplete-selectcomplete", function() {
+                this.value = this.value.trim();
+            });
+
+            // Zoom image preview
+            document.querySelectorAll(".zoomable").forEach((img) => {
+                img.addEventListener("click", () => {
+                    document.getElementById("modalImage").src = img.src;
+                    new bootstrap.Modal(document.getElementById("imageModal")).show();
+                });
+            });
+        });
+    </script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .card {
+            border-radius: 12px;
+        }
+        
+        label {
+            font-weight: 500;
+        }
+        
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+        }
+        
+        .awesomplete>ul {
+            width: 100% !important;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            z-index: 2000;
+        }
+        
+        .awesomplete mark {
+            background: transparent;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1rem !important;
+            }
+        }
+    </style>
