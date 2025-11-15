@@ -101,6 +101,6 @@ app.use((err, req, res, next) => {
   res.status(statusCode).render("error", { err });
 });
 
-app.listen(3002, "0.0.0.0", () => {
-  console.log("App Running On Port 3002");
+app.listen(3000, "0.0.0.0", () => {
+  console.log("App Running On Port 3000");
 });
