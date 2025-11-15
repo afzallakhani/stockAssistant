@@ -19,4 +19,4 @@ token.json
 # Ignore the backup folder
 backups/
 logs/
-
+pending-uploads/
