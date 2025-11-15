@@ -73,20 +73,22 @@
                         <div class="col-md-4">
                             <label for="supplierName" class="form-label">Item Supplier</label>
                             <div class="input-group">
-                                <input id="supplierName" name="item[itemSupplier]" type="text" class="form-control awesomplete" placeholder="Type to search supplier..." autocomplete="off" value="<%= item.itemSupplier %>" required />
-                                <a href="/supplier/new" target="_blank" class="btn btn-outline-primary px-3">
-                                    <i class="bi bi-person-plus"></i>
-                                </a>
+                                <input id="supplierName" name="item[itemSupplier]" type="text" class="form-control awesomplete" autocomplete="off" value="<%= item.itemSupplier %>"> <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#addSupplierModal">
+        <i class="bi bi-plus"></i>
+    </button>
                             </div>
+
 
                             <ul id="supplierList" class="d-none">
                                 <% for (let supplier of itemSuppliers) { %>
                                     <li>
                                         <%= supplier.supplierName.trim() %> (
-                                            <%= supplier.supplierCity.trim() %>)
-                                    </li>
+                                            <%= supplier.supplierCity.trim() %>)</li>
                                     <% } %>
                             </ul>
+
+
                         </div>
                     </div>
 
@@ -146,7 +148,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="/items/category" method="POST" novalidate>
+                    <!-- <form action="/items/category" method="POST" novalidate>
                         <label for="newItemCategory" class="form-label">Category Name</label>
                         <input type="text" class="form-control" id="newItemCategory" name="category[itemCategoryName]" required />
                         <div class="text-end mt-3">
@@ -154,11 +156,50 @@
               <i class="bi bi-check2-circle"></i> Add
             </button>
                         </div>
+                    </form> -->
+                    <form id="addCategoryForm">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="newCategoryInput" required>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-success">Save</button>
+                        </div>
                     </form>
+
                 </div>
             </div>
         </div>
     </div>
+    <!-- Add Supplier Modal -->
+    <div class="modal fade" id="addSupplierModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Add Supplier</h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addSupplierForm">
+                        <label class="form-label">Supplier Name</label>
+                        <input type="text" id="supName" class="form-control" required>
+
+                        <label class="form-label mt-2">City</label>
+                        <input type="text" id="supCity" class="form-control" required>
+
+                        <label class="form-label mt-2">State</label>
+                        <input type="text" id="supState" class="form-control" required>
+
+                        <div class="text-end mt-3">
+                            <button class="btn btn-success">Save Supplier</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 
     <!-- ===== Image Preview Modal ===== -->
     <div class="modal fade" id="imageModal" tabindex="-1">
@@ -177,43 +218,84 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Awesomplete Setup
+
+            /* -----------------------
+               A W E S O M P L E T E
+            ------------------------ */
             const input = document.getElementById("supplierName");
-            const listItems = Array.from(document.querySelectorAll("#supplierList li")).map(
-                (li) => li.textContent.trim()
-            );
+            const listItems = Array.from(document.querySelectorAll("#supplierList li"))
+                .map(li => li.textContent.trim());
+
             new Awesomplete(input, {
                 list: listItems,
                 minChars: 1,
-                autoFirst: true,
-                filter: (text, input) => text.toUpperCase().includes(input.toUpperCase()),
-                item: (text, input) => {
-                    const i = text.toUpperCase().indexOf(input.toUpperCase());
-                    if (i >= 0) {
-                        const prefix = text.substring(0, i);
-                        const match = text.substring(i, i + input.length);
-                        const suffix = text.substring(i + input.length);
-                        const li = document.createElement("li");
-                        li.innerHTML = `<span>${prefix}<strong>${match}</strong>${suffix}</span>`;
-                        return li;
-                    }
-                    return Awesomplete.ITEM(text, input);
-                },
+                autoFirst: true
             });
 
-            input.addEventListener("awesomplete-selectcomplete", function() {
-                this.value = this.value.trim();
-            });
+            /* -----------------------
+               ADD CATEGORY (AJAX)
+            ------------------------ */
+            document.getElementById("addCategoryForm").addEventListener("submit", async function(e) {
+                e.preventDefault();
 
-            // Zoom image preview
-            document.querySelectorAll(".zoomable").forEach((img) => {
-                img.addEventListener("click", () => {
-                    document.getElementById("modalImage").src = img.src;
-                    new bootstrap.Modal(document.getElementById("imageModal")).show();
+                const categoryName = document.getElementById("newCategoryInput").value;
+
+                const res = await fetch("/items/category/ajax", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        itemCategoryName: categoryName
+                    })
                 });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    const select = document.getElementById("category");
+                    const opt = document.createElement("option");
+                    opt.textContent = data.category.itemCategoryName;
+                    select.appendChild(opt);
+                    select.value = data.category.itemCategoryName;
+
+                    bootstrap.Modal.getInstance(document.getElementById("addCategoryModal")).hide();
+                }
             });
+
+            /* -----------------------
+               ADD SUPPLIER (AJAX)
+            ------------------------ */
+            document.getElementById("addSupplierForm").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                console.log("SUPPLIER AJAX CLICKED"); // ADD THIS
+
+                const payload = {
+                    supplierName: document.getElementById("supName").value,
+                    supplierCity: document.getElementById("supCity").value,
+                    supplierState: document.getElementById("supState").value
+                };
+
+                const res = await fetch("/supplier/ajax", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById("supplierName").value = data.supplier.supplierName;
+
+                    bootstrap.Modal.getInstance(document.getElementById("addSupplierModal")).hide();
+                }
+            });
+
         });
     </script>
+
 
     <style>
         body {

@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const SupplierSchema = new mongoose.Schema({
@@ -7,27 +8,30 @@ const SupplierSchema = new mongoose.Schema({
     uppercase: true,
     unique: true,
     trim: true,
+    required: true,
   },
   supplierCity: {
     type: String,
     uppercase: true,
     trim: true,
+    required: true,
   },
   supplierState: {
     type: String,
     uppercase: true,
     trim: true,
+    required: true,
   },
 
   supplierItemCategory: {
     type: String,
     uppercase: true,
     trim: true,
+    required: false,
   },
   supplierEmail: {
     type: String,
     lowercase: true,
-    unique: true,
     trim: true,
   },
   supplierPhone: {
@@ -38,7 +42,6 @@ const SupplierSchema = new mongoose.Schema({
   supplierGst: {
     type: String,
     uppercase: true,
-    unique: true,
     trim: true,
   },
 });

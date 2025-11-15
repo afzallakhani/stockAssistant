@@ -1614,5 +1614,17 @@ router.post("/utility/backup-drive", (req, res) => {
   req.flash("success", "☁️ Google Drive backup started!");
   res.redirect("/items/utility");
 });
+router.post("/category/ajax", upload.none(), async (req, res) => {
+  try {
+    const category = new ItemCategories({
+      itemCategoryName: req.body.itemCategoryName,
+    });
+    await category.save();
+
+    res.json({ success: true, category });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
 
 module.exports = router;
