@@ -5,11 +5,11 @@
 
             <form action="/supplier" novalidate method="POST" enctype="multipart/form-data">
                 <label class="form-label mt-1" for="supplierName">Enter Supplier Name</label>
-                <input class="form-control" type="text" id="supplierName" name="supplier[supplierName]">
+                <input class="form-control" type="text" id="supplierName" name="supplier[supplierName]" required>
                 <label class="form-label mt-1" for="supplierCity">Enter Supplier City</label>
-                <input class="form-control" type="text" id="supplierCity" name="supplier[supplierCity]">
+                <input class="form-control" type="text" id="supplierCity" name="supplier[supplierCity]" required>
                 <label class="form-label mt-1" for="supplierState">Enter Supplier State</label>
-                <input class="form-control" type="text" id="supplierState" name="supplier[supplierState]">
+                <input class="form-control" type="text" id="supplierState" name="supplier[supplierState]" required>
                 <label class="form-label mt-1" for="supplierItemCategory">Enter Supplier Item Category</label>
                 <select class="form-select form-select-lg" name="supplier[supplierItemCategory]" id="supplierItemCategory" required>
                             <option disabled selected>Select Item Category</option>

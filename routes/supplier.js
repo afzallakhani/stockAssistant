@@ -144,4 +144,26 @@ router.delete(
     res.redirect("/supplier/allsuppliers");
   })
 );
+
+router.post("/ajax", upload.none(), async (req, res) => {
+  console.log("📥 AJAX SUPPLIER RECEIVED:", req.body); // ADD THIS
+
+  try {
+    const supplier = new Supplier({
+      supplierName: req.body.supplierName,
+      supplierCity: req.body.supplierCity,
+      supplierState: req.body.supplierState,
+    });
+
+    await supplier.save();
+
+    console.log("✅ SUPPLIER SAVED:", supplier); // ADD THIS
+
+    res.json({ success: true, supplier });
+  } catch (err) {
+    console.log("❌ ERROR SAVING SUPPLIER:", err.message); // ADD THIS
+    res.json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;
