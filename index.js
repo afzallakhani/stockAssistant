@@ -28,26 +28,26 @@ const ExpressError = require("./utils/ExpressError");
 // const unlinkAsync = promisify(fs.unlink);
 
 mongoose.connect("mongodb://localhost:27017/stockAssistant", {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
 
-  useFindAndModify: false,
+    useFindAndModify: false,
 });
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
-  console.log("Database Connected");
-  console.log("MongoDB Version:", mongoose.version);
-  const changeStream = db.watch();
+    console.log("Database Connected");
+    console.log("MongoDB Version:", mongoose.version);
+    const changeStream = db.watch();
 
-  changeStream.on("change", (change) => {
-    console.log("📦 Database change detected:", change.operationType);
-    runBackup("auto");
-  });
+    changeStream.on("change", (change) => {
+        console.log("📦 Database change detected:", change.operationType);
+        runBackup("auto");
+    });
 
-  console.log("👀 Auto-backup watcher started...");
+    console.log("👀 Auto-backup watcher started...");
 });
 
 const app = express();
@@ -62,10 +62,10 @@ app.use(methodOverride("_method"));
 
 // Session config
 const sessionConfig = {
-  secret: "supersecretbackupkey",
-  resave: false,
-  saveUninitialized: true,
-  cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 }, // 1 hour
+    secret: "supersecretbackupkey",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 }, // 1 hour
 };
 
 app.use(session(sessionConfig));
@@ -73,9 +73,9 @@ app.use(flash());
 
 // Make flash messages available to all views
 app.use((req, res, next) => {
-  res.locals.success = req.flash("success");
-  res.locals.error = req.flash("error");
-  next();
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    next();
 });
 
 app.use("/items", item);
@@ -85,22 +85,28 @@ app.use("/billets", billets);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-  res.render("home");
+    res.render("home");
 });
 
 // app.use((req, res) => {
 //     res.status(404).send("NOT FOUND!");
 // });
 app.all("*", (req, res, next) => {
-  next(new ExpressError("Page Not Found!", 404));
+    next(new ExpressError("Page Not Found!", 404));
 });
 
 app.use((err, req, res, next) => {
-  const { statusCode = 500, message = "Something Went Wrong!" } = err;
-  if (!err.message) err.message = "Oh No! Something Went Wrong!";
-  res.status(statusCode).render("error", { err });
+    const { statusCode = 500, message = "Something Went Wrong!" } = err;
+    if (!err.message) err.message = "Oh No! Something Went Wrong!";
+    res.status(statusCode).render("error", {
+        err: {
+            message: err.message,
+            stack: process.env.NODE_ENV === "development" ? err.stack : "",
+        },
+        layout: false, // 🔥 STOP recursive rendering
+    });
 });
 
 app.listen(3000, "0.0.0.0", () => {
-  console.log("App Running On Port 3000");
+    console.log("App Running On Port 3000");
 });
