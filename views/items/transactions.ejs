@@ -123,17 +123,38 @@
                     <% } else { %>
                         <p class="text-center text-muted mt-5">No transactions found for selected filters.</p>
                         <% } %>
+                            <% if (totalPages > 1) { %>
+                                <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
 
-                            <!-- Floating Scroll Buttons -->
-                            <div class="floating-buttons">
-                                <button type="button" class="btn btn-primary shadow-lg rounded-circle scroll-btn" onclick="scrollToTop()">
+                                    <% if (page > 1) { %>
+                                        <a class="btn btn-outline-primary" href="?<%= new URLSearchParams({ ...query, page: page - 1 }).toString() %>">
+        ◀ Prev
+      </a>
+                                        <% } %>
+
+                                            <span class="fw-semibold text-muted">
+      Page <%= page %> of <%= totalPages %>
+    </span>
+
+                                            <% if (page < totalPages) { %>
+                                                <a class="btn btn-outline-primary" href="?<%= new URLSearchParams({ ...query, page: page + 1 }).toString() %>">
+        Next ▶
+      </a>
+                                                <% } %>
+
+                                </div>
+                                <% } %>
+
+                                    <!-- Floating Scroll Buttons -->
+                                    <div class="floating-buttons">
+                                        <button type="button" class="btn btn-primary shadow-lg rounded-circle scroll-btn" onclick="scrollToTop()">
       <i class="bi bi-arrow-up"></i>
     </button>
-                                <button type="button" class="btn btn-primary shadow-lg rounded-circle scroll-btn" onclick="scrollToBottom()">
+                                        <button type="button" class="btn btn-primary shadow-lg rounded-circle scroll-btn" onclick="scrollToBottom()">
       <i class="bi bi-arrow-down"></i>
     </button>
-                            </div>
-                            <div id="bottom"></div>
+                                    </div>
+                                    <div id="bottom"></div>
     </div>
 
     <!-- JS -->
