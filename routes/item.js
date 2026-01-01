@@ -5,6 +5,7 @@ const { promisify } = require("util");
 const { urlencoded, query, json } = require("express");
 // const unlinkAsync = promisify(fs.unlink);
 const runBackup = require("../utils/backupHelper");
+const getDailyConsumption = require("../utils/dailyConsumption");
 
 const catchAsync = require("../utils/catchAsync");
 const methodOverride = require("method-override");
@@ -165,6 +166,12 @@ router.get(
   "/",
   catchAsync(async (req, res) => {
     const items = await Items.find({}).populate("itemImage");
+    for (let item of items) {
+      const dc = await getDailyConsumption(item);
+      item.dailyConsumption = dc.perDay;
+      item.stockDaysLeft =
+        dc.perDay > 0 ? (item.itemQty / dc.perDay).toFixed(1) : "∞";
+    }
     const images = await Images.find({});
     const itemCategories = await ItemCategories.find({});
     const itemSuppliers = await Supplier.find({});
@@ -987,47 +994,82 @@ router.get(
     });
     const suppliers = await Supplier.find({}).sort({ supplierName: 1 });
 
-    var baseMatch = { type: "outward" };
+    var baseMatch = {
+      type: { $in: ["outward", "lend"] }, // consumption types
+    };
 
+    // // ================================
+    // //  🔹 Determine date range based on mode
+    // // ================================
+    // var dateRangeStart = null;
+    // var dateRangeEnd = endDate ? new Date(endDate) : new Date();
+
+    // if (mode === "sinceLastInward" && itemId) {
+    //   var lastInward = await Transaction.findOne({
+    //     itemId: itemId,
+    //     type: "inward",
+    //   })
+    //     .sort({ createdAt: -1 })
+    //     .lean();
+
+    //   if (lastInward) {
+    //     dateRangeStart = new Date(lastInward.createdAt);
+    //   }
+    // } else if (mode === "" && itemId) {
+    //   // Since Start mode
+    //   var firstTransaction = await Transaction.findOne({
+    //     itemId: itemId,
+    //   })
+    //     .sort({ createdAt: 1 })
+    //     .lean();
+
+    //   if (firstTransaction) {
+    //     dateRangeStart = new Date(firstTransaction.createdAt);
+    //   }
+    // }
+
+    // // If manual date filters are provided, override
+    // if (startDate) dateRangeStart = new Date(startDate);
+    // if (endDate) {
+    //   dateRangeEnd = new Date(endDate);
+    //   dateRangeEnd.setHours(23, 59, 59, 999);
+    // }
+
+    // if (dateRangeStart) {
+    //   baseMatch.createdAt = { $gte: dateRangeStart, $lte: dateRangeEnd };
+    // }
     // ================================
-    //  🔹 Determine date range based on mode
-    // ================================
-    var dateRangeStart = null;
-    var dateRangeEnd = endDate ? new Date(endDate) : new Date();
+    // 🔹 DATE RANGE LOGIC (FINAL)
+    // =============================
 
-    if (mode === "sinceLastInward" && itemId) {
-      var lastInward = await Transaction.findOne({
-        itemId: itemId,
-        type: "inward",
-      })
-        .sort({ createdAt: -1 })
-        .lean();
+    // END date → today if not selected
+    let dateRangeEnd = endDate
+      ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
+      : new Date();
 
-      if (lastInward) {
-        dateRangeStart = new Date(lastInward.createdAt);
-      }
-    } else if (mode === "" && itemId) {
-      // Since Start mode
-      var firstTransaction = await Transaction.findOne({
-        itemId: itemId,
+    // START date priority:
+    // 1️⃣ Manual startDate
+    // 2️⃣ Since last inward (per item handled later)
+    // 3️⃣ Since start (global earliest outward)
+
+    let dateRangeStart = null;
+
+    // 1️⃣ Manual date range
+    if (startDate) {
+      dateRangeStart = new Date(startDate);
+    }
+
+    // 2️⃣ Since start (global fallback)
+    if (!dateRangeStart) {
+      const firstOutward = await Transaction.findOne({
+        type: "outward",
       })
         .sort({ createdAt: 1 })
         .lean();
 
-      if (firstTransaction) {
-        dateRangeStart = new Date(firstTransaction.createdAt);
+      if (firstOutward) {
+        dateRangeStart = new Date(firstOutward.createdAt);
       }
-    }
-
-    // If manual date filters are provided, override
-    if (startDate) dateRangeStart = new Date(startDate);
-    if (endDate) {
-      dateRangeEnd = new Date(endDate);
-      dateRangeEnd.setHours(23, 59, 59, 999);
-    }
-
-    if (dateRangeStart) {
-      baseMatch.createdAt = { $gte: dateRangeStart, $lte: dateRangeEnd };
     }
 
     // ================================
@@ -1131,28 +1173,6 @@ router.get(
       return b.ce && b.ce !== "";
     }).length;
     const totalHeats = billets.length;
-
-    // ================================
-    //  🔹 Calculate Averages
-    // ================================
-    var totalUsedOverall = 0;
-    transactions.forEach(function (tx) {
-      totalUsedOverall += tx.totalUsed;
-      tx.currentStock = itemStocks[tx._id.toString()] || 0;
-    });
-
-    var avgPerDay = 0;
-    if (dateRangeStart && dateRangeEnd) {
-      var diffDays =
-        Math.round(
-          (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
-            (1000 * 60 * 60 * 24)
-        ) + 1;
-      if (diffDays > 0) avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
-    }
-
-    var avgPerHeat =
-      totalHeats > 0 ? (totalHeats / totalUsedOverall).toFixed(2) : 0;
     const allItemsWithImages = await Items.find({})
       .populate("itemImage")
       .lean();
@@ -1167,22 +1187,131 @@ router.get(
           "https://via.placeholder.com/60x60.png?text=No+Image";
       }
     });
+    // ================================
+    //  🔹 Calculate Per-Item Consumption
+    // ================================
+    const leadTime = 7;
+    const enrichedTransactions = [];
+
+    for (const rawTx of transactions) {
+      const tx = { ...rawTx };
+
+      // 🔹 Image
+      tx.base64Image =
+        imageMap[tx._id.toString()] ||
+        "https://via.placeholder.com/60x60.png?text=No+Image";
+
+      // 🔹 Stock
+      tx.currentStock = itemStocks[tx._id.toString()] || 0;
+
+      let start = dateRangeStart;
+      let end = dateRangeEnd || new Date();
+
+      if (!start) {
+        const firstOutward = await Transaction.findOne({
+          itemId: tx._id,
+          type: "outward",
+        })
+          .sort({ createdAt: 1 })
+          .lean();
+
+        if (firstOutward) start = new Date(firstOutward.createdAt);
+      }
+
+      if (!start) {
+        tx.avgPerDay = "0.00";
+        tx.stockDaysLeft = "∞";
+        tx.reorderQty = 0;
+        tx.reorderStatus = "safe";
+        enrichedTransactions.push(tx);
+        continue;
+      }
+
+      // const diffDays = Math.max(
+      //   1,
+      //   Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+      // );
+
+      // const avg = tx.totalUsed / diffDays;
+
+      // tx.avgPerDay = avg.toFixed(2);
+      // tx.stockDaysLeft = avg > 0 ? (tx.currentStock / avg).toFixed(1) : "∞";
+      // tx.reorderQty = Math.ceil(avg * leadTime);
+
+      // if (tx.stockDaysLeft !== "∞") {
+      //   if (tx.stockDaysLeft <= 3) tx.reorderStatus = "danger";
+      //   else if (tx.stockDaysLeft <= 7) tx.reorderStatus = "warning";
+      //   else tx.reorderStatus = "safe";
+      // } else {
+      //   tx.reorderStatus = "safe";
+      // }
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const leadTime = 7;
+
+      const diffDays = Math.max(
+        1,
+        Math.ceil((dateRangeEnd.getTime() - start.getTime()) / msPerDay)
+      );
+
+      const avg = tx.totalUsed / diffDays;
+
+      tx.avgPerDay = avg.toFixed(2);
+
+      tx.stockDaysLeft = avg > 0 ? (tx.currentStock / avg).toFixed(1) : "∞";
+
+      tx.reorderQty = Math.ceil(avg * leadTime);
+
+      if (tx.stockDaysLeft !== "∞") {
+        if (tx.stockDaysLeft <= 3) tx.reorderStatus = "danger";
+        else if (tx.stockDaysLeft <= 7) tx.reorderStatus = "warning";
+        else tx.reorderStatus = "safe";
+      } else {
+        tx.reorderStatus = "safe";
+      }
+
+      enrichedTransactions.push(tx);
+    }
+
+    var avgPerDay = 0;
+    if (dateRangeStart && dateRangeEnd) {
+      var diffDays =
+        Math.round(
+          (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
+            (1000 * 60 * 60 * 24)
+        ) + 1;
+      if (diffDays > 0) avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
+    }
+
+    var avgPerHeat =
+      totalHeats > 0 ? (totalHeats / totalUsedOverall).toFixed(2) : 0;
 
     // Attach base64 image to each transaction (for EJS)
-    transactions.forEach((tx) => {
-      tx.base64Image =
-        tx._id && imageMap[tx._id.toString()]
-          ? imageMap[tx._id.toString()]
-          : "https://via.placeholder.com/60x60.png?text=No+Image";
-    });
+    // transactions.forEach((tx) => {
+    //   tx.base64Image =
+    //     tx._id && imageMap[tx._id.toString()]
+    //       ? imageMap[tx._id.toString()]
+    //       : "https://via.placeholder.com/60x60.png?text=No+Image";
+    // });
     // ================================
     //  🔹 Render View
-    // ================================
+    // // ================================
+    // res.render("items/consumption", {
+    //   items,
+    //   categories,
+    //   suppliers,
+    //   transactions,
+    //   query: req.query,
+    //   avgPerDay,
+    //   avgPerHeat,
+    //   openHeats,
+    //   closeHeats,
+    //   totalHeats,
+    // });
     res.render("items/consumption", {
       items,
       categories,
       suppliers,
-      transactions,
+      transactions: enrichedTransactions,
       query: req.query,
       avgPerDay,
       avgPerHeat,
@@ -1534,7 +1663,10 @@ router.get(
     }
 
     if (dateRangeStart) {
-      match.createdAt = { $gte: dateRangeStart, $lte: dateRangeEnd };
+      baseMatch.createdAt = {
+        $gte: dateRangeStart,
+        $lte: dateRangeEnd,
+      };
     }
 
     // Filter by category/supplier
