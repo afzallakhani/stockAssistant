@@ -143,6 +143,31 @@
                                     <li class="list-group-item"><strong>Last Used:</strong>
                                         <%= new Date(tx.lastUsed).toLocaleDateString('en-GB') %>
                                     </li>
+                                    <li class="list-group-item">
+                                        <strong>Avg / Day:</strong>
+                                        <%= tx.avgPerDay %>
+                                    </li>
+
+                                    <li class="list-group-item">
+                                        <strong>Stock Days Left:</strong>
+                                        <%= tx.stockDaysLeft %>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Reorder Qty:</strong>
+                                        <%= tx.reorderQty %>
+                                    </li>
+
+                                    <li class="list-group-item">
+                                        <strong>Status:</strong>
+                                        <% if (tx.reorderStatus === "danger") { %>
+                                            <span class="badge bg-danger">Reorder Now</span>
+                                            <% } else if (tx.reorderStatus === "warning") { %>
+                                                <span class="badge bg-warning text-dark">Low Stock</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-success">Safe</span>
+                                                    <% } %>
+                                    </li>
+
                                 </ul>
                             </div>
                         </div>
