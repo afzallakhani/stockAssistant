@@ -1272,19 +1272,56 @@ router.get(
       enrichedTransactions.push(tx);
     }
 
-    var avgPerDay = 0;
-    if (dateRangeStart && dateRangeEnd) {
-      var diffDays =
-        Math.round(
-          (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
-            (1000 * 60 * 60 * 24)
-        ) + 1;
-      if (diffDays > 0) avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
-    }
+    // var avgPerDay = 0;
+    // if (dateRangeStart && dateRangeEnd) {
+    //   var diffDays =
+    //     Math.round(
+    //       (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
+    //         (1000 * 60 * 60 * 24)
+    //     ) + 1;
+    //   if (diffDays > 0) avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
+    // }
 
-    var avgPerHeat =
-      totalHeats > 0 ? (totalHeats / totalUsedOverall).toFixed(2) : 0;
+    // var avgPerHeat =
+    //   totalHeats > 0 ? (totalHeats / totalUsedOverall).toFixed(2) : 0;
+    // let totalUsedOverall = 0;
 
+    // enrichedTransactions.forEach((tx) => {
+    //   totalUsedOverall += Number(tx.totalUsed || 0);
+    // });
+
+    // let avgPerDay = 0;
+    // if (dateRangeStart && dateRangeEnd) {
+    //   const diffDays = Math.max(
+    //     1,
+    //     Math.ceil(
+    //       (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
+    //         (1000 * 60 * 60 * 24)
+    //     )
+    //   );
+    //   avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
+    // }
+    // ================================
+    // 🔹 OVERALL TOTAL USED
+    // ================================
+
+    // ================================
+    // 🔹 OVERALL AVERAGES
+    // ================================
+    // var avgPerHeat =
+    //   totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
+
+    // let avgPerDay = 0;
+    // if (dateRangeStart && dateRangeEnd) {
+    //   const diffDays = Math.max(
+    //     1,
+    //     Math.ceil(
+    //       (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
+    //         (1000 * 60 * 60 * 24)
+    //     )
+    //   );
+    //   avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
+    // }
     // Attach base64 image to each transaction (for EJS)
     // transactions.forEach((tx) => {
     //   tx.base64Image =
@@ -1307,13 +1344,26 @@ router.get(
     //   closeHeats,
     //   totalHeats,
     // });
+
+    // console.log(enrichedTransactions[0]);
+    // ================================
+    // 🔹 Avg Life / Heat (SAFE)
+    // ================================
+    let totalUsedOverall = 0;
+
+    enrichedTransactions.forEach((tx) => {
+      totalUsedOverall += Number(tx.totalUsed || 0);
+    });
+
+    const avgPerHeat =
+      totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
+
     res.render("items/consumption", {
       items,
       categories,
       suppliers,
       transactions: enrichedTransactions,
       query: req.query,
-      avgPerDay,
       avgPerHeat,
       openHeats,
       closeHeats,
