@@ -545,31 +545,41 @@ router.post(
 router.get(
   "/transactions",
   catchAsync(async (req, res) => {
-    // Fetch all items for the filter dropdown
+    // Fetch all items for the filter dropdow
+    const page = parseInt(req.query.page || 1);
+    const limit = 50;
+
     const allItems = await Items.find().select("itemName _id");
 
     // Build the filter query based on request parameters
     const filter = {};
-    if (req.query.item) {
-      filter.itemId = req.query.item;
+    if (req.query.itemId) {
+      filter.itemId = req.query.itemId;
     }
-    if (req.query.startDate) {
-      filter.createdAt = {
-        ...filter.createdAt,
-        $gte: new Date(req.query.startDate),
-      };
+    if (req.query.type) {
+      filter.type = req.query.type;
     }
-    if (req.query.endDate) {
-      // Add one day to the end date to include all transactions on that day
-      let endDate = new Date(req.query.endDate);
-      endDate.setDate(endDate.getDate() + 1);
-      filter.createdAt = { ...filter.createdAt, $lt: endDate };
+
+    if (req.query.startDate || req.query.endDate) {
+      filter.createdAt = {};
+      if (req.query.startDate) {
+        filter.createdAt.$gte = new Date(req.query.startDate);
+      }
+      if (req.query.endDate) {
+        const end = new Date(req.query.endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = end;
+      }
     }
 
     // Fetch transactions using the filter, sorted by most recent
     const transactions = await Transaction.find(filter)
-      .populate("itemId")
-      .sort({ createdAt: -1 });
+      .populate("itemId", "itemName")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(500);
+    const totalCount = await Transaction.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit);
 
     // --- New Grouping Logic ---
     // Group transactions by date
@@ -589,11 +599,19 @@ router.get(
     );
 
     // Render the page, passing the new grouped data structures
+    // res.render("items/transactions", {
+    //   groupedTransactions,
+    //   sortedDates,
+    //   query: req.query,
+    //   items: allItems, // ✅ now available in EJS
+    // });
     res.render("items/transactions", {
       groupedTransactions,
       sortedDates,
       query: req.query,
-      items: allItems, // ✅ now available in EJS
+      items: allItems,
+      page,
+      totalPages,
     });
   })
 );

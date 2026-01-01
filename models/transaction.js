@@ -91,5 +91,12 @@ const transactionSchema = new Schema({
     default: Date.now,
   },
 });
+// 🔥 Indexes for fast filtering
+transactionSchema.index({ itemId: 1 });
+transactionSchema.index({ type: 1 });
+transactionSchema.index({ createdAt: -1 });
+
+// ✅ Best compound index for your filter page
+transactionSchema.index({ itemId: 1, type: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Transaction", transactionSchema);
