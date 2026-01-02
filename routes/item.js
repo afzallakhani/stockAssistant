@@ -1159,9 +1159,15 @@ router.get(
     //  🔹 Current Stock Info
     // ================================
     const itemStocks = {};
-    const allItems = await Items.find({}).select("_id itemQty itemName");
+    const allItems = await Items.find({})
+      .select("_id itemQty itemName itemUnit")
+      .lean();
     allItems.forEach(function (itm) {
       itemStocks[itm._id.toString()] = itm.itemQty;
+    });
+    const unitMap = {};
+    allItems.forEach((itm) => {
+      unitMap[itm._id.toString()] = itm.itemUnit || "";
     });
 
     // ================================
@@ -1205,6 +1211,53 @@ router.get(
           "https://via.placeholder.com/60x60.png?text=No+Image";
       }
     });
+    // ===============================
+    // 🔹 Last Inward DATE + QTY (NO N+1)
+    // ===============================
+    const lastInwardMap = {};
+
+    const lastInwards = await Transaction.aggregate([
+      { $match: { type: "inward" } },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$itemId",
+          lastInwardDate: { $first: "$createdAt" },
+          lastInwardQty: { $first: "$quantity" },
+        },
+      },
+    ]);
+
+    lastInwards.forEach((row) => {
+      lastInwardMap[row._id.toString()] = {
+        date: row.lastInwardDate,
+        qty: row.lastInwardQty,
+      };
+    });
+    // ===============================
+    // 🔹 Last Outward DATE + QTY (NO N+1)
+    // ===============================
+    const lastOutwardMap = {};
+
+    const lastOutwards = await Transaction.aggregate([
+      { $match: { type: { $in: ["outward", "lend"] } } },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$itemId",
+          lastOutwardDate: { $first: "$createdAt" },
+          lastOutwardQty: { $first: "$quantity" },
+        },
+      },
+    ]);
+
+    lastOutwards.forEach((row) => {
+      lastOutwardMap[row._id.toString()] = {
+        date: row.lastOutwardDate,
+        qty: row.lastOutwardQty,
+      };
+    });
+
     // ================================
     //  🔹 Calculate Per-Item Consumption
     // ================================
@@ -1224,6 +1277,19 @@ router.get(
 
       let start = dateRangeStart;
       let end = dateRangeEnd || new Date();
+      // 🔹 Last Inward Info
+      const inwardInfo = lastInwardMap[tx._id.toString()] || {};
+
+      tx.lastInwards = inwardInfo.date || null;
+      tx.lastInwardQty = inwardInfo.qty || 0;
+      // last outwards info
+      const outwardInfo = lastOutwardMap[tx._id.toString()] || {};
+
+      tx.lastUsed = outwardInfo.date || tx.lastUsed || null;
+      tx.lastOutwardQty = outwardInfo.qty || 0;
+
+      // 🔹 Unit
+      tx.unit = unitMap[tx._id.toString()] || "";
 
       if (!start) {
         const firstOutward = await Transaction.findOne({
@@ -1264,25 +1330,49 @@ router.get(
       //   tx.reorderStatus = "safe";
       // }
       const msPerDay = 1000 * 60 * 60 * 24;
-      const leadTime = 7;
 
       const diffDays = Math.max(
         1,
         Math.ceil((dateRangeEnd.getTime() - start.getTime()) / msPerDay)
       );
 
-      const avg = tx.totalUsed / diffDays;
+      // 🔹 Convert to months (approx)
+      const diffMonths = Math.max(1, diffDays / 30);
 
-      tx.avgPerDay = avg.toFixed(2);
+      // 🔹 Monthly average consumption
+      const monthlyAvg = tx.totalUsed / diffMonths;
+      // 🔹 Expected Stock-Out Date
+      if (monthlyAvg > 0 && tx.currentStock > 0) {
+        const monthsLeftExact = tx.currentStock / monthlyAvg;
+        const daysLeft = Math.floor(monthsLeftExact * 30);
 
-      tx.stockDaysLeft = avg > 0 ? (tx.currentStock / avg).toFixed(1) : "∞";
+        const stockOutDate = new Date();
+        stockOutDate.setDate(stockOutDate.getDate() + daysLeft);
 
-      tx.reorderQty = Math.ceil(avg * leadTime);
+        tx.stockOutDate = stockOutDate;
+      } else {
+        tx.stockOutDate = null;
+      }
 
-      if (tx.stockDaysLeft !== "∞") {
-        if (tx.stockDaysLeft <= 3) tx.reorderStatus = "danger";
-        else if (tx.stockDaysLeft <= 7) tx.reorderStatus = "warning";
-        else tx.reorderStatus = "safe";
+      tx.avgPerMonth = monthlyAvg.toFixed(2);
+
+      // 🔹 Stock life in months
+      if (tx.currentStock === 0) {
+        tx.stockMonthsLeft = 0;
+      } else if (monthlyAvg > 0) {
+        tx.stockMonthsLeft = Math.floor(tx.currentStock / monthlyAvg);
+      } else {
+        // No consumption but stock exists
+        tx.stockMonthsLeft = "∞";
+      }
+
+      // 🔹 Reorder quantity = 1 month requirement
+      tx.reorderQty = Math.ceil(monthlyAvg);
+
+      if (tx.stockMonthsLeft === 0) {
+        tx.reorderStatus = "danger";
+      } else if (tx.stockMonthsLeft === 1) {
+        tx.reorderStatus = "warning";
       } else {
         tx.reorderStatus = "safe";
       }
@@ -1372,6 +1462,7 @@ router.get(
     enrichedTransactions.forEach((tx) => {
       totalUsedOverall += Number(tx.totalUsed || 0);
     });
+    console.log("Last inward map size:", Object.keys(lastInwardMap).length);
 
     const avgPerHeat =
       totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;

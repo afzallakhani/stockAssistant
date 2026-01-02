@@ -136,26 +136,59 @@
                                 <ul class="list-group list-group-flush small">
                                     <li class="list-group-item"><strong>Current Stock:</strong>
                                         <%= tx.currentStock %>
+                                            <small class="text-muted"><%= tx.unit %></small>
                                     </li>
+
                                     <li class="list-group-item"><strong>Total Used:</strong>
-                                        <%= tx.totalUsed %>
+                                        <%= tx.totalUsed || '0.00'  %> <small class="text-muted"><%= tx.unit %></small>
+
                                     </li>
                                     <li class="list-group-item"><strong>Last Used:</strong>
                                         <%= new Date(tx.lastUsed).toLocaleDateString('en-GB') %>
                                     </li>
                                     <li class="list-group-item">
-                                        <strong>Avg / Day:</strong>
-                                        <%= tx.avgPerDay %>
+                                        <strong>Last Inward:</strong>
+                                        <%= tx.lastInwards ? new Date(tx.lastInwards).toLocaleDateString('en-GB') : '—' %>
+                                            (
+                                            <%= tx.lastInwardQty %>
+                                                <%= tx.unit %>)
                                     </li>
 
                                     <li class="list-group-item">
-                                        <strong>Stock Days Left:</strong>
-                                        <%= tx.stockDaysLeft %>
+                                        <strong>Last Outward:</strong>
+                                        <%= tx.lastUsed ? new Date(tx.lastUsed).toLocaleDateString('en-GB') : '—' %>
+                                            (
+                                            <%= tx.lastOutwardQty %>
+                                                <%= tx.unit %>)
                                     </li>
+
+                                    <li class="list-group-item">
+                                        <strong>Avg / Month:</strong>
+                                        <%= tx.avgPerMonth || '0.00' %>
+                                            <small class="text-muted"><%= tx.unit %></small>
+
+                                    </li>
+
+
+
+
+                                    <li class="list-group-item">
+                                        <strong>Stock Months Left:</strong>
+                                        <%= tx.stockMonthsLeft === "∞" ? "∞" : tx.stockMonthsLeft %>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Stock-Out Date:</strong>
+                                        <%= tx.stockOutDate
+    ? new Date(tx.stockOutDate).toLocaleDateString('en-GB')
+    : '—' %>
+                                    </li>
+
                                     <li class="list-group-item">
                                         <strong>Reorder Qty:</strong>
                                         <%= tx.reorderQty %>
+                                            <small class="text-muted"><%= tx.unit %></small>
                                     </li>
+
 
                                     <li class="list-group-item">
                                         <strong>Status:</strong>
