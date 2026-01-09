@@ -1011,46 +1011,6 @@ router.get(
       type: { $in: ["outward", "lend"] }, // consumption types
     };
 
-    // // ================================
-    // //  🔹 Determine date range based on mode
-    // // ================================
-    // var dateRangeStart = null;
-    // var dateRangeEnd = endDate ? new Date(endDate) : new Date();
-
-    // if (mode === "sinceLastInward" && itemId) {
-    //   var lastInward = await Transaction.findOne({
-    //     itemId: itemId,
-    //     type: "inward",
-    //   })
-    //     .sort({ createdAt: -1 })
-    //     .lean();
-
-    //   if (lastInward) {
-    //     dateRangeStart = new Date(lastInward.createdAt);
-    //   }
-    // } else if (mode === "" && itemId) {
-    //   // Since Start mode
-    //   var firstTransaction = await Transaction.findOne({
-    //     itemId: itemId,
-    //   })
-    //     .sort({ createdAt: 1 })
-    //     .lean();
-
-    //   if (firstTransaction) {
-    //     dateRangeStart = new Date(firstTransaction.createdAt);
-    //   }
-    // }
-
-    // // If manual date filters are provided, override
-    // if (startDate) dateRangeStart = new Date(startDate);
-    // if (endDate) {
-    //   dateRangeEnd = new Date(endDate);
-    //   dateRangeEnd.setHours(23, 59, 59, 999);
-    // }
-
-    // if (dateRangeStart) {
-    //   baseMatch.createdAt = { $gte: dateRangeStart, $lte: dateRangeEnd };
-    // }
     // ================================
     // 🔹 DATE RANGE LOGIC (FINAL)
     // =============================
@@ -1206,6 +1166,30 @@ router.get(
           "https://via.placeholder.com/60x60.png?text=No+Image";
       }
     });
+    // ================================
+    // 🔹 Initial Stock Info (NO N+1)
+    // ================================
+    const initialMap = {};
+
+    const initials = await Transaction.aggregate([
+      { $match: { type: "initial" } },
+      { $sort: { createdAt: 1 } },
+      {
+        $group: {
+          _id: "$itemId",
+          initialDate: { $first: "$createdAt" },
+          initialQty: { $first: "$quantity" },
+        },
+      },
+    ]);
+
+    initials.forEach((row) => {
+      initialMap[row._id.toString()] = {
+        date: row.initialDate,
+        qty: row.initialQty,
+      };
+    });
+
     // ===============================
     // 🔹 Last Inward DATE + QTY (NO N+1)
     // ===============================
@@ -1305,25 +1289,6 @@ router.get(
         enrichedTransactions.push(tx);
         continue;
       }
-
-      // const diffDays = Math.max(
-      //   1,
-      //   Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-      // );
-
-      // const avg = tx.totalUsed / diffDays;
-
-      // tx.avgPerDay = avg.toFixed(2);
-      // tx.stockDaysLeft = avg > 0 ? (tx.currentStock / avg).toFixed(1) : "∞";
-      // tx.reorderQty = Math.ceil(avg * leadTime);
-
-      // if (tx.stockDaysLeft !== "∞") {
-      //   if (tx.stockDaysLeft <= 3) tx.reorderStatus = "danger";
-      //   else if (tx.stockDaysLeft <= 7) tx.reorderStatus = "warning";
-      //   else tx.reorderStatus = "safe";
-      // } else {
-      //   tx.reorderStatus = "safe";
-      // }
       const msPerDay = 1000 * 60 * 60 * 24;
 
       const diffDays = Math.max(
@@ -1350,6 +1315,10 @@ router.get(
       }
 
       tx.avgPerMonth = monthlyAvg.toFixed(2);
+      // 🔹 Initial stock info
+      const init = initialMap[tx._id.toString()] || {};
+      tx.initialDate = init.date || null;
+      tx.initialQty = init.qty || 0;
 
       // 🔹 Stock life in months
       if (tx.currentStock === 0) {
@@ -1374,81 +1343,6 @@ router.get(
 
       enrichedTransactions.push(tx);
     }
-
-    // var avgPerDay = 0;
-    // if (dateRangeStart && dateRangeEnd) {
-    //   var diffDays =
-    //     Math.round(
-    //       (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
-    //         (1000 * 60 * 60 * 24)
-    //     ) + 1;
-    //   if (diffDays > 0) avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
-    // }
-
-    // var avgPerHeat =
-    //   totalHeats > 0 ? (totalHeats / totalUsedOverall).toFixed(2) : 0;
-    // let totalUsedOverall = 0;
-
-    // enrichedTransactions.forEach((tx) => {
-    //   totalUsedOverall += Number(tx.totalUsed || 0);
-    // });
-
-    // let avgPerDay = 0;
-    // if (dateRangeStart && dateRangeEnd) {
-    //   const diffDays = Math.max(
-    //     1,
-    //     Math.ceil(
-    //       (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
-    //         (1000 * 60 * 60 * 24)
-    //     )
-    //   );
-    //   avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
-    // }
-    // ================================
-    // 🔹 OVERALL TOTAL USED
-    // ================================
-
-    // ================================
-    // 🔹 OVERALL AVERAGES
-    // ================================
-    // var avgPerHeat =
-    //   totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
-
-    // let avgPerDay = 0;
-    // if (dateRangeStart && dateRangeEnd) {
-    //   const diffDays = Math.max(
-    //     1,
-    //     Math.ceil(
-    //       (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
-    //         (1000 * 60 * 60 * 24)
-    //     )
-    //   );
-    //   avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
-    // }
-    // Attach base64 image to each transaction (for EJS)
-    // transactions.forEach((tx) => {
-    //   tx.base64Image =
-    //     tx._id && imageMap[tx._id.toString()]
-    //       ? imageMap[tx._id.toString()]
-    //       : "https://via.placeholder.com/60x60.png?text=No+Image";
-    // });
-    // ================================
-    //  🔹 Render View
-    // // ================================
-    // res.render("items/consumption", {
-    //   items,
-    //   categories,
-    //   suppliers,
-    //   transactions,
-    //   query: req.query,
-    //   avgPerDay,
-    //   avgPerHeat,
-    //   openHeats,
-    //   closeHeats,
-    //   totalHeats,
-    // });
-
-    // console.log(enrichedTransactions[0]);
     // ================================
     // 🔹 Avg Life / Heat (SAFE)
     // ================================
@@ -1461,6 +1355,19 @@ router.get(
 
     const avgPerHeat =
       totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
+    // 🔹 Consumption Period Summary
+    const periodStart = dateRangeStart;
+    const periodEnd = dateRangeEnd;
+
+    let consumptionDays = 0;
+    if (periodStart && periodEnd) {
+      consumptionDays = Math.max(
+        1,
+        Math.ceil(
+          (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24)
+        )
+      );
+    }
 
     res.render("items/consumption", {
       items,
@@ -1468,10 +1375,14 @@ router.get(
       suppliers,
       transactions: enrichedTransactions,
       query: req.query,
+
       avgPerHeat,
       openHeats,
       closeHeats,
       totalHeats,
+      periodStart,
+      periodEnd,
+      consumptionDays,
     });
   })
 );
