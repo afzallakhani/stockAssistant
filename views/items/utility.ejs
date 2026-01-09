@@ -50,7 +50,7 @@
                                         <table class="table table-hover align-middle">
                                             <thead>
                                                 <tr>
-                                                    <th>Backup Folder</th>
+                                                    <th>Backup File</th>
                                                     <th>Date Modified</th>
                                                     <th class="text-center">Actions</th>
                                                 </tr>
@@ -65,28 +65,27 @@
                                                             <tr>
                                                                 <td>
                                                                     <%= b.name %>
-                                                                        <% if (!b.hasDBFolder) { %>
-                                                                            <span class="text-danger">(missing DB folder)</span>
-                                                                            <% } %>
                                                                 </td>
                                                                 <td>
-                                                                    <%= new Date(b.date).toLocaleString('en-GB') %>
+                                                                    <%= new Date(b.date).toLocaleString("en-GB") %>
                                                                 </td>
                                                                 <td class="text-center">
-                                                                    <form action="/items/utility/restore" method="POST" class="d-inline" onsubmit="return confirm('⚠️ Restoring will overwrite ALL current data.\nAre you sure you want to continue?');">
-                                                                        <input type="hidden" name="backupFolder" value="<%= b.name %>">
+                                                                    <form action="/items/utility/restore" method="POST" onsubmit="return confirm('⚠️ Restoring will overwrite ALL current data. Continue?');" class="d-inline">
+                                                                        <input type="hidden" name="backupFile" value="<%= b.name %>">
                                                                         <button class="btn btn-sm btn-outline-primary">
-    <i class="bi bi-arrow-clockwise"></i> Restore
-  </button>
+        Restore
+      </button>
                                                                     </form>
-                                                                    <form action="/items/utility/delete" method="POST" class="d-inline" onsubmit="return confirm('❌ Delete this backup permanently?');">
-                                                                        <input type="hidden" name="backupFolder" value="<%= b.name %>">
+
+                                                                    <form action="/items/utility/delete" method="POST" onsubmit="return confirm('❌ Delete this backup permanently?');" class="d-inline">
+                                                                        <input type="hidden" name="backupFile" value="<%= b.name %>">
                                                                         <button class="btn btn-sm btn-outline-danger">
-    <i class="bi bi-trash"></i> Delete
-  </button>
+        Delete
+      </button>
                                                                     </form>
                                                                 </td>
                                                             </tr>
+
                                                             <% }) %>
                                                                 <% } %>
                                             </tbody>
