@@ -98,68 +98,63 @@ router.post("/utility/backup", (req, res) => {
 
 // Restore Backup
 router.post("/utility/restore", (req, res) => {
-  const { backupFolder } = req.body;
-  if (!backupFolder) {
-    req.flash("error", "⚠️ No backup selected!");
-    return res.redirect("/items/utility");
-  }
+  const file = req.body.backupFile;
+  const BACKUP_PATH = path.join(__dirname, "../backups");
+  const fullPath = path.join(BACKUP_PATH, file);
 
-  const restorePath = path.join(BACKUP_DIR, backupFolder, DB_NAME);
-  const cmd = `mongorestore --db=${DB_NAME} --gzip "${restorePath}" --drop`;
+  const cmd = `"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongorestore.exe" --gzip --archive="${fullPath}" --drop`;
 
-  console.log(`♻️ Restoring from ${restorePath}...`);
-  exec(cmd, (error) => {
-    if (error) {
-      console.error(`❌ Restore failed: ${error.message}`);
-      req.flash("error", "❌ Restore failed! Check console for details.");
+  exec(cmd, (err) => {
+    if (err) {
+      req.flash("error", "Restore failed");
       return res.redirect("/items/utility");
     }
-    console.log(`✅ Restore completed from ${backupFolder}`);
-    req.flash("success", `✅ Database restored from ${backupFolder}`);
+    req.flash("success", "Database restored successfully");
     res.redirect("/items/utility");
   });
 });
 
 // Delete Backup
 router.post("/utility/delete", (req, res) => {
-  const { backupFolder } = req.body;
-  if (!backupFolder) {
-    req.flash("error", "⚠️ No backup selected!");
-    return res.redirect("/items/utility");
+  const file = req.body.backupFile;
+  const BACKUP_PATH = path.join(__dirname, "../backups");
+
+  try {
+    fs.unlinkSync(path.join(BACKUP_PATH, file));
+    req.flash("success", "Backup deleted successfully");
+  } catch (err) {
+    req.flash("error", "Failed to delete backup");
   }
-  const deletePath = path.join(BACKUP_DIR, backupFolder);
-  fs.rmSync(deletePath, { recursive: true, force: true });
-  console.log(`🗑️ Deleted backup: ${backupFolder}`);
-  req.flash("success", `🗑️ Deleted backup: ${backupFolder}`);
+
   res.redirect("/items/utility");
 });
 
 // Utility Dashboard Page
+
 router.get("/utility", (req, res) => {
-  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  const BACKUP_PATH = path.join(__dirname, "../backups");
 
-  const backups = fs
-    .readdirSync(BACKUP_DIR)
-    .filter((folder) =>
-      fs.lstatSync(path.join(BACKUP_DIR, folder)).isDirectory()
-    )
-    .map((folder) => {
-      const fullPath = path.join(BACKUP_DIR, folder);
-      const innerDBPath = path.join(fullPath, DB_NAME);
+  let backups = [];
 
-      // confirm it actually contains your DB folder (e.g. "stockAssistant")
-      const hasDBFolder = fs.existsSync(innerDBPath);
-      const stats = fs.statSync(fullPath);
+  if (fs.existsSync(BACKUP_PATH)) {
+    backups = fs
+      .readdirSync(BACKUP_PATH)
+      .filter((f) => f.endsWith(".archive.gz"))
+      .map((f) => {
+        const stat = fs.statSync(path.join(BACKUP_PATH, f));
+        return {
+          name: f,
+          date: stat.mtime,
+        };
+      })
+      .sort((a, b) => b.date - a.date);
+  }
 
-      return {
-        name: folder,
-        hasDBFolder,
-        date: stats.mtime,
-      };
-    })
-    .sort((a, b) => b.date - a.date);
-
-  res.render("items/utility", { backups });
+  res.render("items/utility", {
+    backups,
+    success: req.flash("success"),
+    error: req.flash("error"),
+  });
 });
 
 router.get(

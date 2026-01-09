@@ -269,7 +269,7 @@ const LOG_PATH = path.join(
   LOG_DIR,
   `backup-${new Date().toISOString().split("T")[0]}.log`
 );
-const LOG_RETENTION_DAYS = Number(process.env.LOG_RETENTION_DAYS || 7);
+const LOG_RETENTION_DAYS = Number(process.env.LOG_RETENTION_DAYS || 3);
 
 function logMessage(message) {
   const timestamp = new Date().toLocaleString();
@@ -305,7 +305,7 @@ function cleanupOldLogs() {
 
 function runBackup(trigger = "manual") {
   const now = Date.now();
-  const MIN_GAP = 2 * 60 * 1000; // 1 min throttle
+  const MIN_GAP = 5 * 60 * 1000; // 1 min throttle
   clearTimeout(timeoutId);
   if (now - lastBackup < MIN_GAP)
     timeoutId = setTimeout(() => doBackup(trigger), MIN_GAP);
@@ -440,7 +440,9 @@ async function retryPendingUploads(PENDING_PATH) {
 // 🧹 Delete old local backups
 function deleteOldLocalBackups() {
   const BACKUP_PATH = path.join(__dirname, "../backups");
-  const MAX_AGE_DAYS = Number(process.env.BACKUP_RETENTION_DAYS || 3);
+  // const MAX_AGE_DAYS = Number(process.env.BACKUP_RETENTION_DAYS || 3);
+  const MAX_AGE_HOURS = Number(process.env.BACKUP_RETENTION_HOURS || 48);
+
   const now = Date.now();
 
   if (!fs.existsSync(BACKUP_PATH)) return;
@@ -463,8 +465,8 @@ function deleteOldLocalBackups() {
   const [, ...olderZips] = zipFiles;
 
   for (const file of olderZips) {
-    const ageDays = (now - file.time) / (1000 * 60 * 60 * 24);
-    if (ageDays > MAX_AGE_DAYS) {
+    const ageHours = (now - file.time) / (1000 * 60 * 60);
+    if (ageHours > MAX_AGE_HOURS) {
       try {
         fs.unlinkSync(path.join(BACKUP_PATH, file.name));
         logMessage(`🗑️ Deleted old archive backup: ${file.name}`);

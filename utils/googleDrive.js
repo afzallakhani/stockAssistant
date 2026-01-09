@@ -429,7 +429,9 @@ async function cleanupOldDriveBackups() {
   const auth = await authorize();
   const drive = google.drive({ version: "v3", auth });
 
-  const MAX_AGE_DAYS = Number(process.env.BACKUP_RETENTION_DAYS || 3);
+  // const MAX_AGE_DAYS = Number(process.env.BACKUP_RETENTION_DAYS || 3);
+  const MAX_AGE_HOURS = Number(process.env.BACKUP_RETENTION_HOURS || 48);
+
   const now = new Date();
 
   const res = await drive.files.list({
@@ -447,9 +449,9 @@ async function cleanupOldDriveBackups() {
   const [, ...olderFiles] = files;
 
   for (const file of olderFiles) {
-    const ageDays = (now - new Date(file.createdTime)) / (1000 * 60 * 60 * 24);
+    const ageHours = (now - new Date(file.createdTime)) / (1000 * 60 * 60);
 
-    if (ageDays > MAX_AGE_DAYS) {
+    if (ageHours > MAX_AGE_HOURS) {
       await drive.files.delete({ fileId: file.id });
       console.log(`🗑️ Deleted old Drive backup: ${file.name}`);
     }
