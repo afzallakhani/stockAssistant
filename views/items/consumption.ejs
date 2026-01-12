@@ -136,16 +136,17 @@
                                 </p>
                                 <div class="alert alert-info small">
                                     <strong>Consumption Period:</strong>
-                                    <% if (periodStart && periodEnd) { %>
-                                        <%= new Date(periodStart).toLocaleDateString('en-GB') %>
+                                    <% if (tx.periodStart && tx.periodEnd) { %>
+                                        <%= new Date(tx.periodStart).toLocaleDateString('en-GB') %>
                                             →
-                                            <%= new Date(periodEnd).toLocaleDateString('en-GB') %>
+                                            <%= new Date(tx.periodEnd).toLocaleDateString('en-GB') %>
                                                 (
-                                                <%= consumptionDays %> days)
+                                                <%= tx.consumptionDays %> days)
                                                     <% } else { %>
-                                                        Since beginning
+                                                        —
                                                         <% } %>
                                 </div>
+
                                 <ul class="list-group list-group-flush small">
                                     <li class="list-group-item"><strong>Current Stock:</strong>
                                         <%= tx.currentStock %>
