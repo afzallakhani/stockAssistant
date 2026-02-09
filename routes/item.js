@@ -183,7 +183,7 @@ router.get(
             itemSuppliers: itemSuppliers || [],
             query: req.query || {}, // ✅ Fix added
         });
-    })
+    }),
 );
 
 router.get("/", (req, res) => {
@@ -197,7 +197,7 @@ router.get(
         const images = await Images.find({});
         console.log("hi");
         res.render("items/spares");
-    })
+    }),
 );
 router.get(
     "/new",
@@ -206,7 +206,7 @@ router.get(
         const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
         console.log(itemSuppliers);
         res.render("items/new", { itemCategories, itemSuppliers });
-    })
+    }),
 );
 // router.get(
 //     "/outwards",
@@ -267,7 +267,7 @@ router.get(
             itemCategories,
             itemSuppliers,
         });
-    })
+    }),
 );
 
 // POST: Handle lend transaction
@@ -300,7 +300,7 @@ router.post(
         }
 
         res.redirect("/items/transactions");
-    })
+    }),
 );
 
 router.get(
@@ -308,7 +308,7 @@ router.get(
     catchAsync(async(req, res) => {
         const category = await ItemCategories.find({});
         res.render("items/category", { category });
-    })
+    }),
 );
 
 // searched items display
@@ -402,7 +402,7 @@ router.post(
                 const image = new Images({
                     contentType: file.mimetype,
                     data: fs.readFileSync(
-                        path.join(__dirname, "..", "views", "images", file.filename)
+                        path.join(__dirname, "..", "views", "images", file.filename),
                     ),
                     path: file.path,
                     name: file.originalname,
@@ -424,7 +424,7 @@ router.post(
         }).save();
 
         res.redirect("/items");
-    })
+    }),
 );
 router.get(
     "/:id/view",
@@ -432,7 +432,7 @@ router.get(
         const item = await Items.findById(req.params.id).populate("itemImage");
         if (!item) return res.status(404).send("Item not found");
         res.render("items/viewItem", { item });
-    })
+    }),
 );
 
 // GET route to display the inwards form
@@ -457,7 +457,7 @@ router.get(
             itemCategories,
             itemSuppliers,
         });
-    })
+    }),
 );
 
 // POST route to handle inward stock updates
@@ -493,7 +493,7 @@ router.post(
         }
 
         res.redirect("/items");
-    })
+    }),
 );
 
 // GET route to view all transactions
@@ -590,7 +590,7 @@ router.get(
 
         // Get an array of date keys and sort them from newest to oldest
         const sortedDates = Object.keys(groupedTransactions).sort(
-            (a, b) => new Date(b) - new Date(a)
+            (a, b) => new Date(b) - new Date(a),
         );
 
         // Render the page, passing the new grouped data structures
@@ -608,7 +608,7 @@ router.get(
             page,
             totalPages,
         });
-    })
+    }),
 );
 router.get(
     "/insights",
@@ -679,7 +679,7 @@ router.get(
             transactions,
             query: req.query, // Pass query params back to pre-fill the form
         });
-    })
+    }),
 );
 // router.get(
 //   "/consumption",
@@ -1373,6 +1373,24 @@ router.get(
 
                 if (sum.length > 0) totalUsed = sum[0].total;
             }
+            // ---------------------------------
+            // 🔹 Last Outward / Lend (FIX)
+            // ---------------------------------
+            let lastUsed = null;
+            let lastOutwardQty = 0;
+
+            const lastOutward = await Transaction.findOne({
+                    itemId: item._id,
+                    type: { $in: ["outward", "lend"] },
+                })
+                .sort({ createdAt: -1 })
+                .select("createdAt quantity")
+                .lean();
+
+            if (lastOutward) {
+                lastUsed = lastOutward.createdAt;
+                lastOutwardQty = lastOutward.quantity;
+            }
 
             // ---------------------------------
             // 🔹 Monthly Consumption
@@ -1401,8 +1419,16 @@ router.get(
 
                 stockOutDate = new Date();
                 stockOutDate.setMonth(
-                    stockOutDate.getMonth() + Math.ceil(stockMonthsLeft)
+                    stockOutDate.getMonth() + Math.ceil(stockMonthsLeft),
                 );
+            }
+            // ---------------------------------
+            // 🔹 Reorder Qty (1 FULL MONTH)
+            // ---------------------------------
+            let reorderQty = 0;
+
+            if (avgPerMonth > 0) {
+                reorderQty = Number(avgPerMonth.toFixed(1));
             }
 
             // ---------------------------------
@@ -1449,11 +1475,13 @@ router.get(
 
                 periodStart,
                 periodEnd,
-
+                lastUsed,
+                lastOutwardQty,
                 totalUsed,
                 avgPerMonth,
                 stockMonthsLeft,
                 stockOutDate,
+                reorderQty,
             });
         }
 
@@ -1501,7 +1529,7 @@ router.get(
             closeHeats,
             avgPerHeat,
         });
-    })
+    }),
 );
 
 // *** THIS IS THE ROUTE TO FIX THE ERROR ***
@@ -1540,7 +1568,7 @@ router.delete(
 
         await Transaction.findByIdAndDelete(id);
         res.redirect("/items/transactions");
-    })
+    }),
 );
 // ➕ Log "return" transaction when item is brought back
 router.post(
@@ -1576,7 +1604,7 @@ router.post(
         await lendTx.save();
 
         res.redirect("/items/transactions");
-    })
+    }),
 );
 
 // --- Other routes ---
@@ -1585,7 +1613,7 @@ router.get(
     catchAsync(async(req, res) => {
         const itemCategories = await ItemCategories.find({});
         res.render("items/new", { itemCategories });
-    })
+    }),
 );
 
 // router.get(
@@ -1608,7 +1636,7 @@ router.post(
         let category = new ItemCategories(req.body.category);
         await category.save();
         res.redirect("/items/new");
-    })
+    }),
 );
 
 router.delete(
@@ -1617,7 +1645,7 @@ router.delete(
         const { id } = req.params;
         await ItemCategories.findByIdAndDelete(id);
         res.redirect("/items/category");
-    })
+    }),
 );
 router.get(
     "/:id/edit",
@@ -1627,7 +1655,7 @@ router.get(
         const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
         res.render("items/edit", { item, itemCategories, itemSuppliers });
         // next(e);
-    })
+    }),
 );
 router.put(
     "/:id",
@@ -1650,7 +1678,7 @@ router.put(
 
             // Remove references from item
             item.itemImage = item.itemImage.filter(
-                (img) => !idsToDelete.includes(img._id.toString())
+                (img) => !idsToDelete.includes(img._id.toString()),
             );
         }
 
@@ -1664,7 +1692,7 @@ router.put(
                 const image = new Images({
                     contentType: file.mimetype,
                     data: fs.readFileSync(
-                        path.join(__dirname, "..", "views", "images", file.filename)
+                        path.join(__dirname, "..", "views", "images", file.filename),
                     ),
                     path: file.path,
                     name: file.originalname,
@@ -1679,7 +1707,7 @@ router.put(
         // req.flash("success", "Item updated successfully!");
 
         res.redirect("/items");
-    })
+    }),
 );
 
 // Replace your existing POST "/update-stock" route with this
@@ -1718,7 +1746,7 @@ router.post(
         }
 
         res.redirect("/items");
-    })
+    }),
 );
 
 router.delete(
@@ -1727,7 +1755,7 @@ router.delete(
         const { id } = req.params;
         await Items.findByIdAndDelete(id);
         res.redirect("/items");
-    })
+    }),
 );
 
 // Add this route below other routes in items.js
@@ -1775,7 +1803,7 @@ router.get(
 
         // render HTML first
         const html = await ejs.renderFile(
-            path.join(__dirname, "../views/items/pdf_stock.ejs"), { items, category, supplier }, { async: false }
+            path.join(__dirname, "../views/items/pdf_stock.ejs"), { items, category, supplier }, { async: false },
         );
 
         // generate PDF
@@ -1785,7 +1813,7 @@ router.get(
 
         const pdfPath = path.join(
             __dirname,
-            `../public/reports/Stock_Report_${Date.now()}.pdf`
+            `../public/reports/Stock_Report_${Date.now()}.pdf`,
         );
 
         await page.pdf({
@@ -1798,7 +1826,7 @@ router.get(
         await browser.close();
 
         res.download(pdfPath, () => fs.unlinkSync(pdfPath));
-    })
+    }),
 );
 
 // ------------------------------------
@@ -1868,7 +1896,7 @@ router.get(
                     {},
                     supplier && supplier !== "all" ?
                     { "item.itemSupplier": supplier } :
-                    {}
+                    {},
                 ),
             },
             {
@@ -1893,7 +1921,7 @@ router.get(
                 mode,
                 startDate,
                 endDate,
-            }, { async: false }
+            }, { async: false },
         );
 
         const browser = await puppeteer.launch({ headless: true });
@@ -1902,7 +1930,7 @@ router.get(
 
         const pdfPath = path.join(
             __dirname,
-            `../public/reports/Consumption_Report_${Date.now()}.pdf`
+            `../public/reports/Consumption_Report_${Date.now()}.pdf`,
         );
 
         await page.pdf({
@@ -1915,7 +1943,7 @@ router.get(
         await browser.close();
 
         res.download(pdfPath, () => fs.unlinkSync(pdfPath));
-    })
+    }),
 );
 
 router.post("/utility/backup-drive", (req, res) => {
