@@ -1,0 +1,108 @@
+<% layout('layout/boilerplate') %>
+
+    <div class="container mt-4">
+
+        <h3>Create Purchase Order</h3>
+
+        <!-- SUPPLIER -->
+        <div class="mb-3">
+            <label class="form-label">Supplier</label>
+            <select id="supplierSelect" class="form-select" onchange="onSupplierChange(this.value)">
+      <option value="">-- Select Supplier --</option>
+      <% suppliers.forEach(s => { %>
+        <option value="<%= s._id %>"><%= s.supplierName %></option>
+      <% }) %>
+    </select>
+        </div>
+
+        <!-- FORM -->
+        <form action="/purchase-orders" method="POST" id="poForm">
+
+            <input type="hidden" name="supplier" id="supplierHidden">
+
+            <!-- TABLE WRAPPER (IMPORTANT) -->
+            <div id="tableWrapper" style="display:none">
+
+                <table class="table table-bordered mt-3" id="itemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Item</th>
+                            <th>Current Stock</th>
+                            <th>Avg / Month</th>
+                            <th>Unit</th>
+                            <th>PO Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTbody">
+                        <!-- rows injected here -->
+                    </tbody>
+                </table>
+
+                <button class="btn btn-primary mt-3" id="submitBtn">
+        Create Purchase Order
+      </button>
+
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        function onSupplierChange(supplierId) {
+            console.log("Supplier selected:", supplierId);
+
+            const tbody = document.getElementById("itemsTbody");
+            const tableWrapper = document.getElementById("tableWrapper");
+            const supplierHidden = document.getElementById("supplierHidden");
+
+            tbody.innerHTML = "";
+            tableWrapper.style.display = "none";
+
+            if (!supplierId) return;
+
+            supplierHidden.value = supplierId;
+
+            fetch(`/purchase-orders/supplier/${supplierId}/items`)
+                .then(res => res.json())
+                .then(items => {
+                    console.log("Items:", items);
+
+                    if (!items || !items.length) {
+                        alert("No items found for this supplier");
+                        return;
+                    }
+
+                    items.forEach((item, index) => {
+                        const row = `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.currentStock}</td>
+            <td>${item.avgMonthlyConsumption}</td>
+            <td>${item.unit}</td>
+            <td>
+              <input type="number"
+                     min="0"
+                     class="form-control"
+                     name="items[${index}][quantity]">
+
+              <input type="hidden"
+                     name="items[${index}][item]"
+                     value="${item._id}">
+
+              <input type="hidden"
+                     name="items[${index}][unit]"
+                     value="${item.unit}">
+            </td>
+          </tr>
+        `;
+                        tbody.insertAdjacentHTML("beforeend", row);
+                    });
+
+                    tableWrapper.style.display = "block";
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Error loading items");
+                });
+        }
+    </script>

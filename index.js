@@ -11,6 +11,8 @@ const supplier = require("./routes/supplier");
 const docx = require("docx");
 
 const billets = require("./routes/billet");
+const purchaseOrderRoutes = require("./routes/purchaseOrder");
+
 // const Images = require("./models/images");
 // const Joi = require("joi");
 const ejsMate = require("ejs-mate");
@@ -82,6 +84,8 @@ app.use("/items", item);
 app.use("/partymaster", party);
 app.use("/supplier", supplier);
 app.use("/billets", billets);
+app.use("/purchase-orders", purchaseOrderRoutes);
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {

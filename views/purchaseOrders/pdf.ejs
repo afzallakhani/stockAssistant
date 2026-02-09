@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Purchase Order</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .company-name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .company-details {
+            font-size: 11px;
+        }
+        
+        .po-meta {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .po-meta td {
+            padding: 4px;
+            vertical-align: top;
+        }
+        
+        .box {
+            border: 1px solid #000;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            text-align: left;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            font-size: 11px;
+        }
+        
+        .sign {
+            margin-top: 60px;
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="company-name">ELAF STEEL</div>
+        <div class="company-details">
+            Bhavnagar, Gujarat, India<br> Email: elafsteel@gmail.com | Phone: +91-9825206004
+        </div>
+        <div class="company-gst-details">
+            GSTIN :- 24AAEFE5252C1ZY </div>
+    </div>
+
+    <!-- PO META -->
+    <table class="po-meta">
+        <tr>
+            <td>
+                <strong>PO No:</strong>
+                <%= po.poNumber %><br>
+                    <strong>PO Date:</strong>
+                    <%= po.createdAt.toDateString() %>
+            </td>
+            <td class="text-right">
+                <strong>Status:</strong>
+                <%= po.status %>
+            </td>
+        </tr>
+    </table>
+
+    <!-- SUPPLIER -->
+    <div class="box">
+        <strong>Supplier:</strong><br>
+        <%= po.supplier.supplierName %><br>
+            <%= po.supplier.supplierCity || "" %>,
+                <%= po.supplier.supplierState || "" %>
+    </div>
+
+    <!-- ITEMS -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width:5%">#</th>
+                <th>Item Description</th>
+                <th style="width:15%">Quantity</th>
+                <th style="width:15%">Unit</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% po.items.forEach((i, index) => { %>
+                <tr>
+                    <td>
+                        <%= index + 1 %>
+                    </td>
+                    <td>
+                        <%= i.item.itemName %>
+                    </td>
+                    <td>
+                        <%= i.quantity %>
+                    </td>
+                    <td>
+                        <%= i.unit %>
+                    </td>
+                </tr>
+                <% }) %>
+        </tbody>
+    </table>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>
+            1. Material should be supplied as per agreed specifications.<br> 2. Delivery schedule to be strictly followed.<br> 3. This Purchase Order is system generated and does not require signature.
+        </p>
+    </div>
+
+    <div class="sign">
+        For ELAF STEEL<br><br> Authorized Signatory
+    </div>
+
+</body>
+
+</html>
