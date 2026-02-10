@@ -56,6 +56,39 @@ router.get("/backup-now", (req, res) => {
     runBackup("manual");
     res.send("Backup triggered successfully!");
 });
+// GET item stock & avg monthly consumption
+
+router.get("/:id/po-info", async(req, res) => {
+    const itemId = req.params.id;
+
+    const item = await Items.findById(itemId).lean();
+    if (!item) {
+        return res.json({});
+    }
+
+    /* ================= CURRENT STOCK ================= */
+    const txs = await Transaction.find({ itemId: item._id });
+
+    let inward = 0;
+    let outward = 0;
+
+    txs.forEach((tx) => {
+        if (tx.type === "inward") inward += tx.quantity;
+        if (tx.type === "outward" || tx.type === "lend") outward += tx.quantity;
+    });
+
+    const currentStock = inward - outward;
+
+    /* ================= AVG / MONTH (UTIL) ================= */
+    const monthly = await getMonthlyConsumption(item);
+
+    res.json({
+        unit: item.itemUnit,
+        currentStock: currentStock,
+        avgMonthly: monthly.perMonth,
+    });
+});
+
 // // ✅ Manual Backup Trigger (this is what "Backup Now" button calls)
 // router.post("/utility/backup", (req, res) => {
 //   runBackup("manual");
