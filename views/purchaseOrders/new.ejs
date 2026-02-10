@@ -4,105 +4,235 @@
 
         <h3>Create Purchase Order</h3>
 
-        <!-- SUPPLIER -->
-        <div class="mb-3">
-            <label class="form-label">Supplier</label>
-            <select id="supplierSelect" class="form-select" onchange="onSupplierChange(this.value)">
-      <option value="">-- Select Supplier --</option>
-      <% suppliers.forEach(s => { %>
-        <option value="<%= s._id %>"><%= s.supplierName %></option>
-      <% }) %>
-    </select>
-        </div>
+        <form method="POST" action="/purchase-orders">
 
-        <!-- FORM -->
-        <form action="/purchase-orders" method="POST" id="poForm">
-
-            <input type="hidden" name="supplier" id="supplierHidden">
-
-            <!-- TABLE WRAPPER (IMPORTANT) -->
-            <div id="tableWrapper" style="display:none">
-
-                <table class="table table-bordered mt-3" id="itemsTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Item</th>
-                            <th>Current Stock</th>
-                            <th>Avg / Month</th>
-                            <th>Unit</th>
-                            <th>PO Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itemsTbody">
-                        <!-- rows injected here -->
-                    </tbody>
-                </table>
-
-                <button class="btn btn-primary mt-3" id="submitBtn">
-        Create Purchase Order
-      </button>
-
+            <!-- ================= SUPPLIER ================= -->
+            <div class="mb-3">
+                <label class="form-label">Supplier Type</label>
+                <select id="supplierMode" name="supplierMode" class="form-select">
+        <option value="master">Select Supplier</option>
+        <option value="custom">Custom Supplier</option>
+      </select>
             </div>
+
+            <div id="supplierMaster">
+                <select name="supplierId" class="form-select">
+        <% suppliers.forEach(s => { %>
+          <option value="<%= s._id %>"><%= s.supplierName %></option>
+        <% }) %>
+      </select>
+            </div>
+
+            <div id="supplierCustom" style="display:none">
+                <input class="form-control mb-2" name="supplierName" placeholder="Supplier Name">
+                <textarea class="form-control mb-2" name="supplierAddress" placeholder="Address"></textarea>
+                <input class="form-control mb-2" name="supplierGST" placeholder="GST">
+            </div>
+
+            <hr>
+
+            <!-- ================= ITEMS ================= -->
+            <h5>Items</h5>
+
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:90px">Type</th>
+                        <th>Item</th>
+                        <th>Description</th>
+                        <th style="width:90px">Qty</th>
+                        <th style="width:120px">Unit</th>
+                        <th style="width:110px">Rate</th>
+                        <th style="width:160px">Info</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addItem()">➕ Add Item</button>
+
+            <hr>
+
+            <textarea class="form-control mb-3" name="terms" placeholder="Terms & Conditions"></textarea>
+
+            <button class="btn btn-primary">Create PO</button>
 
         </form>
     </div>
 
+    <!-- ================= PRE-RENDERED ITEM OPTIONS ================= -->
     <script>
-        function onSupplierChange(supplierId) {
-            console.log("Supplier selected:", supplierId);
+        const itemOptionsHTML = `
+  <% items.forEach(i => { %>
+    <option value="<%= i._id %>"><%= i.itemName %></option>
+  <% }) %>
+`;
+    </script>
 
-            const tbody = document.getElementById("itemsTbody");
-            const tableWrapper = document.getElementById("tableWrapper");
-            const supplierHidden = document.getElementById("supplierHidden");
+    <script>
+        let idx = 0;
 
-            tbody.innerHTML = "";
-            tableWrapper.style.display = "none";
+        /* ================= ADD ITEM ROW ================= */
+        function addItem() {
+            const tr = document.createElement("tr");
 
-            if (!supplierId) return;
+            tr.innerHTML = `
+    <td>
+      <select class="form-select"
+        name="items[${idx}][itemType]"
+        onchange="toggleItemType(this, ${idx})">
+        <option value="master">DB</option>
+        <option value="custom">Custom</option>
+      </select>
+    </td>
 
-            supplierHidden.value = supplierId;
+    <!-- DB ITEM -->
+    <td id="itemDB${idx}">
+      <select class="form-select"
+        name="items[${idx}][itemId]"
+        onchange="loadItemInfo(this, ${idx})">
+        <option value="">Select Item</option>
+        ${itemOptionsHTML}
+      </select>
+    </td>
 
-            fetch(`/purchase-orders/supplier/${supplierId}/items`)
-                .then(res => res.json())
-                .then(items => {
-                    console.log("Items:", items);
+    <!-- CUSTOM ITEM -->
+    <td id="itemCustom${idx}" style="display:none">
+      <input class="form-control"
+        name="items[${idx}][name]"
+        placeholder="Item name">
+    </td>
 
-                    if (!items || !items.length) {
-                        alert("No items found for this supplier");
-                        return;
-                    }
+    <!-- DESCRIPTION (COMMON) -->
+    <td>
+      <textarea class="form-control"
+        name="items[${idx}][description]"
+        placeholder="Description (optional)"></textarea>
+    </td>
 
-                    items.forEach((item, index) => {
-                        const row = `
-          <tr>
-            <td>${item.name}</td>
-            <td>${item.currentStock}</td>
-            <td>${item.avgMonthlyConsumption}</td>
-            <td>${item.unit}</td>
-            <td>
-              <input type="number"
-                     min="0"
-                     class="form-control"
-                     name="items[${index}][quantity]">
+    <td>
+      <input class="form-control"
+        name="items[${idx}][qty]"
+        type="number"
+        min="0">
+    </td>
 
-              <input type="hidden"
-                     name="items[${index}][item]"
-                     value="${item._id}">
+    <!-- UNIT -->
+    <td id="unitCell${idx}">
+      <select class="form-select"
+        name="items[${idx}][unit]"
+        id="unit${idx}"
+        disabled>
+        <option value="">Select</option>
+        <option value="PCS">PCS</option>
+        <option value="KG">KG</option>
+        <option value="MT">MT</option>
+                <option value="MTS">MTS</option>
+        <option value="BAGS">BAGS</option>
+        <option value="SETS">SETS</option>
+        <option value="BOX">BOX</option>
+        <option value="MTRS">MTRS</option>
+      </select>
+    </td>
 
-              <input type="hidden"
-                     name="items[${index}][unit]"
-                     value="${item.unit}">
-            </td>
-          </tr>
-        `;
-                        tbody.insertAdjacentHTML("beforeend", row);
-                    });
+    <td>
+      <input class="form-control"
+        name="items[${idx}][rate]"
+        type="number"
+        min="0">
+    </td>
 
-                    tableWrapper.style.display = "block";
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("Error loading items");
-                });
+    <td>
+      <small id="info${idx}" class="text-muted">Select item</small>
+    </td>
+  `;
+
+            document.getElementById("itemsBody").appendChild(tr);
+            idx++;
         }
+
+        /* ================= TOGGLE ITEM TYPE ================= */
+        function toggleItemType(sel, i) {
+            const isMaster = sel.value === "master";
+
+            document.getElementById("itemDB" + i).style.display = isMaster ? "block" : "none";
+            document.getElementById("itemCustom" + i).style.display = isMaster ? "none" : "block";
+
+            const unitCell = document.getElementById("unitCell" + i);
+            unitCell.innerHTML = isMaster ?
+                `
+      <select class="form-select"
+        name="items[${i}][unit]"
+        id="unit${i}"
+        disabled>
+        <option value="">Select</option>
+        <option value="PCS">PCS</option>
+        <option value="KG">KG</option>
+        <option value="MT">MT</option>
+        <option value="MTS">MTS</option>
+        <option value="SETS">SETS</option>
+        <option value="BOX">BOX</option>
+        <option value="MTRS">MTRS</option>
+      </select>` :
+                `
+      <input class="form-control"
+        name="items[${i}][unit]"
+        placeholder="Unit">`;
+
+            if (!isMaster) {
+                document.getElementById("info" + i).innerText = "—";
+            }
+        }
+
+        /* ================= LOAD DB ITEM INFO ================= */
+        async function loadItemInfo(select, i) {
+            if (!select.value) return;
+
+            const infoBox = document.getElementById("info" + i);
+            infoBox.innerText = "Loading...";
+
+            try {
+                const res = await fetch("/items/" + select.value + "/po-info");
+
+                if (!res.ok) {
+                    infoBox.innerText = "Failed to load stock info";
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (!data || typeof data.currentStock === "undefined") {
+                    infoBox.innerText = "No stock data";
+                    return;
+                }
+
+                // Enable & auto-select unit
+                const unitSelect = document.getElementById("unit" + i);
+                if (unitSelect) {
+                    unitSelect.disabled = false;
+                    unitSelect.value = data.unit || "";
+                }
+
+                infoBox.innerHTML =
+                    "Stock: <b>" + data.currentStock + "</b><br>" +
+                    "Avg / Month: <b>" + data.avgMonthly + "</b>";
+
+            } catch (err) {
+                console.error(err);
+                infoBox.innerText = "Error loading info";
+            }
+        }
+
+
+        /* ================= SUPPLIER TOGGLE ================= */
+        document.getElementById("supplierMode").addEventListener("change", function() {
+            document.getElementById("supplierMaster").style.display =
+                this.value === "master" ? "block" : "none";
+
+            document.getElementById("supplierCustom").style.display =
+                this.value === "custom" ? "block" : "none";
+        });
+
+        /* ================= INIT ================= */
+        addItem();
     </script>

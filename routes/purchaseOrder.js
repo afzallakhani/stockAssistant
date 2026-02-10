@@ -12,6 +12,17 @@ const generatePONumber = require("../utils/generatePONumber");
 const puppeteer = require("puppeteer");
 const ejs = require("ejs");
 const path = require("path");
+/* ===============================
+   LIST ALL POs
+================================ */
+router.get(
+    "/",
+    catchAsync(async(req, res) => {
+        const pos = await PurchaseOrder.find({}).sort({ createdAt: -1 });
+
+        res.render("purchaseOrders/index", { pos });
+    }),
+);
 
 /* ===============================
    SUPPLIER ITEMS API  (🚨 MUST BE FIRST)
@@ -82,7 +93,8 @@ router.get(
     "/new",
     catchAsync(async(req, res) => {
         const suppliers = await Supplier.find({});
-        res.render("purchaseOrders/new", { suppliers });
+        const items = await Items.find({});
+        res.render("purchaseOrders/new", { suppliers, items });
     }),
 );
 
@@ -92,29 +104,119 @@ router.get(
 router.post(
     "/",
     catchAsync(async(req, res) => {
-        const { supplier, items } = req.body;
+        const {
+            supplierMode,
+            supplierId,
+            supplierName,
+            supplierAddress,
+            supplierGST,
+            items,
+            terms,
+        } = req.body;
 
-        const cleanedItems = items
-            .filter((i) => i.quantity && Number(i.quantity) > 0)
-            .map((i) => ({
-                item: i.item,
-                quantity: Number(i.quantity),
-                unit: i.unit,
-            }));
+        /* ================= SUPPLIER ================= */
+        let supplierData;
 
-        if (!cleanedItems.length) {
-            req.flash("error", "Please enter quantity for at least one item");
-            return res.redirect("/purchase-orders/new");
+        if (supplierMode === "custom") {
+            supplierData = {
+                supplierType: "custom",
+                name: supplierName || "—",
+                address: supplierAddress || "",
+                gst: supplierGST || "",
+            };
+        } else {
+            const supplier = await Supplier.findById(supplierId);
+
+            if (supplier) {
+                supplierData = {
+                    supplierType: "master",
+                    name: supplier.supplierName,
+                    address: supplier.supplierAddress || "",
+                    gst: supplier.supplierGST || "",
+                };
+            } else {
+                supplierData = {
+                    supplierType: "unknown",
+                    name: "Unknown Supplier",
+                    address: "",
+                    gst: "",
+                };
+            }
         }
 
+        /* ================= ITEMS ================= */
+        let poItems = [];
+        let subTotal = 0;
+
+        for (let i of items) {
+            let itemData = {};
+
+            if (i.itemType === "master") {
+                const dbItem = await Items.findById(i.itemId);
+
+                const qty = Number(i.qty) || 0;
+                const rate = Number(i.rate) || 0;
+
+                itemData = {
+                    itemType: "master",
+                    itemRef: dbItem._id,
+                    name: dbItem.itemName,
+                    description: i.description || "",
+                    qty: qty,
+                    unit: i.unit || dbItem.itemUnit,
+                    rate: rate,
+                    amount: qty * rate,
+                };
+            } else {
+                const qty = Number(i.qty) || 0;
+                const rate = Number(i.rate) || 0;
+
+                itemData = {
+                    itemType: "custom",
+                    name: i.name,
+                    description: i.description || "",
+                    qty: qty,
+                    unit: i.unit || "",
+                    rate: rate,
+                    amount: qty * rate,
+                };
+            }
+
+            subTotal += itemData.amount;
+            poItems.push(itemData);
+        }
+
+        /* ================= SAVE PO ================= */
         const po = new PurchaseOrder({
             poNumber: generatePONumber(),
-            supplier,
-            items: cleanedItems,
+            supplier: supplierData,
+            items: poItems,
+            terms: terms,
+            subTotal: subTotal,
         });
 
         await po.save();
+
         res.redirect(`/purchase-orders/${po._id}`);
+    }),
+);
+/* ===============================
+   DELETE PO
+================================ */
+router.delete(
+    "/:id",
+    catchAsync(async(req, res) => {
+        const po = await PurchaseOrder.findById(req.params.id);
+
+        if (!po) return res.redirect("/purchase-orders");
+
+        if (po.status === "final") {
+            req.flash("error", "Finalized PO cannot be deleted.");
+            return res.redirect("/purchase-orders");
+        }
+
+        await PurchaseOrder.findByIdAndDelete(req.params.id);
+        res.redirect("/purchase-orders");
     }),
 );
 
@@ -124,11 +226,33 @@ router.post(
 router.get(
     "/:id",
     catchAsync(async(req, res) => {
-        const po = await PurchaseOrder.findById(req.params.id)
-            .populate("supplier")
-            .populate("items.item");
+        const po = await PurchaseOrder.findById(req.params.id);
 
         res.render("purchaseOrders/show", { po });
+    }),
+);
+/* ===============================
+   EDIT PO (FORM)
+================================ */
+router.get(
+    "/:id/edit",
+    catchAsync(async(req, res) => {
+        const po = await PurchaseOrder.findById(req.params.id);
+        if (!po) return res.redirect("/purchase-orders");
+
+        if (po.status === "final") {
+            req.flash("error", "Finalized PO cannot be edited.");
+            return res.redirect(`/purchase-orders/${po._id}`);
+        }
+
+        const suppliers = await Supplier.find({});
+        const items = await Items.find({});
+
+        res.render("purchaseOrders/edit", {
+            po,
+            suppliers,
+            items,
+        });
     }),
 );
 
@@ -138,9 +262,7 @@ router.get(
 router.get(
     "/:id/pdf",
     catchAsync(async(req, res) => {
-        const po = await PurchaseOrder.findById(req.params.id)
-            .populate("supplier")
-            .populate("items.item");
+        const po = await PurchaseOrder.findById(req.params.id);
 
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
@@ -149,11 +271,44 @@ router.get(
             path.join(__dirname, "../views/purchaseOrders/pdf.ejs"), { po },
         );
 
-        await page.setContent(html, { waitUntil: "networkidle0" });
+        await page.setContent(html, { waitUntil: "networkidle2" });
+        await page.evaluate(async() => {
+            const images = Array.from(document.images);
+            await Promise.all(
+                images.map((img) => {
+                    if (img.complete) return;
+                    return new Promise((resolve) => {
+                        img.onload = img.onerror = resolve;
+                    });
+                }),
+            );
+        });
 
         const pdf = await page.pdf({
             format: "A4",
             printBackground: true,
+            displayHeaderFooter: true,
+
+            headerTemplate: `
+    <div style="font-size:10px; width:100%; text-align:center;"></div>
+  `,
+
+            footerTemplate: `
+    <div style="
+      font-size:10px;
+      width:100%;
+      text-align:right;
+      padding-right:30px;
+    ">
+      Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+    </div>
+  `,
+            margin: {
+                top: "0mm",
+                bottom: "18mm",
+                left: "10mm",
+                right: "10mm",
+            },
         });
 
         await browser.close();
@@ -164,6 +319,111 @@ router.get(
         });
 
         res.send(pdf);
+    }),
+);
+
+router.post(
+    "/:id/finalize",
+    catchAsync(async(req, res) => {
+        await PurchaseOrder.findByIdAndUpdate(req.params.id, {
+            status: "final",
+        });
+        res.redirect(`/purchase-orders/${req.params.id}`);
+    }),
+);
+
+/* ===============================
+   UPDATE PO
+================================ */
+router.put(
+    "/:id",
+    catchAsync(async(req, res) => {
+        const po = await PurchaseOrder.findById(req.params.id);
+        if (!po) return res.redirect("/purchase-orders");
+
+        if (po.status === "final") {
+            req.flash("error", "Finalized PO cannot be edited.");
+            return res.redirect(`/purchase-orders/${po._id}`);
+        }
+
+        const {
+            supplierMode,
+            supplierId,
+            supplierName,
+            supplierAddress,
+            supplierGST,
+            items,
+            terms,
+        } = req.body;
+
+        /* -------- SUPPLIER SNAPSHOT -------- */
+        let supplierData;
+
+        if (supplierMode === "custom") {
+            supplierData = {
+                supplierType: "custom",
+                name: supplierName || "—",
+                address: supplierAddress || "",
+                gst: supplierGST || "",
+            };
+        } else {
+            const supplier = await Supplier.findById(supplierId);
+            supplierData = supplier ?
+                {
+                    supplierType: "master",
+                    name: supplier.supplierName,
+                    address: supplier.supplierAddress || "",
+                    gst: supplier.supplierGST || "",
+                } :
+                po.supplier;
+        }
+
+        /* -------- ITEMS SNAPSHOT -------- */
+        let poItems = [];
+        let subTotal = 0;
+
+        for (let i of items) {
+            const qty = Number(i.qty) || 0;
+            const rate = Number(i.rate) || 0;
+
+            let itemData;
+
+            if (i.itemType === "master") {
+                const dbItem = await Items.findById(i.itemId);
+                itemData = {
+                    itemType: "master",
+                    itemRef: dbItem._id,
+                    name: dbItem.itemName,
+                    description: i.description || "",
+                    qty,
+                    unit: i.unit || dbItem.itemUnit,
+                    rate,
+                    amount: qty * rate,
+                };
+            } else {
+                itemData = {
+                    itemType: "custom",
+                    name: i.name,
+                    description: i.description || "",
+                    qty,
+                    unit: i.unit || "",
+                    rate,
+                    amount: qty * rate,
+                };
+            }
+
+            subTotal += itemData.amount;
+            poItems.push(itemData);
+        }
+
+        po.supplier = supplierData;
+        po.items = poItems;
+        po.terms = terms;
+        po.subTotal = subTotal;
+
+        await po.save();
+
+        res.redirect(`/purchase-orders/${po._id}`);
     }),
 );
 
