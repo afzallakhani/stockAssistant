@@ -13,8 +13,10 @@ files/1695131662245.pdf
 *.log
 node_modules/
 
+
 # Google Drive credentials and tokens
-service-account.json
+token.json
+credentials.json
 # Ignore the backup folder
 backups/
 logs/
