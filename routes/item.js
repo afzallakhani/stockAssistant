@@ -5,6 +5,7 @@ const { promisify } = require("util");
 const { urlencoded, query, json } = require("express");
 // const unlinkAsync = promisify(fs.unlink);
 const runBackup = require("../utils/backupHelper");
+const getMonthlyConsumption = require("../utils/getMonthlyConsumption");
 
 const catchAsync = require("../utils/catchAsync");
 const methodOverride = require("method-override");
@@ -55,6 +56,37 @@ router.get("/backup-now", (req, res) => {
   runBackup("manual");
   res.send("Backup triggered successfully!");
 });
+// GET item stock & avg monthly consumption
+
+router.get("/:id/po-info", async (req, res) => {
+  const itemId = req.params.id;
+
+  const item = await Items.findById(itemId).lean();
+  if (!item) {
+    return res.json({});
+  }
+
+  /* ================= CURRENT STOCK ================= */
+  const txs = await Transaction.find({ itemId: item._id });
+
+  let inward = 0;
+  let outward = 0;
+
+  txs.forEach((tx) => {
+    if (tx.type === "inward") inward += tx.quantity;
+    if (tx.type === "outward" || tx.type === "lend") outward += tx.quantity;
+  });
+
+  /* ================= AVG / MONTH (UTIL) ================= */
+  const monthly = await getMonthlyConsumption(item);
+
+  res.json({
+    unit: item.itemUnit,
+    currentStock: item.itemQty,
+    avgMonthly: monthly.perMonth,
+  });
+});
+
 // // ✅ Manual Backup Trigger (this is what "Backup Now" button calls)
 // router.post("/utility/backup", (req, res) => {
 //   runBackup("manual");
@@ -97,74 +129,75 @@ router.post("/utility/backup", (req, res) => {
 
 // Restore Backup
 router.post("/utility/restore", (req, res) => {
-  const { backupFolder } = req.body;
-  if (!backupFolder) {
-    req.flash("error", "⚠️ No backup selected!");
-    return res.redirect("/items/utility");
-  }
+  const file = req.body.backupFile;
+  const BACKUP_PATH = path.join(__dirname, "../backups");
+  const fullPath = path.join(BACKUP_PATH, file);
 
-  const restorePath = path.join(BACKUP_DIR, backupFolder, DB_NAME);
-  const cmd = `mongorestore --db=${DB_NAME} --gzip "${restorePath}" --drop`;
+  const cmd = `"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongorestore.exe" --gzip --archive="${fullPath}" --drop`;
 
-  console.log(`♻️ Restoring from ${restorePath}...`);
-  exec(cmd, (error) => {
-    if (error) {
-      console.error(`❌ Restore failed: ${error.message}`);
-      req.flash("error", "❌ Restore failed! Check console for details.");
+  exec(cmd, (err) => {
+    if (err) {
+      req.flash("error", "Restore failed");
       return res.redirect("/items/utility");
     }
-    console.log(`✅ Restore completed from ${backupFolder}`);
-    req.flash("success", `✅ Database restored from ${backupFolder}`);
+    req.flash("success", "Database restored successfully");
     res.redirect("/items/utility");
   });
 });
 
 // Delete Backup
 router.post("/utility/delete", (req, res) => {
-  const { backupFolder } = req.body;
-  if (!backupFolder) {
-    req.flash("error", "⚠️ No backup selected!");
-    return res.redirect("/items/utility");
+  const file = req.body.backupFile;
+  const BACKUP_PATH = path.join(__dirname, "../backups");
+
+  try {
+    fs.unlinkSync(path.join(BACKUP_PATH, file));
+    req.flash("success", "Backup deleted successfully");
+  } catch (err) {
+    req.flash("error", "Failed to delete backup");
   }
-  const deletePath = path.join(BACKUP_DIR, backupFolder);
-  fs.rmSync(deletePath, { recursive: true, force: true });
-  console.log(`🗑️ Deleted backup: ${backupFolder}`);
-  req.flash("success", `🗑️ Deleted backup: ${backupFolder}`);
+
   res.redirect("/items/utility");
 });
 
 // Utility Dashboard Page
+
 router.get("/utility", (req, res) => {
-  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  const BACKUP_PATH = path.join(__dirname, "../backups");
 
-  const backups = fs
-    .readdirSync(BACKUP_DIR)
-    .filter((folder) =>
-      fs.lstatSync(path.join(BACKUP_DIR, folder)).isDirectory()
-    )
-    .map((folder) => {
-      const fullPath = path.join(BACKUP_DIR, folder);
-      const innerDBPath = path.join(fullPath, DB_NAME);
+  let backups = [];
 
-      // confirm it actually contains your DB folder (e.g. "stockAssistant")
-      const hasDBFolder = fs.existsSync(innerDBPath);
-      const stats = fs.statSync(fullPath);
+  if (fs.existsSync(BACKUP_PATH)) {
+    backups = fs
+      .readdirSync(BACKUP_PATH)
+      .filter((f) => f.endsWith(".archive.gz"))
+      .map((f) => {
+        const stat = fs.statSync(path.join(BACKUP_PATH, f));
+        return {
+          name: f,
+          date: stat.mtime,
+        };
+      })
+      .sort((a, b) => b.date - a.date);
+  }
 
-      return {
-        name: folder,
-        hasDBFolder,
-        date: stats.mtime,
-      };
-    })
-    .sort((a, b) => b.date - a.date);
-
-  res.render("items/utility", { backups });
+  res.render("items/utility", {
+    backups,
+    success: req.flash("success"),
+    error: req.flash("error"),
+  });
 });
 
 router.get(
   "/",
   catchAsync(async (req, res) => {
     const items = await Items.find({}).populate("itemImage");
+    for (let item of items) {
+      const dc = await getMonthlyConsumption(item);
+      item.monthlyConsumption = dc.perMonth;
+      item.stockDaysLeft =
+        dc.perMonth > 0 ? Math.floor((item.itemQty / dc.perMonth) * 30) : "∞";
+    }
     const images = await Images.find({});
     const itemCategories = await ItemCategories.find({});
     const itemSuppliers = await Supplier.find({});
@@ -181,7 +214,7 @@ router.get(
       itemSuppliers: itemSuppliers || [],
       query: req.query || {}, // ✅ Fix added
     });
-  })
+  }),
 );
 
 router.get("/", (req, res) => {
@@ -195,7 +228,7 @@ router.get(
     const images = await Images.find({});
     console.log("hi");
     res.render("items/spares");
-  })
+  }),
 );
 router.get(
   "/new",
@@ -204,7 +237,7 @@ router.get(
     const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
     console.log(itemSuppliers);
     res.render("items/new", { itemCategories, itemSuppliers });
-  })
+  }),
 );
 // router.get(
 //     "/outwards",
@@ -265,7 +298,7 @@ router.get(
       itemCategories,
       itemSuppliers,
     });
-  })
+  }),
 );
 
 // POST: Handle lend transaction
@@ -298,7 +331,7 @@ router.post(
     }
 
     res.redirect("/items/transactions");
-  })
+  }),
 );
 
 router.get(
@@ -306,7 +339,7 @@ router.get(
   catchAsync(async (req, res) => {
     const category = await ItemCategories.find({});
     res.render("items/category", { category });
-  })
+  }),
 );
 
 // searched items display
@@ -400,7 +433,7 @@ router.post(
         const image = new Images({
           contentType: file.mimetype,
           data: fs.readFileSync(
-            path.join(__dirname, "..", "views", "images", file.filename)
+            path.join(__dirname, "..", "views", "images", file.filename),
           ),
           path: file.path,
           name: file.originalname,
@@ -422,7 +455,7 @@ router.post(
     }).save();
 
     res.redirect("/items");
-  })
+  }),
 );
 router.get(
   "/:id/view",
@@ -430,7 +463,7 @@ router.get(
     const item = await Items.findById(req.params.id).populate("itemImage");
     if (!item) return res.status(404).send("Item not found");
     res.render("items/viewItem", { item });
-  })
+  }),
 );
 
 // GET route to display the inwards form
@@ -455,7 +488,7 @@ router.get(
       itemCategories,
       itemSuppliers,
     });
-  })
+  }),
 );
 
 // POST route to handle inward stock updates
@@ -491,7 +524,7 @@ router.post(
     }
 
     res.redirect("/items");
-  })
+  }),
 );
 
 // GET route to view all transactions
@@ -538,31 +571,41 @@ router.post(
 router.get(
   "/transactions",
   catchAsync(async (req, res) => {
-    // Fetch all items for the filter dropdown
+    // Fetch all items for the filter dropdow
+    const page = parseInt(req.query.page || 1);
+    const limit = 50;
+
     const allItems = await Items.find().select("itemName _id");
 
     // Build the filter query based on request parameters
     const filter = {};
-    if (req.query.item) {
-      filter.itemId = req.query.item;
+    if (req.query.itemId) {
+      filter.itemId = req.query.itemId;
     }
-    if (req.query.startDate) {
-      filter.createdAt = {
-        ...filter.createdAt,
-        $gte: new Date(req.query.startDate),
-      };
+    if (req.query.type) {
+      filter.type = req.query.type;
     }
-    if (req.query.endDate) {
-      // Add one day to the end date to include all transactions on that day
-      let endDate = new Date(req.query.endDate);
-      endDate.setDate(endDate.getDate() + 1);
-      filter.createdAt = { ...filter.createdAt, $lt: endDate };
+
+    if (req.query.startDate || req.query.endDate) {
+      filter.createdAt = {};
+      if (req.query.startDate) {
+        filter.createdAt.$gte = new Date(req.query.startDate);
+      }
+      if (req.query.endDate) {
+        const end = new Date(req.query.endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = end;
+      }
     }
 
     // Fetch transactions using the filter, sorted by most recent
     const transactions = await Transaction.find(filter)
-      .populate("itemId")
-      .sort({ createdAt: -1 });
+      .populate("itemId", "itemName")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(500);
+    const totalCount = await Transaction.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit);
 
     // --- New Grouping Logic ---
     // Group transactions by date
@@ -578,17 +621,25 @@ router.get(
 
     // Get an array of date keys and sort them from newest to oldest
     const sortedDates = Object.keys(groupedTransactions).sort(
-      (a, b) => new Date(b) - new Date(a)
+      (a, b) => new Date(b) - new Date(a),
     );
 
     // Render the page, passing the new grouped data structures
+    // res.render("items/transactions", {
+    //   groupedTransactions,
+    //   sortedDates,
+    //   query: req.query,
+    //   items: allItems, // ✅ now available in EJS
+    // });
     res.render("items/transactions", {
       groupedTransactions,
       sortedDates,
       query: req.query,
-      items: allItems, // ✅ now available in EJS
+      items: allItems,
+      page,
+      totalPages,
     });
-  })
+  }),
 );
 router.get(
   "/insights",
@@ -659,7 +710,7 @@ router.get(
       transactions,
       query: req.query, // Pass query params back to pre-fill the form
     });
-  })
+  }),
 );
 // router.get(
 //   "/consumption",
@@ -970,153 +1021,515 @@ router.get(
 //     });
 //   })
 // );
+// latestrouter.get(
+//     "/consumption",
+//     catchAsync(async(req, res) => {
+//         const { itemId, category, supplier, startDate, endDate, mode, heatType } =
+//         req.query;
+
+//         // ---------------------------------
+//         // 🔹 Masters
+//         // ---------------------------------
+//         const items = await Items.find({}).sort({ _id: 1 });
+//         const categories = await ItemCategories.find({});
+//         const suppliers = await Supplier.find({});
+
+//         // ---------------------------------
+//         // 🔹 Date Range (Manual)
+//         // ---------------------------------
+//         const hasManualRange = startDate || endDate;
+//         const rangeStart = startDate ? new Date(startDate) : null;
+//         const rangeEnd = endDate ?
+//             new Date(new Date(endDate).setHours(23, 59, 59, 999)) :
+//             new Date();
+
+//         // ---------------------------------
+//         // 🔹 Base Match (initial aggregation)
+//         // ---------------------------------
+//         const baseMatch = { type: { $in: ["outward", "lend"] } };
+
+//         if (hasManualRange) {
+//             baseMatch.createdAt = {};
+//             if (rangeStart) baseMatch.createdAt.$gte = rangeStart;
+//             if (rangeEnd) baseMatch.createdAt.$lte = rangeEnd;
+//         }
+
+//         // ---------------------------------
+//         // 🔹 Aggregate items (structure only)
+//         // ---------------------------------
+//         let transactions = await Transaction.aggregate([
+//             { $match: baseMatch },
+//             {
+//                 $lookup: {
+//                     from: "allitems",
+//                     localField: "itemId",
+//                     foreignField: "_id",
+//                     as: "item",
+//                 },
+//             },
+//             { $unwind: "$item" },
+//             {
+//                 $match: {
+//                     ...(itemId && { "item._id": new mongoose.Types.ObjectId(itemId) }),
+//                     ...(category && { "item.itemCategoryName": category }),
+//                     ...(supplier && { "item.itemSupplier": supplier }),
+//                 },
+//             },
+//             {
+//                 $group: {
+//                     _id: "$item._id",
+//                     itemName: { $first: "$item.itemName" },
+//                     category: { $first: "$item.itemCategoryName" },
+//                     supplier: { $first: "$item.itemSupplier" },
+//                     totalUsed: { $sum: "$quantity" }, // ⚠️ will be corrected below
+//                     lastUsed: { $max: "$createdAt" },
+//                 },
+//             },
+//             { $sort: { _id: 1 } },
+//         ]);
+
+//         // ---------------------------------
+//         // 🔹 Initial & Last Inward Maps
+//         // ---------------------------------
+//         const initialMap = {};
+//         const lastInwardMap = {};
+
+//         const initials = await Transaction.aggregate([
+//             { $match: { type: "initial" } },
+//             { $sort: { createdAt: 1 } },
+//             {
+//                 $group: {
+//                     _id: "$itemId",
+//                     date: { $first: "$createdAt" },
+//                     qty: { $first: "$quantity" },
+//                 },
+//             },
+//         ]);
+
+//         initials.forEach((r) => {
+//             initialMap[r._id.toString()] = r;
+//         });
+
+//         const lastInwards = await Transaction.aggregate([
+//             { $match: { type: "inward" } },
+//             { $sort: { createdAt: -1 } },
+//             {
+//                 $group: {
+//                     _id: "$itemId",
+//                     date: { $first: "$createdAt" },
+//                     qty: { $first: "$quantity" },
+//                 },
+//             },
+//         ]);
+
+//         lastInwards.forEach((r) => {
+//             lastInwardMap[r._id.toString()] = r;
+//         });
+
+//         // ---------------------------------
+//         // 🔹 Image / Unit / Stock Maps
+//         // ---------------------------------
+//         const itemDocs = await Items.find({})
+//             .populate("itemImage")
+//             .select("_id itemImage itemUnit itemQty createdAt")
+//             .lean();
+
+//         const imageMap = {};
+//         const unitMap = {};
+//         const stockMap = {};
+//         const itemCreatedMap = {}; // ✅ ADD
+//         const itemQtyMap = {}; // ✅ ADD
+//         itemDocs.forEach((i) => {
+//             imageMap[i._id.toString()] =
+//                 i.itemImage && i.itemImage.length ?
+//                 "data:image/" +
+//                 i.itemImage[0].contentType +
+//                 ";base64," +
+//                 i.itemImage[0].data.toString("base64") :
+//                 "https://via.placeholder.com/400x300.png?text=No+Image";
+
+//             unitMap[i._id.toString()] = i.itemUnit || "";
+//             stockMap[i._id.toString()] = i.itemQty || 0;
+//         });
+
+//         // ---------------------------------
+//         // 🔹 PER-ITEM PERIOD + CORRECT TOTAL USED
+//         // ---------------------------------
+//         for (const tx of transactions) {
+//             const id = tx._id.toString();
+
+//             let periodStart = null;
+//             const periodEnd = rangeEnd;
+
+//             if (hasManualRange) {
+//                 periodStart = rangeStart;
+//             } else if (mode === "sinceLastInward") {
+//                 periodStart = lastInwardMap[id] ? lastInwardMap[id].date : null;
+//             } else {
+//                 if (initialMap[id]) {
+//                     periodStart = initialMap[id].date;
+//                 } else {
+//                     // 🔥 FALLBACK: item created date
+//                     periodStart = itemCreatedMap[id] || null;
+//                 }
+//             }
+
+//             // 🔥 RECALCULATE TOTAL USED FOR THIS ITEM
+//             if (periodStart) {
+//                 const sumResult = await Transaction.aggregate([{
+//                         $match: {
+//                             itemId: tx._id,
+//                             type: { $in: ["outward", "lend"] },
+//                             createdAt: { $gte: periodStart, $lte: periodEnd },
+//                         },
+//                     },
+//                     { $group: { _id: null, total: { $sum: "$quantity" } } },
+//                 ]);
+
+//                 tx.totalUsed = sumResult.length > 0 ? sumResult[0].total : 0;
+//             }
+
+//             tx.periodStart = periodStart;
+//             tx.periodEnd = periodEnd;
+
+//             tx.base64Image = imageMap[id];
+//             tx.unit = unitMap[id];
+//             tx.currentStock = stockMap[id];
+//             tx.initialDate = initialMap[id] ?
+//                 initialMap[id].date :
+//                 itemCreatedMap[id] || null;
+
+//             tx.initialQty = initialMap[id] ? initialMap[id].qty : itemQtyMap[id] || 0;
+
+//             tx.lastInwards = lastInwardMap[id] ? lastInwardMap[id].date : null;
+//             tx.lastInwardQty = lastInwardMap[id] ? lastInwardMap[id].qty : 0;
+//             // ---------------------------------
+//             // 🔹 MONTHLY CONSUMPTION LOGIC (FIX)
+//             // ---------------------------------
+
+//             let months = 0;
+
+//             if (periodStart && periodEnd) {
+//                 months =
+//                     (periodEnd.getFullYear() - periodStart.getFullYear()) * 12 +
+//                     (periodEnd.getMonth() - periodStart.getMonth()) +
+//                     Math.max(1, (periodEnd.getDate() - periodStart.getDate()) / 30);
+//             }
+
+//             months = Math.max(1, Number(months.toFixed(2)));
+
+//             tx.consumptionMonths = months;
+
+//             // 🔹 Avg per month
+//             tx.avgPerMonth =
+//                 months > 0 ? Number((tx.totalUsed / months).toFixed(2)) : 0;
+
+//             // 🔹 Stock months left
+//             tx.stockMonthsLeft =
+//                 tx.avgPerMonth > 0 ?
+//                 Number((tx.currentStock / tx.avgPerMonth).toFixed(1)) :
+//                 null;
+
+//             // 🔹 Stock out date
+//             if (tx.stockMonthsLeft) {
+//                 const outDate = new Date();
+//                 outDate.setMonth(outDate.getMonth() + Math.ceil(tx.stockMonthsLeft));
+//                 tx.stockOutDate = outDate;
+//             } else {
+//                 tx.stockOutDate = null;
+//             }
+//         }
+
+//         // ---------------------------------
+//         // 🔹 HEAT SUMMARY (USES FIXED TOTALS)
+//         // ---------------------------------
+//         const billetFilter = {};
+
+//         if (hasManualRange) {
+//             billetFilter.createdAt = { $gte: rangeStart, $lte: rangeEnd };
+//         }
+
+//         if (heatType === "open") {
+//             billetFilter.$or = [{ ce: null }, { ce: "" }];
+//         } else if (heatType === "close") {
+//             billetFilter.ce = { $nin: [null, ""] };
+//         }
+
+//         const billets = await Billets.find(billetFilter);
+
+//         const openHeats = billets.filter((b) => !b.ce).length;
+//         const closeHeats = billets.filter((b) => b.ce).length;
+//         const totalHeats = billets.length;
+
+//         let totalUsedOverall = 0;
+//         transactions.forEach((t) => {
+//             totalUsedOverall += Number(t.totalUsed || 0);
+//         });
+
+//         const avgPerHeat =
+//             totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
+
+//         // ---------------------------------
+//         // 🔹 Render
+//         // ---------------------------------
+//         res.render("items/consumption", {
+//             items,
+//             categories,
+//             suppliers,
+//             transactions,
+//             query: req.query,
+
+//             totalHeats,
+//             openHeats,
+//             closeHeats,
+//             avgPerHeat,
+//         });
+//     })
+// );
 router.get(
   "/consumption",
   catchAsync(async (req, res) => {
-    var itemId = req.query.itemId;
-    var category = req.query.category;
-    var supplier = req.query.supplier;
-    var startDate = req.query.startDate;
-    var endDate = req.query.endDate;
-    var mode = req.query.mode;
-    var heatType = req.query.heatType;
+    const { itemId, category, supplier, startDate, endDate, mode, heatType } =
+      req.query;
 
-    const items = await Items.find({}).sort({ itemName: 1 });
-    const categories = await ItemCategories.find({}).sort({
-      itemCategoryName: 1,
-    });
-    const suppliers = await Supplier.find({}).sort({ supplierName: 1 });
+    // ---------------------------------
+    // 🔹 Masters (ITEM-DRIVEN)
+    // ---------------------------------
+    const items = await Items.find({})
+      .populate("itemImage")
+      .sort({ _id: 1 })
+      .lean();
 
-    var baseMatch = { type: "outward" };
+    const categories = await ItemCategories.find({});
+    const suppliers = await Supplier.find({});
 
-    // ================================
-    //  🔹 Determine date range based on mode
-    // ================================
-    var dateRangeStart = null;
-    var dateRangeEnd = endDate ? new Date(endDate) : new Date();
+    // ---------------------------------
+    // 🔹 Date Range
+    // ---------------------------------
+    const hasManualRange = startDate || endDate;
+    const rangeStart = startDate ? new Date(startDate) : null;
+    const rangeEnd = endDate
+      ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
+      : new Date();
 
-    if (mode === "sinceLastInward" && itemId) {
-      var lastInward = await Transaction.findOne({
-        itemId: itemId,
-        type: "inward",
-      })
-        .sort({ createdAt: -1 })
-        .lean();
+    // ---------------------------------
+    // 🔹 Initial & Last Inward Maps
+    // ---------------------------------
+    const initialMap = {};
+    const lastInwardMap = {};
 
-      if (lastInward) {
-        dateRangeStart = new Date(lastInward.createdAt);
-      }
-    } else if (mode === "" && itemId) {
-      // Since Start mode
-      var firstTransaction = await Transaction.findOne({
-        itemId: itemId,
-      })
-        .sort({ createdAt: 1 })
-        .lean();
-
-      if (firstTransaction) {
-        dateRangeStart = new Date(firstTransaction.createdAt);
-      }
-    }
-
-    // If manual date filters are provided, override
-    if (startDate) dateRangeStart = new Date(startDate);
-    if (endDate) {
-      dateRangeEnd = new Date(endDate);
-      dateRangeEnd.setHours(23, 59, 59, 999);
-    }
-
-    if (dateRangeStart) {
-      baseMatch.createdAt = { $gte: dateRangeStart, $lte: dateRangeEnd };
-    }
-
-    // ================================
-    //  🔹 Fetch Outward Transactions
-    // ================================
-    var transactions = await Transaction.aggregate([
-      { $match: baseMatch },
-      {
-        $lookup: {
-          from: "allitems",
-          localField: "itemId",
-          foreignField: "_id",
-          as: "item",
-        },
-      },
-      { $unwind: "$item" },
-      {
-        $match: Object.assign(
-          {},
-          itemId ? { "item._id": new mongoose.Types.ObjectId(itemId) } : {},
-          category ? { "item.itemCategoryName": category } : {},
-          supplier ? { "item.itemSupplier": supplier } : {}
-        ),
-      },
+    const initials = await Transaction.aggregate([
+      { $match: { type: "initial" } },
+      { $sort: { createdAt: 1 } },
       {
         $group: {
-          _id: "$item._id",
-          itemName: { $first: "$item.itemName" },
-          category: { $first: "$item.itemCategoryName" },
-          supplier: { $first: "$item.itemSupplier" },
-          totalUsed: { $sum: "$quantity" },
-          lastUsed: { $max: "$createdAt" },
+          _id: "$itemId",
+          date: { $first: "$createdAt" },
+          qty: { $first: "$quantity" },
         },
       },
-      { $sort: { itemName: 1 } },
     ]);
 
-    // ================================
-    //  🔹 Handle Mode: sinceLastInward (adjust totals)
-    // ================================
-    if (mode === "sinceLastInward") {
-      for (var i = 0; i < transactions.length; i++) {
-        var tx = transactions[i];
-        var lastInward = await Transaction.findOne({
-          itemId: tx._id,
-          type: "inward",
-        })
-          .sort({ createdAt: -1 })
-          .lean();
-
-        if (lastInward) {
-          var afterInward = await Transaction.aggregate([
-            {
-              $match: {
-                itemId: tx._id,
-                type: "outward",
-                createdAt: { $gte: lastInward.createdAt },
-              },
-            },
-            { $group: { _id: null, totalUsed: { $sum: "$quantity" } } },
-          ]);
-
-          tx.totalUsed = afterInward.length > 0 ? afterInward[0].totalUsed : 0;
-        }
-      }
-    }
-
-    // ================================
-    //  🔹 Current Stock Info
-    // ================================
-    const itemStocks = {};
-    const allItems = await Items.find({}).select("_id itemQty itemName");
-    allItems.forEach(function (itm) {
-      itemStocks[itm._id.toString()] = itm.itemQty;
+    initials.forEach((r) => {
+      initialMap[r._id.toString()] = r;
     });
 
-    // ================================
-    //  🔹 Fetch Billets for same date range & heat type
-    // ================================
-    var billetFilter = {};
+    const lastInwards = await Transaction.aggregate([
+      { $match: { type: "inward" } },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$itemId",
+          date: { $first: "$createdAt" },
+          qty: { $first: "$quantity" },
+        },
+      },
+    ]);
 
-    if (dateRangeStart && dateRangeEnd) {
-      billetFilter.createdAt = {
-        $gte: dateRangeStart,
-        $lte: dateRangeEnd,
-      };
+    lastInwards.forEach((r) => {
+      lastInwardMap[r._id.toString()] = r;
+    });
+
+    // ---------------------------------
+    // 🔹 Build Consumption Rows
+    // ---------------------------------
+    const transactions = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const id = item._id.toString();
+
+      // 🔹 Filters
+      if (itemId && id !== itemId) continue;
+      if (category && item.itemCategoryName !== category) continue;
+      if (supplier && item.itemSupplier !== supplier) continue;
+
+      // ---------------------------------
+      // 🔹 Period Start Logic (NODE 15 SAFE)
+      // ---------------------------------
+      let periodStart = null;
+      const periodEnd = rangeEnd;
+
+      if (hasManualRange) {
+        periodStart = rangeStart;
+      } else if (mode === "sinceLastInward") {
+        if (lastInwardMap[id] && lastInwardMap[id].date) {
+          periodStart = lastInwardMap[id].date;
+        } else {
+          periodStart = item.createdAt;
+        }
+      } else {
+        if (initialMap[id] && initialMap[id].date) {
+          periodStart = initialMap[id].date;
+        } else {
+          periodStart = item.createdAt;
+        }
+      }
+
+      // ---------------------------------
+      // 🔹 Total Used
+      // ---------------------------------
+      let totalUsed = 0;
+
+      if (periodStart) {
+        const sum = await Transaction.aggregate([
+          {
+            $match: {
+              itemId: item._id,
+              type: { $in: ["outward", "lend"] },
+              createdAt: { $gte: periodStart, $lte: periodEnd },
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$quantity" } } },
+        ]);
+
+        if (sum.length > 0) totalUsed = sum[0].total;
+      }
+      // ---------------------------------
+      // 🔹 Last Outward / Lend (FIX)
+      // ---------------------------------
+      let lastUsed = null;
+      let lastOutwardQty = 0;
+
+      const lastOutward = await Transaction.findOne({
+        itemId: item._id,
+        type: { $in: ["outward", "lend"] },
+      })
+        .sort({ createdAt: -1 })
+        .select("createdAt quantity")
+        .lean();
+
+      if (lastOutward) {
+        lastUsed = lastOutward.createdAt;
+        lastOutwardQty = lastOutward.quantity;
+      }
+
+      // ---------------------------------
+      // 🔹 Monthly Consumption
+      // ---------------------------------
+      let months = 1;
+
+      if (periodStart && periodEnd) {
+        months =
+          (periodEnd.getFullYear() - periodStart.getFullYear()) * 12 +
+          (periodEnd.getMonth() - periodStart.getMonth()) +
+          (periodEnd.getDate() - periodStart.getDate()) / 30;
+
+        months = Math.max(1, Number(months.toFixed(2)));
+      }
+
+      const avgPerMonth = Number((totalUsed / months).toFixed(2));
+
+      // ---------------------------------
+      // 🔹 Stock Calculations
+      // ---------------------------------
+      let stockMonthsLeft = null;
+      let stockOutDate = null;
+
+      if (avgPerMonth > 0) {
+        stockMonthsLeft = Number((item.itemQty / avgPerMonth).toFixed(1));
+
+        stockOutDate = new Date();
+        stockOutDate.setMonth(
+          stockOutDate.getMonth() + Math.ceil(stockMonthsLeft),
+        );
+      }
+      // ---------------------------------
+      // 🔹 Reorder Qty (1 FULL MONTH)
+      // ---------------------------------
+      let reorderQty = 0;
+
+      if (avgPerMonth > 0) {
+        reorderQty = Number(avgPerMonth.toFixed(1));
+      }
+
+      // ---------------------------------
+      // 🔹 Image
+      // ---------------------------------
+      let base64Image = "https://via.placeholder.com/400x300.png?text=No+Image";
+
+      if (item.itemImage && item.itemImage.length > 0) {
+        base64Image =
+          "data:image/" +
+          item.itemImage[0].contentType +
+          ";base64," +
+          item.itemImage[0].data.toString("base64");
+      }
+
+      // ---------------------------------
+      // 🔹 Push Row
+      // ---------------------------------
+      transactions.push({
+        _id: item._id,
+        itemName: item.itemName,
+        category: item.itemCategoryName,
+        supplier: item.itemSupplier,
+
+        base64Image,
+        unit: item.itemUnit || "",
+        currentStock: item.itemQty || 0,
+
+        initialDate:
+          initialMap[id] && initialMap[id].date
+            ? initialMap[id].date
+            : item.createdAt,
+
+        initialQty:
+          initialMap[id] && initialMap[id].qty
+            ? initialMap[id].qty
+            : item.itemQty || 0,
+
+        lastInwards:
+          lastInwardMap[id] && lastInwardMap[id].date
+            ? lastInwardMap[id].date
+            : null,
+
+        lastInwardQty:
+          lastInwardMap[id] && lastInwardMap[id].qty
+            ? lastInwardMap[id].qty
+            : 0,
+
+        periodStart,
+        periodEnd,
+        lastUsed,
+        lastOutwardQty,
+        totalUsed,
+        avgPerMonth,
+        stockMonthsLeft,
+        stockOutDate,
+        reorderQty,
+      });
     }
 
-    // Heat Type
+    // ---------------------------------
+    // 🔹 Heat Summary (UNCHANGED)
+    // ---------------------------------
+    const billetFilter = {};
+
+    if (hasManualRange) {
+      billetFilter.createdAt = { $gte: rangeStart, $lte: rangeEnd };
+    }
+
     if (heatType === "open") {
       billetFilter.$or = [{ ce: null }, { ce: "" }];
     } else if (heatType === "close") {
@@ -1124,73 +1537,35 @@ router.get(
     }
 
     const billets = await Billets.find(billetFilter);
-    const openHeats = billets.filter(function (b) {
-      return !b.ce || b.ce === "";
-    }).length;
-    const closeHeats = billets.filter(function (b) {
-      return b.ce && b.ce !== "";
-    }).length;
+
+    const openHeats = billets.filter((b) => !b.ce).length;
+    const closeHeats = billets.filter((b) => b.ce).length;
     const totalHeats = billets.length;
 
-    // ================================
-    //  🔹 Calculate Averages
-    // ================================
-    var totalUsedOverall = 0;
-    transactions.forEach(function (tx) {
-      totalUsedOverall += tx.totalUsed;
-      tx.currentStock = itemStocks[tx._id.toString()] || 0;
-    });
-
-    var avgPerDay = 0;
-    if (dateRangeStart && dateRangeEnd) {
-      var diffDays =
-        Math.round(
-          (dateRangeEnd.getTime() - dateRangeStart.getTime()) /
-            (1000 * 60 * 60 * 24)
-        ) + 1;
-      if (diffDays > 0) avgPerDay = (totalUsedOverall / diffDays).toFixed(2);
+    let totalUsedOverall = 0;
+    for (let i = 0; i < transactions.length; i++) {
+      totalUsedOverall += Number(transactions[i].totalUsed || 0);
     }
 
-    var avgPerHeat =
-      totalHeats > 0 ? (totalHeats / totalUsedOverall).toFixed(2) : 0;
-    const allItemsWithImages = await Items.find({})
-      .populate("itemImage")
-      .lean();
-    const imageMap = {};
-    allItemsWithImages.forEach((itm) => {
-      if (itm.itemImage && itm.itemImage.length > 0) {
-        imageMap[itm._id.toString()] = `data:image/${
-          itm.itemImage[0].contentType
-        };base64,${itm.itemImage[0].data.toString("base64")}`;
-      } else {
-        imageMap[itm._id.toString()] =
-          "https://via.placeholder.com/60x60.png?text=No+Image";
-      }
-    });
+    const avgPerHeat =
+      totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
 
-    // Attach base64 image to each transaction (for EJS)
-    transactions.forEach((tx) => {
-      tx.base64Image =
-        tx._id && imageMap[tx._id.toString()]
-          ? imageMap[tx._id.toString()]
-          : "https://via.placeholder.com/60x60.png?text=No+Image";
-    });
-    // ================================
-    //  🔹 Render View
-    // ================================
+    // ---------------------------------
+    // 🔹 Render
+    // ---------------------------------
     res.render("items/consumption", {
       items,
       categories,
       suppliers,
       transactions,
       query: req.query,
-      avgPerDay,
-      avgPerHeat,
+
+      totalHeats,
       openHeats,
       closeHeats,
-      totalHeats,
+      avgPerHeat,
     });
-  })
+  }),
 );
 
 // *** THIS IS THE ROUTE TO FIX THE ERROR ***
@@ -1229,7 +1604,7 @@ router.delete(
 
     await Transaction.findByIdAndDelete(id);
     res.redirect("/items/transactions");
-  })
+  }),
 );
 // ➕ Log "return" transaction when item is brought back
 router.post(
@@ -1265,7 +1640,7 @@ router.post(
     await lendTx.save();
 
     res.redirect("/items/transactions");
-  })
+  }),
 );
 
 // --- Other routes ---
@@ -1274,7 +1649,7 @@ router.get(
   catchAsync(async (req, res) => {
     const itemCategories = await ItemCategories.find({});
     res.render("items/new", { itemCategories });
-  })
+  }),
 );
 
 // router.get(
@@ -1297,7 +1672,7 @@ router.post(
     let category = new ItemCategories(req.body.category);
     await category.save();
     res.redirect("/items/new");
-  })
+  }),
 );
 
 router.delete(
@@ -1306,7 +1681,7 @@ router.delete(
     const { id } = req.params;
     await ItemCategories.findByIdAndDelete(id);
     res.redirect("/items/category");
-  })
+  }),
 );
 router.get(
   "/:id/edit",
@@ -1316,7 +1691,7 @@ router.get(
     const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
     res.render("items/edit", { item, itemCategories, itemSuppliers });
     // next(e);
-  })
+  }),
 );
 router.put(
   "/:id",
@@ -1339,7 +1714,7 @@ router.put(
 
       // Remove references from item
       item.itemImage = item.itemImage.filter(
-        (img) => !idsToDelete.includes(img._id.toString())
+        (img) => !idsToDelete.includes(img._id.toString()),
       );
     }
 
@@ -1353,7 +1728,7 @@ router.put(
         const image = new Images({
           contentType: file.mimetype,
           data: fs.readFileSync(
-            path.join(__dirname, "..", "views", "images", file.filename)
+            path.join(__dirname, "..", "views", "images", file.filename),
           ),
           path: file.path,
           name: file.originalname,
@@ -1368,7 +1743,7 @@ router.put(
     // req.flash("success", "Item updated successfully!");
 
     res.redirect("/items");
-  })
+  }),
 );
 
 // Replace your existing POST "/update-stock" route with this
@@ -1407,7 +1782,7 @@ router.post(
     }
 
     res.redirect("/items");
-  })
+  }),
 );
 
 router.delete(
@@ -1416,7 +1791,7 @@ router.delete(
     const { id } = req.params;
     await Items.findByIdAndDelete(id);
     res.redirect("/items");
-  })
+  }),
 );
 
 // Add this route below other routes in items.js
@@ -1466,7 +1841,7 @@ router.get(
     const html = await ejs.renderFile(
       path.join(__dirname, "../views/items/pdf_stock.ejs"),
       { items, category, supplier },
-      { async: false }
+      { async: false },
     );
 
     // generate PDF
@@ -1476,7 +1851,7 @@ router.get(
 
     const pdfPath = path.join(
       __dirname,
-      `../public/reports/Stock_Report_${Date.now()}.pdf`
+      `../public/reports/Stock_Report_${Date.now()}.pdf`,
     );
 
     await page.pdf({
@@ -1489,7 +1864,7 @@ router.get(
     await browser.close();
 
     res.download(pdfPath, () => fs.unlinkSync(pdfPath));
-  })
+  }),
 );
 
 // ------------------------------------
@@ -1534,7 +1909,10 @@ router.get(
     }
 
     if (dateRangeStart) {
-      match.createdAt = { $gte: dateRangeStart, $lte: dateRangeEnd };
+      baseMatch.createdAt = {
+        $gte: dateRangeStart,
+        $lte: dateRangeEnd,
+      };
     }
 
     // Filter by category/supplier
@@ -1557,7 +1935,7 @@ router.get(
             : {},
           supplier && supplier !== "all"
             ? { "item.itemSupplier": supplier }
-            : {}
+            : {},
         ),
       },
       {
@@ -1584,7 +1962,7 @@ router.get(
         startDate,
         endDate,
       },
-      { async: false }
+      { async: false },
     );
 
     const browser = await puppeteer.launch({ headless: true });
@@ -1593,7 +1971,7 @@ router.get(
 
     const pdfPath = path.join(
       __dirname,
-      `../public/reports/Consumption_Report_${Date.now()}.pdf`
+      `../public/reports/Consumption_Report_${Date.now()}.pdf`,
     );
 
     await page.pdf({
@@ -1606,13 +1984,25 @@ router.get(
     await browser.close();
 
     res.download(pdfPath, () => fs.unlinkSync(pdfPath));
-  })
+  }),
 );
 
 router.post("/utility/backup-drive", (req, res) => {
   runBackup("manual-drive");
   req.flash("success", "☁️ Google Drive backup started!");
   res.redirect("/items/utility");
+});
+router.post("/category/ajax", upload.none(), async (req, res) => {
+  try {
+    const category = new ItemCategories({
+      itemCategoryName: req.body.itemCategoryName,
+    });
+    await category.save();
+
+    res.json({ success: true, category });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
 });
 
 module.exports = router;

@@ -1,0 +1,183 @@
+<% layout("layout/boilerplate") %>
+
+    <div class="container mt-4">
+
+        <h3>Edit Purchase Order</h3>
+
+        <!-- ================= FORM ================= -->
+        <form method="POST" action="/purchase-orders/<%= po._id %>?_method=PUT">
+
+            <!-- ================= SUPPLIER ================= -->
+            <div class="mb-3">
+                <label class="form-label">Supplier Type</label>
+                <select id="supplierMode" name="supplierMode" class="form-select">
+        <option value="master" <%= po.supplier.supplierType === "master" ? "selected" : "" %>>
+          Select Supplier
+        </option>
+        <option value="custom" <%= po.supplier.supplierType === "custom" ? "selected" : "" %>>
+          Custom Supplier
+        </option>
+      </select>
+            </div>
+
+            <!-- MASTER SUPPLIER -->
+            <div id="supplierMaster">
+                <select name="supplierId" class="form-select">
+        <% suppliers.forEach(s => { %>
+          <option value="<%= s._id %>"
+            <%= po.supplier.supplierRef && po.supplier.supplierRef.toString() === s._id.toString() ? "selected" : "" %>>
+            <%= s.supplierName %>
+          </option>
+        <% }) %>
+      </select>
+            </div>
+
+            <!-- CUSTOM SUPPLIER -->
+            <div id="supplierCustom" style="display:none">
+                <input class="form-control mb-2" name="supplierName" placeholder="Supplier Name" value="<%= po.supplier.name || " " %>">
+
+                <textarea class="form-control mb-2" name="supplierAddress" placeholder="Address"><%= po.supplier.address || "" %></textarea>
+
+                <input class="form-control mb-2" name="supplierGST" placeholder="GST" value="<%= po.supplier.gst || " " %>">
+            </div>
+
+            <hr>
+
+            <!-- ================= ITEMS ================= -->
+            <h5>Items</h5>
+
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:90px">Type</th>
+                        <th>Item</th>
+                        <th>Description</th>
+                        <th style="width:90px">Qty</th>
+                        <th style="width:120px">Unit</th>
+                        <th style="width:110px">Rate</th>
+                        <th style="width:60px"></th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addItem()">➕ Add Item</button>
+
+            <hr>
+
+            <!-- ================= TERMS ================= -->
+            <textarea class="form-control mb-3" name="terms" placeholder="Terms & Conditions"><%= po.terms || "" %></textarea>
+
+            <button class="btn btn-primary">Update PO</button>
+            <a href="/purchase-orders/<%= po._id %>" class="btn btn-secondary">Cancel</a>
+
+        </form>
+    </div>
+
+    <!-- ================= ITEM OPTIONS ================= -->
+    <script>
+        const itemOptionsHTML = `
+    <% items.forEach(i => { %>
+      <option value="<%= i._id %>"><%= i.itemName %></option>
+    <% }) %>
+  `;
+    </script>
+
+    <script>
+        let idx = 0;
+
+        /* ================= ADD ITEM ================= */
+        function addItem() {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+      <td>
+        <select class="form-select" name="items[${idx}][itemType]"
+          onchange="toggleItemType(this, ${idx})">
+          <option value="master">DB</option>
+          <option value="custom">Custom</option>
+        </select>
+      </td>
+
+      <td id="itemDB${idx}">
+        <select class="form-select" name="items[${idx}][itemId]">
+          <option value="">Select Item</option>
+          ${itemOptionsHTML}
+        </select>
+      </td>
+
+      <td id="itemCustom${idx}" style="display:none">
+        <input class="form-control" name="items[${idx}][name]" placeholder="Item name">
+      </td>
+
+      <td>
+        <textarea class="form-control" name="items[${idx}][description]"></textarea>
+      </td>
+
+      <td>
+        <input class="form-control" name="items[${idx}][qty]" type="number" min="0">
+      </td>
+
+      <td>
+        <input class="form-control" name="items[${idx}][unit]">
+      </td>
+
+      <td>
+        <input class="form-control" name="items[${idx}][rate]" type="number" min="0">
+      </td>
+
+      <td>
+        <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">✖</button>
+      </td>
+    `;
+
+            document.getElementById("itemsBody").appendChild(tr);
+            idx++;
+        }
+
+        /* ================= TOGGLE TYPE ================= */
+        function toggleItemType(sel, i) {
+            document.getElementById("itemDB" + i).style.display =
+                sel.value === "master" ? "block" : "none";
+
+            document.getElementById("itemCustom" + i).style.display =
+                sel.value === "custom" ? "block" : "none";
+        }
+
+        /* ================= PREFILL EXISTING ITEMS ================= */
+        function addItemWithData(item) {
+            addItem();
+            const i = idx - 1;
+
+            document.querySelector(`[name="items[${i}][itemType]"]`).value = item.itemType;
+            toggleItemType({
+                value: item.itemType
+            }, i);
+
+            if (item.itemType === "master") {
+                document.querySelector(`[name="items[${i}][itemId]"]`).value = item.itemRef;
+            } else {
+                document.querySelector(`[name="items[${i}][name]"]`).value = item.name;
+            }
+
+            document.querySelector(`[name="items[${i}][description]"]`).value = item.description || "";
+            document.querySelector(`[name="items[${i}][qty]"]`).value = item.qty;
+            document.querySelector(`[name="items[${i}][unit]"]`).value = item.unit || "";
+            document.querySelector(`[name="items[${i}][rate]"]`).value = item.rate;
+        }
+
+        /* ================= SUPPLIER MODE TOGGLE ================= */
+        function toggleSupplier() {
+            const mode = document.getElementById("supplierMode").value;
+            document.getElementById("supplierMaster").style.display = mode === "master" ? "block" : "none";
+            document.getElementById("supplierCustom").style.display = mode === "custom" ? "block" : "none";
+        }
+
+        document.getElementById("supplierMode").addEventListener("change", toggleSupplier);
+
+        /* ================= INIT ================= */
+        toggleSupplier();
+
+        const existingItems = <%- JSON.stringify(po.items) %>;
+        existingItems.forEach(i => addItemWithData(i));
+    </script>

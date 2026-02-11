@@ -125,6 +125,7 @@
                             <div class="position-relative">
                                 <img src="<%= tx.base64Image || 'https://via.placeholder.com/400x300.png?text=No+Image' %>" alt="<%= tx.itemName %>" class="card-img-top clickable-image" style="height:160px;object-fit:contain;cursor:pointer;" onclick="openImage('<%= tx.base64Image || 'https://via.placeholder.com/600x600.png?text=No+Image' %>', '<%= tx.itemName %>.jpg')">
                             </div>
+
                             <div class="card-body">
                                 <h5 class="fw-semibold mb-1">
                                     <%= tx.itemName %>
@@ -133,18 +134,111 @@
                                     <%= tx.category %> —
                                         <%= tx.supplier %>
                                 </p>
+                                <div class="alert alert-info small">
+                                    <strong>Consumption Period:</strong>
+                                    <% if (tx.periodStart && tx.periodEnd) { %>
+                                        <%= new Date(tx.periodStart).toLocaleDateString('en-GB') %>
+                                            →
+                                            <%= new Date(tx.periodEnd).toLocaleDateString('en-GB') %>
+                                                (
+                                                <%= tx.consumptionDays %> days)
+                                                    <% } else { %>
+                                                        —
+                                                        <% } %>
+                                </div>
+
                                 <ul class="list-group list-group-flush small">
                                     <li class="list-group-item"><strong>Current Stock:</strong>
                                         <%= tx.currentStock %>
+                                            <small class="text-muted"><%= tx.unit %></small>
                                     </li>
+                                    <li class="list-group-item">
+                                        <strong>Initial Stock:</strong>
+                                        <%= tx.initialQty %> <small class="text-muted"><%= tx.unit %></small>
+                                            <br>
+                                            <small class="text-muted">
+    Since <%= tx.initialDate
+      ? new Date(tx.initialDate).toLocaleDateString('en-GB')
+      : '—' %>
+  </small>
+                                    </li>
+
                                     <li class="list-group-item"><strong>Total Used:</strong>
-                                        <%= tx.totalUsed %>
+                                        <%= tx.totalUsed || '0.00'  %> <small class="text-muted"><%= tx.unit %></small>
+
                                     </li>
                                     <li class="list-group-item"><strong>Last Used:</strong>
                                         <%= new Date(tx.lastUsed).toLocaleDateString('en-GB') %>
                                     </li>
+                                    <li class="list-group-item">
+                                        <strong>Last Inward:</strong>
+                                        <%= tx.lastInwards ? new Date(tx.lastInwards).toLocaleDateString('en-GB') : '—' %>
+                                            (
+                                            <%= tx.lastInwardQty %>
+                                                <%= tx.unit %>)
+                                    </li>
+
+                                    <li class="list-group-item">
+                                        <strong>Last Outward:</strong>
+                                        <%= tx.lastUsed ? new Date(tx.lastUsed).toLocaleDateString('en-GB') : '—' %>
+                                            (
+                                            <%= tx.lastOutwardQty %>
+                                                <%= tx.unit %>)
+                                    </li>
+
+                                    <li class="list-group-item">
+                                        <strong>Avg / Month:</strong>
+                                        <%= tx.avgPerMonth || '0.00' %>
+                                            <small class="text-muted"><%= tx.unit %></small>
+
+                                    </li>
+
+
+
+
+                                    <li class="list-group-item">
+                                        <strong>Stock Months Left:</strong>
+                                        <%= tx.stockMonthsLeft === "∞" ? "∞" : tx.stockMonthsLeft %>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Stock-Out Date:</strong>
+                                        <%= tx.stockOutDate
+    ? new Date(tx.stockOutDate).toLocaleDateString('en-GB')
+    : '—' %>
+                                    </li>
+
+                                    <li class="list-group-item">
+                                        <strong>Monthly Reorder Qty:</strong>
+                                        <%= tx.reorderQty %>
+                                            <small class="text-muted"><%= tx.unit %></small>
+                                    </li>
+
+
+                                    <li class="list-group-item">
+                                        <strong>Status:</strong>
+                                        <%
+let status = "Safe";
+let badge = "bg-success";
+
+if (tx.avgPerMonth > 0 && tx.stockMonthsLeft !== null) {
+  if (tx.stockMonthsLeft <= 1) {
+    status = "Critical";
+    badge = "bg-danger";
+  } else if (tx.stockMonthsLeft <= 1.5) {
+    status = "Warning";
+    badge = "bg-warning";
+  }
+}
+%>
+
+                                            <span class="badge <%= badge %>"><%= status %></span>
+
+                                    </li>
+
                                 </ul>
                             </div>
+
+
                         </div>
                     </div>
                     <% }) %>

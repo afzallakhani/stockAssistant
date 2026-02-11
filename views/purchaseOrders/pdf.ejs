@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .page {
+            padding: 10px 15px;
+        }
+        /* ================= LETTERHEAD ================= */
+        
+        .letterhead {
+            width: 100%;
+            height: 100px;
+            margin: 0;
+            padding: 0;
+            border-bottom: 1px solid #000;
+        }
+        
+        .letterhead-img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            /* 🔥 fills full width */
+        }
+        
+        .letterhead .company-name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .letterhead .company-details {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        /* ================= HEADER ================= */
+        
+        .po-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .po-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .po-meta {
+            font-size: 12px;
+            text-align: right;
+        }
+        /* ================= SECTIONS ================= */
+        
+        .section {
+            margin-bottom: 18px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        /* ================= TABLE ================= */
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+        }
+        
+        th {
+            background: #f2f2f2;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 6px;
+            vertical-align: top;
+        }
+        
+        td.num {
+            text-align: right;
+        }
+        /* ================= TOTAL ================= */
+        
+        .total-box {
+            margin-top: 10px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        /* ================= FOOTER ================= */
+        
+        .terms {
+            margin-top: 15px;
+            font-size: 11px;
+        }
+        
+        .signature-block {
+            margin-top: 40px;
+            text-align: right;
+            font-size: 12px;
+            page-break-inside: avoid;
+            /* 🔥 prevents splitting */
+        }
+        
+        .company-line {
+            margin-bottom: 50px;
+        }
+        
+        .sign-line {
+            display: inline-block;
+            width: 180px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="letterhead">
+        <img src="http://localhost:3000/images/elaf_letterhead.jpg" class="letterhead-img" />
+    </div>
+    <div class="page">
+
+        <!-- ================= LETTERHEAD ================= -->
+        <!-- ================= LETTERHEAD ================= -->
+
+
+
+
+        <!-- ================= PO HEADER ================= -->
+        <div class="po-header">
+            <div class="po-title">PURCHASE ORDER</div>
+
+            <div class="po-meta">
+                <div><b>PO No:</b>
+                    <%= po.poNumber %>
+                </div>
+                <div><b>OUR GST NO.:</b> 24AAEFE5252C1ZY
+                </div>
+                <div><b>Date:</b>
+                    <%= po.createdAt.toDateString() %>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SUPPLIER ================= -->
+        <div class="section">
+            <div class="section-title"></div>
+
+            <% if (po.supplier) { %>
+                <div><b><%= po.supplier.name || "—" %></b></div>
+                <div>
+                    <%= po.supplier.address || "" %>
+                </div>
+                <div>GST:
+                    <%= po.supplier.gst || "NA" %>
+                </div>
+                <% } else { %>
+                    <div>Supplier information not available</div>
+                    <% } %>
+        </div>
+
+        <!-- ================= ITEMS ================= -->
+        <div class="section">
+            <div class="section-title">Order Items</div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px">#</th>
+                        <th>Item</th>
+                        <th>Description</th>
+                        <th style="width:80px">Qty</th>
+                        <th style="width:90px">Rate</th>
+                        <th style="width:100px">Amount</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <% po.items.forEach((i, idx) => { %>
+                        <tr>
+                            <td class="num">
+                                <%= idx + 1 %>
+                            </td>
+                            <td>
+                                <%= i.name %>
+                            </td>
+                            <td>
+                                <%= i.description || "-" %>
+                            </td>
+                            <td class="num">
+                                <%= i.qty %>
+                                    <%= i.unit || "" %>
+                            </td>
+                            <td class="num">
+                                <%= i.rate %>
+                            </td>
+                            <td class="num">
+                                <%= i.amount %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+
+            <div class="total-box">
+                Total Amount: ₹
+                <%= po.subTotal %>
+            </div>
+        </div>
+
+        <!-- ================= TERMS ================= -->
+        <div class="section terms">
+            <div class="section-title">Terms & Conditions</div>
+
+            <% if (po.terms) { 
+       const lines = po.terms.split(/\r?\n/).filter(l => l.trim());
+  %>
+                <ul style="margin:6px 0 0 16px; padding:0;">
+                    <% lines.forEach(line => { %>
+                        <li style="margin-bottom:4px;">
+                            <%= line %>
+                        </li>
+                        <% }) %>
+                </ul>
+                <% } else { %>
+                    <div>—</div>
+                    <% } %>
+        </div>
+
+
+        <!-- ================= SIGNATURE ================= -->
+        <!-- ================= SIGNATURE ================= -->
+        <div class="signature-block">
+            <div class="company-line">
+                For <b>ELAF STEEL</b>
+            </div>
+
+            <div class="sign-line">
+                Authorised Signatory
+            </div>
+        </div>
+
+
+    </div>
+</body>
+
+</html>

@@ -78,6 +78,9 @@
                 <i class="bi bi-file-earmark-pdf"></i> Export Stock PDF
             </a>
 
+            <a href="/purchase-orders/new" class="btn btn-success">
+  ➕ Create PO
+</a>
 
         </div>
 
@@ -137,10 +140,17 @@
                                             <%= item.itemQty %>
                                                 <%= item.itemUnit %>
                                         </li>
-                                        <li class="list-group-item"><strong>Daily Req.:</strong>
-                                            <%= item.life %>
-                                                <%= item.itemUnit %>
+                                        <li class="list-group-item">
+                                            <strong>Monthly Usage:</strong>
+                                            <%= item.monthlyConsumption || 0 %>
+                                                <%= item.itemUnit %>/month
                                         </li>
+
+                                        <li class="list-group-item">
+                                            <strong>Stock Days Left:</strong>
+                                            <%= item.stockDaysLeft %> days
+                                        </li>
+
                                         <li class="list-group-item"><strong>Added:</strong>
                                             <%= item.formattedItemDate %>
                                         </li>

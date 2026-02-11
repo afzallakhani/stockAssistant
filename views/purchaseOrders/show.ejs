@@ -1,0 +1,102 @@
+<% layout('layout/boilerplate') %>
+
+    <div class="container mt-4">
+
+
+
+        <h3>Purchase Order</h3>
+
+        <p><b>PO No:</b>
+            <%= po.poNumber %>
+        </p>
+        <p><b>Date:</b>
+            <%= po.createdAt.toDateString() %>
+        </p>
+
+        <hr>
+
+        <h5>Supplier</h5>
+
+        <% if (po.supplier) { %>
+            <p>
+                <b><%= po.supplier.name || "—" %></b><br>
+                <%= po.supplier.address || "" %><br> GST:
+                    <%= po.supplier.gst || "NA" %>
+            </p>
+            <% } else { %>
+                <p><b>Supplier information not available</b></p>
+                <% } %>
+
+
+                    <hr>
+
+                    <h5>Items</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th>Description</th>
+                                <th>Qty</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% po.items.forEach((i, idx) => { %>
+                                <tr>
+                                    <td>
+                                        <%= idx + 1 %>
+                                    </td>
+                                    <td>
+                                        <%= i.name %>
+                                    </td>
+                                    <td>
+                                        <%= i.description || "-" %>
+                                    </td>
+                                    <td>
+                                        <%= i.qty %>
+                                            <%= i.unit || "" %>
+                                    </td>
+                                    <td>
+                                        <%= i.rate %>
+                                    </td>
+                                    <td>
+                                        <%= i.amount %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+
+                    <h5 class="text-end">Total: ₹
+                        <%= po.subTotal %>
+                    </h5>
+
+                    <hr>
+
+                    <h5>Terms & Conditions</h5>
+                    <p>
+                        <%= po.terms || "—" %>
+                    </p>
+
+                    <a href="/purchase-orders/<%= po._id %>/pdf" class="btn btn-outline-primary">
+  Download PDF
+</a>
+                    <% if (po.status === "draft") { %>
+                        <a href="/purchase-orders/<%= po._id %>/edit" class="btn btn-warning">
+    Edit PO
+  </a>
+                        <% } else { %>
+                            <span class="badge bg-secondary">Final</span>
+                            <% } %>
+                                <% if (po.status === "draft") { %>
+                                    <form method="POST" action="/purchase-orders/<%= po._id %>/finalize">
+                                        <button class="btn btn-success">Finalize PO</button>
+                                    </form>
+                                    <% } %>
+
+
+
+
+    </div>
