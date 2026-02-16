@@ -188,31 +188,106 @@ router.get("/utility", (req, res) => {
   });
 });
 
+// router.get(
+//   "/",
+//   catchAsync(async (req, res) => {
+//     const items = await Items.find({}).populate("itemImage");
+//     for (let item of items) {
+//       const dc = await getMonthlyConsumption(item);
+//       item.monthlyConsumption = dc.perMonth;
+//       item.stockDaysLeft =
+//         dc.perMonth > 0 ? Math.floor((item.itemQty / dc.perMonth) * 30) : "∞";
+//     }
+//     const images = await Images.find({});
+//     const itemCategories = await ItemCategories.find({});
+//     const itemSuppliers = await Supplier.find({});
+
+//     console.log({
+//       items: items.length,
+//       itemCategories: itemCategories.length,
+//       itemSuppliers: itemSuppliers.length,
+//     });
+
+//     res.render("items/allItems", {
+//       items,
+//       itemCategories: itemCategories || [],
+//       itemSuppliers: itemSuppliers || [],
+//       query: req.query || {}, // ✅ Fix added
+//     });
+//   }),
+// );
 router.get(
   "/",
   catchAsync(async (req, res) => {
-    const items = await Items.find({}).populate("itemImage");
-    for (let item of items) {
-      const dc = await getMonthlyConsumption(item);
-      item.monthlyConsumption = dc.perMonth;
-      item.stockDaysLeft =
-        dc.perMonth > 0 ? Math.floor((item.itemQty / dc.perMonth) * 30) : "∞";
-    }
-    const images = await Images.find({});
-    const itemCategories = await ItemCategories.find({});
-    const itemSuppliers = await Supplier.find({});
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
 
-    console.log({
-      items: items.length,
-      itemCategories: itemCategories.length,
-      itemSuppliers: itemSuppliers.length,
-    });
+    // 🔹 Total count for pagination
+    const totalItems = await Items.countDocuments();
+
+    // 🔹 Fetch only 10 items
+    const items = await Items.find({})
+      .populate("itemImage")
+      .select(
+        "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
+      )
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // 🔹 Aggregation for consumption (still fast)
+    const consumptionData = await Transaction.aggregate([
+      { $match: { type: "OUTWARD" } },
+      {
+        $group: {
+          _id: "$item",
+          totalQty: { $sum: "$qty" },
+        },
+      },
+    ]);
+
+    const consumptionMap = {};
+    for (let i = 0; i < consumptionData.length; i++) {
+      consumptionMap[consumptionData[i]._id.toString()] =
+        consumptionData[i].totalQty;
+    }
+
+    // 🔹 Attach data
+    for (let i = 0; i < items.length; i++) {
+      const id = items[i]._id.toString();
+      const totalOutward = consumptionMap[id] || 0;
+
+      items[i].monthlyConsumption = totalOutward;
+
+      if (totalOutward > 0) {
+        items[i].stockDaysLeft = Math.floor(
+          (items[i].itemQty / totalOutward) * 30,
+        );
+      } else {
+        items[i].stockDaysLeft = "∞";
+      }
+
+      items[i].formattedItemDate = new Date(
+        items[i].createdAt,
+      ).toLocaleDateString("en-GB");
+    }
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const itemCategories = await ItemCategories.find({})
+      .select("itemCategoryName")
+      .lean();
+
+    const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
 
     res.render("items/allItems", {
       items,
-      itemCategories: itemCategories || [],
-      itemSuppliers: itemSuppliers || [],
-      query: req.query || {}, // ✅ Fix added
+      itemCategories,
+      itemSuppliers,
+      currentPage: page,
+      totalPages,
+      query: req.query || {},
     });
   }),
 );
