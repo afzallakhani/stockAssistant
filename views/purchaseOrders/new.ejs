@@ -161,14 +161,16 @@
 
             if (!selected) return;
 
+            // Set unit
             document.querySelector('[name="items[' + i + '][unit]"]').value =
                 selected.unit || "";
 
+            // Show BOTH values properly
             document.getElementById("info" + i).innerHTML =
-                "Stock: <b>" + selected.currentStock + "</b>";
-            document.getElementById("info" + i).innerHTML =
-                "Stock: <b>" + selected.avgMonthlyConsumption + "</b>";
+                "Stock: <b>" + selected.currentStock + "</b><br>" +
+                "Avg / Month: <b>" + selected.avgMonthlyConsumption + "</b>";
         }
+
 
 
 

@@ -216,6 +216,81 @@ router.get("/utility", (req, res) => {
 //     });
 //   }),
 // );
+// router.get(
+//   "/",
+//   catchAsync(async (req, res) => {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = 10;
+//     const skip = (page - 1) * limit;
+
+//     // 🔹 Total count for pagination
+//     const totalItems = await Items.countDocuments();
+
+//     // 🔹 Fetch only 10 items
+//     const items = await Items.find({})
+//       .populate("itemImage")
+//       .select(
+//         "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
+//       )
+//       .skip(skip)
+//       .limit(limit)
+//       .lean();
+
+//     // 🔹 Aggregation for consumption (still fast)
+//     const consumptionData = await Transaction.aggregate([
+//       { $match: { type: "OUTWARD" } },
+//       {
+//         $group: {
+//           _id: "$item",
+//           totalQty: { $sum: "$qty" },
+//         },
+//       },
+//     ]);
+
+//     const consumptionMap = {};
+//     for (let i = 0; i < consumptionData.length; i++) {
+//       consumptionMap[consumptionData[i]._id.toString()] =
+//         consumptionData[i].totalQty;
+//     }
+
+//     // 🔹 Attach data
+//     for (let i = 0; i < items.length; i++) {
+//       const id = items[i]._id.toString();
+//       const totalOutward = consumptionMap[id] || 0;
+
+//       items[i].monthlyConsumption = totalOutward;
+
+//       if (totalOutward > 0) {
+//         items[i].stockDaysLeft = Math.floor(
+//           (items[i].itemQty / totalOutward) * 30,
+//         );
+//       } else {
+//         items[i].stockDaysLeft = "∞";
+//       }
+
+//       items[i].formattedItemDate = new Date(
+//         items[i].createdAt,
+//       ).toLocaleDateString("en-GB");
+//     }
+
+//     const totalPages = Math.ceil(totalItems / limit);
+
+//     const itemCategories = await ItemCategories.find({})
+//       .select("itemCategoryName")
+//       .lean();
+
+//     const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
+
+//     res.render("items/allItems", {
+//       items,
+//       itemCategories,
+//       itemSuppliers,
+//       currentPage: page,
+//       totalPages,
+//       query: req.query || {},
+//     });
+//   }),
+// );
 router.get(
   "/",
   catchAsync(async (req, res) => {
@@ -223,10 +298,8 @@ router.get(
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    // 🔹 Total count for pagination
     const totalItems = await Items.countDocuments();
 
-    // 🔹 Fetch only 10 items
     const items = await Items.find({})
       .populate("itemImage")
       .select(
@@ -236,34 +309,18 @@ router.get(
       .limit(limit)
       .lean();
 
-    // 🔹 Aggregation for consumption (still fast)
-    const consumptionData = await Transaction.aggregate([
-      { $match: { type: "OUTWARD" } },
-      {
-        $group: {
-          _id: "$item",
-          totalQty: { $sum: "$qty" },
-        },
-      },
-    ]);
+    /* ===============================
+           USE UTIL FOR MONTHLY CONSUMPTION
+        =============================== */
 
-    const consumptionMap = {};
-    for (let i = 0; i < consumptionData.length; i++) {
-      consumptionMap[consumptionData[i]._id.toString()] =
-        consumptionData[i].totalQty;
-    }
-
-    // 🔹 Attach data
     for (let i = 0; i < items.length; i++) {
-      const id = items[i]._id.toString();
-      const totalOutward = consumptionMap[id] || 0;
+      const dc = await getMonthlyConsumption(items[i]);
 
-      items[i].monthlyConsumption = totalOutward;
+      items[i].monthlyConsumption = dc.perMonth;
 
-      if (totalOutward > 0) {
-        items[i].stockDaysLeft = Math.floor(
-          (items[i].itemQty / totalOutward) * 30,
-        );
+      if (dc.perMonth > 0) {
+        const monthsLeft = items[i].itemQty / dc.perMonth;
+        items[i].stockDaysLeft = Math.floor(monthsLeft * 30);
       } else {
         items[i].stockDaysLeft = "∞";
       }
