@@ -11,22 +11,25 @@
         <!-- 🔍 Search & Filters -->
         <div class="bg-white p-4 rounded-4 shadow-sm mb-5">
             <div class="row g-3 align-items-center">
+
                 <!-- Search -->
                 <div class="col-lg-6">
-                    <form action="/items/search" method="get" id="itemSearchForm" class="position-relative">
+                    <form action="/items" method="get" id="itemSearchForm" class="position-relative">
                         <div class="input-group shadow-sm rounded-pill overflow-hidden">
                             <span class="input-group-text bg-white border-0 ps-3">
-              <i class="bi bi-search text-muted fs-5"></i>
-            </span>
-                            <input type="search" id="itemSearch" name="item[itemName]" class="form-control border-0" placeholder="Search by item, category, supplier or description..." autocomplete="off" />
+                            <i class="bi bi-search text-muted fs-5"></i>
+                        </span>
+                            <input type="search" id="itemSearch" name="search" value="<%= search || '' %>" class="form-control border-0" placeholder="Search by item, category, supplier or description..." autocomplete="off" />
                         </div>
                     </form>
 
                     <!-- Suggestions dropdown -->
-                    <div id="suggestionsWrapper" class="position-absolute bg-white rounded-3 shadow mt-2 w-100" style="z-index: 1000; display: none;">
+                    <div id="suggestionsWrapper" class="bg-white rounded-3 shadow mt-2 w-100" style="position:absolute; z-index:9999; display:none;">
                         <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                             <span class="fw-semibold text-secondary">Suggestions</span>
-                            <button type="button" id="closeSuggestions" class="btn btn-sm btn-light border"><i class="bi bi-x-lg"></i></button>
+                            <button type="button" id="closeSuggestions" class="btn btn-sm btn-light border">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                         </div>
                         <ul id="suggestions" class="list-group list-group-flush mb-0"></ul>
                     </div>
@@ -35,89 +38,43 @@
                 <!-- Category Filter -->
                 <div class="col-md-3">
                     <select id="filterCategory" class="form-select shadow-sm border-0">
-          <option value="">All Categories</option>
-          <% itemCategories.forEach(cat => { %>
-            <option value="<%= cat.itemCategoryName %>"><%= cat.itemCategoryName %></option>
-          <% }) %>
-        </select>
+                    <option value="">All Categories</option>
+                    <% itemCategories.forEach(cat => { %>
+                        <option value="<%= cat.itemCategoryName %>"
+                            <%= category === cat.itemCategoryName ? 'selected' : '' %>>
+                            <%= cat.itemCategoryName %>
+                        </option>
+                    <% }) %>
+                </select>
                 </div>
 
                 <!-- Supplier Filter -->
                 <div class="col-md-3">
                     <select id="filterSupplier" class="form-select shadow-sm border-0">
-          <option value="">All Suppliers</option>
-          <% itemSuppliers.forEach(sup => { %>
-            <option value="<%= sup.supplierName %>"><%= sup.supplierName %></option>
-          <% }) %>
-        </select>
+                    <option value="">All Suppliers</option>
+                    <% itemSuppliers.forEach(sup => { %>
+                        <option value="<%= sup.supplierName %>"
+                            <%= supplier === sup.supplierName ? 'selected' : '' %>>
+                            <%= sup.supplierName %>
+                        </option>
+                    <% }) %>
+                </select>
                 </div>
+
             </div>
         </div>
-
-        <!-- Navigation Buttons -->
-        <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
-            <a class="btn btn-primary shadow-sm" href="/items/inwards">
-                <i class="bi bi-box-arrow-in-down"></i> Inwards
-            </a>
-            <a class="btn btn-secondary shadow-sm" href="/items/outwards">
-                <i class="bi bi-box-arrow-up"></i> Outwards
-            </a>
-            <a class="btn btn-info shadow-sm text-white" href="/items/lend">
-                <i class="bi bi-arrow-left-right"></i> Lend Item
-            </a>
-            <a class="btn btn-warning shadow-sm text-white" href="/items/transactions">
-                <i class="bi bi-clock-history"></i> Transactions
-            </a>
-            <a class="btn btn-success shadow-sm text-white" href="/items/insights">
-                <i class="bi bi-graph-up"></i> Insights
-            </a>
-            <a class="btn btn-outline-dark shadow-sm" href="/items/consumption">
-                <i class="bi bi-bar-chart-line"></i> Consumption Summary
-            </a>
-            <a href="#" class="btn btn-danger" id="exportStockBtn">
-                <i class="bi bi-file-earmark-pdf"></i> Export Stock PDF
-            </a>
-
-            <a href="/purchase-orders/new" class="btn btn-success">
-  ➕ Create PO
-</a>
-
-        </div>
-
 
         <!-- 🗂️ Item Grid -->
         <h3 class="text-center fw-bold mb-4 text-dark">All Inventory Items</h3>
         <div id="itemsGrid" class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3">
             <% items.forEach(item => { %>
-                <div class="col item-card" data-category="<%= item.itemCategoryName %>" data-supplier="<%= item.itemSupplier %>">
+                <div class="col">
                     <div class="card h-100 border-0 shadow-sm hover-shadow transition">
+
                         <% if (item.itemImage && item.itemImage.length > 0) { %>
-                            <div id="carousel-<%= item._id %>" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner">
-                                    <% item.itemImage.forEach((img, index) => { %>
-                                        <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
-                                            <img src="data:image/<%= img.contentType %>;base64,<%= img.data.toString('base64') %>" alt="<%= item.itemName %>" class="d-block w-100 card-img-top" style="height: 230px; object-fit: contain; background-color: #f8f9fa; border-radius: 0;">
-
-
-
-                                        </div>
-                                        <% }) %>
-                                </div>
-
-                                <% if (item.itemImage.length > 1) { %>
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-<%= item._id %>" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-<%= item._id %>" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-                                    <% } %>
-                            </div>
+                            <img src="data:image/<%= item.itemImage[0].contentType %>;base64,<%= item.itemImage[0].data.toString('base64') %>" class="card-img-top" style="height:230px; object-fit:contain; background:#f8f9fa;">
                             <% } else { %>
-                                <img src="https://via.placeholder.com/600x400.png?text=No+Image" class="card-img-top" style="height:100%; width:100%; object-fit:cover;">
-
+                                <img src="https://via.placeholder.com/600x400.png?text=No+Image" class="card-img-top">
                                 <% } %>
 
                                     <div class="card-body">
@@ -140,54 +97,48 @@
                                             <%= item.itemQty %>
                                                 <%= item.itemUnit %>
                                         </li>
-                                        <li class="list-group-item">
-                                            <strong>Monthly Usage:</strong>
+                                        <li class="list-group-item"><strong>Monthly Usage:</strong>
                                             <%= item.monthlyConsumption || 0 %>
-                                                <%= item.itemUnit %>/month
-                                        </li>
-
-                                        <li class="list-group-item">
-                                            <strong>Stock Days Left:</strong>
-                                            <%= item.stockDaysLeft %> days
-                                        </li>
-
+                                                <%= item.itemUnit %>/month</li>
+                                        <li class="list-group-item"><strong>Stock Days Left:</strong>
+                                            <%= item.stockDaysLeft %> days</li>
                                         <li class="list-group-item"><strong>Added:</strong>
                                             <%= item.formattedItemDate %>
                                         </li>
                                     </ul>
 
                                     <div class="card-body text-end">
-
                                         <form action="/items/<%= item._id %>/view" method="GET" class="d-inline">
-                                            <button class="btn btn-outline-primary btn-sm"><i class="bi bi-eye"></i> View</button>
+                                            <button class="btn btn-outline-primary btn-sm">View</button>
                                         </form>
-
                                         <form action="/items/<%= item._id %>/edit" method="GET" class="d-inline">
-                                            <button class="btn btn-outline-info btn-sm"><i class="bi bi-pencil-square"></i> Edit</button>
+                                            <button class="btn btn-outline-info btn-sm">Edit</button>
                                         </form>
                                         <form action="/items/<%= item._id %>?_method=DELETE" method="POST" class="d-inline">
-                                            <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
+                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
                                         </form>
                                     </div>
+
                     </div>
                 </div>
                 <% }) %>
         </div>
+
         <!-- Pagination -->
         <nav class="mt-4">
             <ul class="pagination justify-content-center">
 
                 <% if (currentPage > 1) { %>
                     <li class="page-item">
-                        <a class="page-link" href="/items?page=<%= currentPage - 1 %>">
-          Previous
-        </a>
+                        <a class="page-link" href="/items?page=<%= currentPage - 1 %>&search=<%= search || '' %>&category=<%= category || '' %>&supplier=<%= supplier || '' %>">
+                        Previous
+                    </a>
                     </li>
                     <% } %>
 
                         <% for (let i = 1; i <= totalPages; i++) { %>
                             <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                                <a class="page-link" href="/items?page=<%= i %>">
+                                <a class="page-link" href="/items?page=<%= i %>&search=<%= search || '' %>&category=<%= category || '' %>&supplier=<%= supplier || '' %>">
                                     <%= i %>
                                 </a>
                             </li>
@@ -195,9 +146,9 @@
 
                                 <% if (currentPage < totalPages) { %>
                                     <li class="page-item">
-                                        <a class="page-link" href="/items?page=<%= currentPage + 1 %>">
-          Next
-        </a>
+                                        <a class="page-link" href="/items?page=<%= currentPage + 1 %>&search=<%= search || '' %>&category=<%= category || '' %>&supplier=<%= supplier || '' %>">
+                        Next
+                    </a>
                                     </li>
                                     <% } %>
 
@@ -206,186 +157,97 @@
 
     </div>
 
-    <!-- Scroll Buttons -->
-    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
-        <button onclick="scrollToTop()" class="btn btn-outline-primary rounded-circle shadow mb-2"><i class="bi bi-arrow-up"></i></button><br>
-        <button onclick="scrollToBottom()" class="btn btn-outline-primary rounded-circle shadow"><i class="bi bi-arrow-down"></i></button>
-    </div>
-    <div id="bottom"></div>
-
-    <!-- Scripts -->
     <script>
         const searchInput = document.getElementById("itemSearch");
+        const filterCategory = document.getElementById("filterCategory");
+        const filterSupplier = document.getElementById("filterSupplier");
+
+        filterCategory.addEventListener("change", submitFilters);
+        filterSupplier.addEventListener("change", submitFilters);
+
+        function submitFilters() {
+            const search = searchInput.value.trim();
+            const category = filterCategory.value.trim();
+            const supplier = filterSupplier.value.trim();
+
+            const params = new URLSearchParams();
+
+            if (search) params.append("search", search);
+            if (category) params.append("category", category);
+            if (supplier) params.append("supplier", supplier);
+
+            window.location.href = "/items?" + params.toString();
+        }
+    </script>
+    <script>
         const suggestionsBox = document.getElementById("suggestions");
         const suggestionsWrapper = document.getElementById("suggestionsWrapper");
         const closeBtn = document.getElementById("closeSuggestions");
-        const filterCategory = document.getElementById("filterCategory");
-        const filterSupplier = document.getElementById("filterSupplier");
-        const itemCards = document.querySelectorAll(".item-card");
 
-        // 🔍 Live Search Suggestions
+        // 🔍 Live Suggestions
         searchInput.addEventListener("input", () => {
             const query = searchInput.value.trim();
+
             if (query.length < 1) {
                 suggestionsWrapper.style.display = "none";
-                filterItems();
                 return;
             }
 
             fetch(`/items/suggestions?q=${encodeURIComponent(query)}`)
                 .then(res => res.json())
-                .then(suggestions => displaySuggestions(suggestions, query))
-                .catch(console.error);
-
-            filterItems();
+                .then(data => showSuggestions(data, query))
+                .catch(err => console.log(err));
         });
 
-        function displaySuggestions(suggestions, query) {
+        function showSuggestions(items, query) {
             suggestionsBox.innerHTML = "";
-            if (!suggestions.length) {
+
+            if (items.length === 0) {
                 suggestionsBox.innerHTML = `<li class="list-group-item text-muted">No results found</li>`;
                 suggestionsWrapper.style.display = "block";
                 return;
             }
 
             const regex = new RegExp(`(${query})`, "ig");
-            suggestions.forEach(item => {
+
+            items.forEach(item => {
                 const li = document.createElement("li");
                 li.className = "list-group-item list-group-item-action";
+
                 const highlighted = item.itemName.replace(regex, "<mark>$1</mark>");
-                li.innerHTML = `${highlighted}<br><small class="text-muted">${item.itemCategoryName || ""}</small>`;
+
+                li.innerHTML = `
+    ${highlighted}
+    <br>
+    <small class="text-muted">
+        ${item.itemCategoryName || ""} | Stock: ${item.itemQty || 0} ${item.itemUnit || ""}
+    </small>
+`;
+
+                // ✅ THIS IS THE CLICK CODE YOU ASKED ABOUT
                 li.addEventListener("click", () => {
                     searchInput.value = item.itemName;
-                    suggestionsWrapper.style.display = "none";
-                    document.getElementById("itemSearchForm").submit();
+
+                    const params = new URLSearchParams();
+                    params.append("search", item.itemName);
+
+                    window.location.href = "/items?" + params.toString();
                 });
+
                 suggestionsBox.appendChild(li);
             });
+
             suggestionsWrapper.style.display = "block";
         }
 
-        closeBtn.addEventListener("click", () => (suggestionsWrapper.style.display = "none"));
-        document.addEventListener("click", e => {
-            if (!e.target.closest("#suggestionsWrapper") && e.target !== searchInput)
+        // Close suggestions
+        closeBtn.addEventListener("click", () => {
+            suggestionsWrapper.style.display = "none";
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest("#suggestionsWrapper") && e.target !== searchInput) {
                 suggestionsWrapper.style.display = "none";
-        });
-
-        // 🧭 Filters
-        filterCategory.addEventListener("change", filterItems);
-        filterSupplier.addEventListener("change", filterItems);
-
-        function filterItems() {
-            const searchVal = searchInput.value.toLowerCase();
-            const catVal = filterCategory.value.toLowerCase();
-            const supVal = filterSupplier.value.toLowerCase();
-
-            itemCards.forEach(card => {
-                const name = card.querySelector(".card-title").textContent.toLowerCase();
-                const category = card.dataset.category.toLowerCase();
-                const supplier = card.dataset.supplier.toLowerCase();
-
-                const match =
-                    (!searchVal || name.includes(searchVal)) &&
-                    (!catVal || category === catVal) &&
-                    (!supVal || supplier === supVal);
-
-                card.style.display = match ? "" : "none";
-            });
-        }
-
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        }
-
-        function scrollToBottom() {
-            document.getElementById("bottom").scrollIntoView({
-                behavior: "smooth"
-            });
-        }
-    </script>
-    <script>
-        document.getElementById("exportStockBtn").addEventListener("click", function(e) {
-            e.preventDefault();
-
-            const category = document.getElementById("filterCategory").value.trim();
-            const supplier = document.getElementById("filterSupplier").value.trim();
-
-            // Build URL dynamically
-            const params = new URLSearchParams();
-            if (category) params.append("category", category);
-            if (supplier) params.append("supplier", supplier);
-
-            const url = `/items/report/stock?${params.toString()}`;
-            window.open(url, "_blank");
+            }
         });
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Styles -->
-    <style>
-        .hover-shadow:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        .transition {
-            transition: all 0.3s ease;
-        }
-        
-        mark {
-            background-color: #fff3cd;
-            padding: 0 2px;
-            border-radius: 2px;
-        }
-        
-        .carousel {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .carousel-control-prev-icon,
-        .carousel-control-next-icon {
-            filter: invert(1) brightness(0.8);
-        }
-        
-        .card {
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        
-        .carousel,
-        .carousel-item,
-        .carousel-item img {
-            height: 100%;
-        }
-        
-        .carousel-item img {
-            object-fit: cover;
-        }
-        
-        @media (max-width: 576px) {
-            .card img {
-                height: 180px !important;
-                object-fit: contain;
-            }
-            .card-body {
-                text-align: center;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .card-body.text-end {
-                text-align: center !important;
-            }
-            .card-body .btn {
-                display: block;
-                width: 100%;
-                margin: 0.25rem 0;
-            }
-        }
-    </style>
