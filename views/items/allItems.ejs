@@ -63,7 +63,35 @@
 
             </div>
         </div>
+        <!-- Navigation Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+            <a class="btn btn-primary shadow-sm" href="/items/inwards">
+                <i class="bi bi-box-arrow-in-down"></i> Inwards
+            </a>
+            <a class="btn btn-secondary shadow-sm" href="/items/outwards">
+                <i class="bi bi-box-arrow-up"></i> Outwards
+            </a>
+            <a class="btn btn-info shadow-sm text-white" href="/items/lend">
+                <i class="bi bi-arrow-left-right"></i> Lend Item
+            </a>
+            <a class="btn btn-warning shadow-sm text-white" href="/items/transactions">
+                <i class="bi bi-clock-history"></i> Transactions
+            </a>
+            <a class="btn btn-success shadow-sm text-white" href="/items/insights">
+                <i class="bi bi-graph-up"></i> Insights
+            </a>
+            <a class="btn btn-outline-dark shadow-sm" href="/items/consumption">
+                <i class="bi bi-bar-chart-line"></i> Consumption Summary
+            </a>
+            <a href="#" class="btn btn-danger" id="exportStockBtn">
+                <i class="bi bi-file-earmark-pdf"></i> Export Stock PDF
+            </a>
 
+            <a href="/purchase-orders/new" class="btn btn-success">
+  ➕ Create PO
+</a>
+
+        </div>
         <!-- 🗂️ Item Grid -->
         <h3 class="text-center fw-bold mb-4 text-dark">All Inventory Items</h3>
         <div id="itemsGrid" class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3">
@@ -156,7 +184,12 @@
         </nav>
 
     </div>
-
+    <!-- Scroll Buttons -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
+        <button onclick="scrollToTop()" class="btn btn-outline-primary rounded-circle shadow mb-2"><i class="bi bi-arrow-up"></i></button><br>
+        <button onclick="scrollToBottom()" class="btn btn-outline-primary rounded-circle shadow"><i class="bi bi-arrow-down"></i></button>
+    </div>
+    <div id="bottom"></div>
     <script>
         const searchInput = document.getElementById("itemSearch");
         const filterCategory = document.getElementById("filterCategory");
@@ -177,6 +210,19 @@
             if (supplier) params.append("supplier", supplier);
 
             window.location.href = "/items?" + params.toString();
+        }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        function scrollToBottom() {
+            document.getElementById("bottom").scrollIntoView({
+                behavior: "smooth"
+            });
         }
     </script>
     <script>
