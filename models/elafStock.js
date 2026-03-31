@@ -8,9 +8,13 @@ const ItemSchema = new mongoose.Schema({
     type: String,
     uppercase: true,
   },
+  // itemSupplier: {
+  //   type: String,
+  //   uppercase: true,
+  // },
   itemSupplier: {
-    type: String,
-    uppercase: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "supplier",
   },
   itemUnit: {
     type: String,

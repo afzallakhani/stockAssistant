@@ -35,8 +35,9 @@
                 <select class="form-select" name="supplier">
         <option value="">All Suppliers</option>
         <% suppliers.forEach(s => { %>
-          <option value="<%= s.supplierName %>" <%= query.supplier === s.supplierName ? "selected" : "" %>><%= s.supplierName %></option>
-        <% }) %>
+<option value="<%= s._id %>" <%= query.supplier === s._id.toString() ? "selected" : "" %>>
+  <%= s.supplierName %>
+</option>        <% }) %>
       </select>
             </div>
 

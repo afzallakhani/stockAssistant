@@ -53,10 +53,10 @@
                     <select id="filterSupplier" class="form-select shadow-sm border-0">
                     <option value="">All Suppliers</option>
                     <% itemSuppliers.forEach(sup => { %>
-                        <option value="<%= sup.supplierName %>"
-                            <%= supplier === sup.supplierName ? 'selected' : '' %>>
-                            <%= sup.supplierName %>
-                        </option>
+                        <option value="<%= sup._id %>"
+  <%= supplier == sup._id.toString() ? 'selected' : '' %>>
+  <%= sup.supplierName %>
+</option>
                     <% }) %>
                 </select>
                 </div>
@@ -119,7 +119,7 @@
 
                                     <ul class="list-group list-group-flush small">
                                         <li class="list-group-item"><strong>Supplier:</strong>
-                                            <%= item.itemSupplier %>
+                                            <%= item.itemSupplier ? item.itemSupplier.supplierName : '' %>
                                         </li>
                                         <li class="list-group-item"><strong>Quantity:</strong>
                                             <%= item.itemQty %>
