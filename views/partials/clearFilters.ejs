@@ -1,0 +1,14 @@
+<div class="col-6 col-md-3 d-grid" id="clearFiltersContainer" style="display:none;">
+    <a href="<%= requestPath %>" class="btn btn-warning">
+        <i class="bi bi-x-circle"></i> Clear Filters
+    </a>
+</div>
+
+<script>
+    const query = <%- JSON.stringify(query || {}) %>;
+    const hasFilters = Object.values(query).some(v => v && v !== "");
+
+    if (hasFilters) {
+        document.getElementById("clearFiltersContainer").style.display = "block";
+    }
+</script>
