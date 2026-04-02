@@ -1,0 +1,11 @@
+<div class="col-12 col-md-3">
+    <div class="d-grid gap-2">
+
+
+        <% if (Object.values(query || {}).some(v => v && v !== "")) { %>
+            <a href="<%= baseUrl %>" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Clear Filters
+            </a>
+            <% } %>
+    </div>
+</div>

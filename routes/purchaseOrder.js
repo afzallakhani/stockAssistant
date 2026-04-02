@@ -5,6 +5,7 @@ const PurchaseOrder = require("../models/purchaseOrder");
 const Supplier = require("../models/supplier");
 const Items = require("../models/elafStock");
 const Transaction = require("../models/transaction");
+const getMonthlyConsumption = require("../utils/getMonthlyConsumption");
 
 const catchAsync = require("../utils/catchAsync");
 const generatePONumber = require("../utils/generatePONumber");
@@ -27,27 +28,46 @@ router.get(
 /* ===============================
    SUPPLIER ITEMS API  (🚨 MUST BE FIRST)
 ================================ */
+
 router.get(
   "/supplier/:supplierId/items",
   catchAsync(async (req, res) => {
     const { supplierId } = req.params;
 
-    // 1️⃣ Get supplier
     const supplier = await Supplier.findById(supplierId);
-    if (!supplier) {
-      return res.json([]);
-    }
+    if (!supplier) return res.json([]);
 
-    // 2️⃣ Find items USING SUPPLIER NAME (IMPORTANT)
     const supplierName = supplier.supplierName.trim();
 
     const items = await Items.find({
-      itemSupplier: {
-        $regex: new RegExp(supplierName, "i"),
-      },
-    });
+      itemSupplier: { $regex: new RegExp(supplierName, "i") },
+    }).lean();
 
-    // 3️⃣ Avg monthly consumption (last 90 days)
+    const response = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const dc = await getMonthlyConsumption(items[i]);
+
+      response.push({
+        _id: items[i]._id,
+        name: items[i].itemName,
+        unit: items[i].itemUnit,
+        currentStock: items[i].itemQty || 0,
+        avgMonthlyConsumption: dc.perMonth || 0,
+      });
+    }
+
+    res.json(response);
+  }),
+);
+/* ===============================
+   ALL ITEMS API
+================================ */
+router.get(
+  "/items/all",
+  catchAsync(async (req, res) => {
+    const items = await Items.find({});
+
     const since = new Date();
     since.setDate(since.getDate() - 90);
 
@@ -74,7 +94,6 @@ router.get(
       consumptionMap[c._id.toString()] = Math.round(c.totalUsed / 3);
     });
 
-    // 4️⃣ Response
     res.json(
       items.map((item) => ({
         _id: item._id,
@@ -110,7 +129,7 @@ router.post(
       supplierId,
       supplierName,
       supplierAddress,
-      supplierGST,
+      supplierGst,
       items,
       terms,
     } = req.body;
@@ -123,7 +142,7 @@ router.post(
         supplierType: "custom",
         name: supplierName || "—",
         address: supplierAddress || "",
-        gst: supplierGST || "",
+        gst: supplierGst || "",
       };
     } else {
       const supplier = await Supplier.findById(supplierId);
@@ -132,8 +151,10 @@ router.post(
         supplierData = {
           supplierType: "master",
           name: supplier.supplierName,
+          supplierRef: supplier._id, // ✅ VERY IMPORTANT
+
           address: supplier.supplierAddress || "",
-          gst: supplier.supplierGST || "",
+          gst: supplier.supplierGst || "",
         };
       } else {
         supplierData = {
@@ -353,7 +374,7 @@ router.put(
       supplierId,
       supplierName,
       supplierAddress,
-      supplierGST,
+      supplierGst,
       items,
       terms,
     } = req.body;
@@ -366,7 +387,7 @@ router.put(
         supplierType: "custom",
         name: supplierName || "—",
         address: supplierAddress || "",
-        gst: supplierGST || "",
+        gst: supplierGst || "",
       };
     } else {
       const supplier = await Supplier.findById(supplierId);
@@ -374,8 +395,10 @@ router.put(
         ? {
             supplierType: "master",
             name: supplier.supplierName,
+            supplierRef: supplier._id, // ✅ VERY IMPORTANT
+
             address: supplier.supplierAddress || "",
-            gst: supplier.supplierGST || "",
+            gst: supplier.supplierGst || "",
           }
         : po.supplier;
     }

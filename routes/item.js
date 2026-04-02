@@ -37,6 +37,9 @@ const DB_NAME = "stockAssistant";
 const BACKUP_DIR = path.join(__dirname, "../backups");
 let upload = multer({ storage: multerStorage });
 
+function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 // router.get(
 //   "/",
 //   catchAsync(async (req, res) => {
@@ -216,19 +219,205 @@ router.get("/utility", (req, res) => {
 //     });
 //   }),
 // );
+// router.get(
+//   "/",
+//   catchAsync(async (req, res) => {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = 10;
+//     const skip = (page - 1) * limit;
+
+//     // 🔹 Total count for pagination
+//     const totalItems = await Items.countDocuments();
+
+//     // 🔹 Fetch only 10 items
+//     const items = await Items.find({})
+//       .populate("itemImage")
+//       .select(
+//         "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
+//       )
+//       .skip(skip)
+//       .limit(limit)
+//       .lean();
+
+//     // 🔹 Aggregation for consumption (still fast)
+//     const consumptionData = await Transaction.aggregate([
+//       { $match: { type: "OUTWARD" } },
+//       {
+//         $group: {
+//           _id: "$item",
+//           totalQty: { $sum: "$qty" },
+//         },
+//       },
+//     ]);
+
+//     const consumptionMap = {};
+//     for (let i = 0; i < consumptionData.length; i++) {
+//       consumptionMap[consumptionData[i]._id.toString()] =
+//         consumptionData[i].totalQty;
+//     }
+
+//     // 🔹 Attach data
+//     for (let i = 0; i < items.length; i++) {
+//       const id = items[i]._id.toString();
+//       const totalOutward = consumptionMap[id] || 0;
+
+//       items[i].monthlyConsumption = totalOutward;
+
+//       if (totalOutward > 0) {
+//         items[i].stockDaysLeft = Math.floor(
+//           (items[i].itemQty / totalOutward) * 30,
+//         );
+//       } else {
+//         items[i].stockDaysLeft = "∞";
+//       }
+
+//       items[i].formattedItemDate = new Date(
+//         items[i].createdAt,
+//       ).toLocaleDateString("en-GB");
+//     }
+
+//     const totalPages = Math.ceil(totalItems / limit);
+
+//     const itemCategories = await ItemCategories.find({})
+//       .select("itemCategoryName")
+//       .lean();
+
+//     const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
+
+//     res.render("items/allItems", {
+//       items,
+//       itemCategories,
+//       itemSuppliers,
+//       currentPage: page,
+//       totalPages,
+//       query: req.query || {},
+//     });
+//   }),
+// );
+// router.get(
+//   "/",
+//   catchAsync(async (req, res) => {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = 10;
+//     const skip = (page - 1) * limit;
+
+//     const totalItems = await Items.countDocuments();
+
+//     const items = await Items.find({})
+//       .populate("itemImage")
+//       .select(
+//         "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
+//       )
+//       .skip(skip)
+//       .limit(limit)
+//       .lean();
+
+//     /* ===============================
+//            USE UTIL FOR MONTHLY CONSUMPTION
+//         =============================== */
+
+//     for (let i = 0; i < items.length; i++) {
+//       const dc = await getMonthlyConsumption(items[i]);
+
+//       items[i].monthlyConsumption = dc.perMonth;
+
+//       if (dc.perMonth > 0) {
+//         const monthsLeft = items[i].itemQty / dc.perMonth;
+//         items[i].stockDaysLeft = Math.floor(monthsLeft * 30);
+//       } else {
+//         items[i].stockDaysLeft = "∞";
+//       }
+
+//       items[i].formattedItemDate = new Date(
+//         items[i].createdAt,
+//       ).toLocaleDateString("en-GB");
+//     }
+
+//     const totalPages = Math.ceil(totalItems / limit);
+
+//     const itemCategories = await ItemCategories.find({})
+//       .select("itemCategoryName")
+//       .lean();
+
+//     const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
+
+//     res.render("items/allItems", {
+//       items,
+//       itemCategories,
+//       itemSuppliers,
+//       currentPage: page,
+//       totalPages,
+//       query: req.query || {},
+//     });
+//   }),
+// );
+router.get("/suggestions", async (req, res) => {
+  let q = req.query.q || "";
+  q = escapeRegex(q);
+
+  if (!q) return res.json([]);
+
+  const suppliers = await Supplier.find({
+    supplierName: { $regex: q, $options: "i" },
+  }).select("_id");
+
+  const items = await Items.find({
+    $or: [
+      { itemName: { $regex: q, $options: "i" } },
+      { itemCategoryName: { $regex: q, $options: "i" } },
+      { itemDescription: { $regex: q, $options: "i" } },
+      { itemSupplier: { $in: suppliers.map((s) => s._id) } },
+    ],
+  })
+    .select("itemName itemCategoryName itemQty itemUnit")
+    .limit(5);
+
+  res.json(items);
+});
 router.get(
   "/",
   catchAsync(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = 15;
     const skip = (page - 1) * limit;
 
-    // 🔹 Total count for pagination
-    const totalItems = await Items.countDocuments();
+    let { search, category, supplier } = req.query;
 
-    // 🔹 Fetch only 10 items
-    const items = await Items.find({})
+    if (search) {
+      search = escapeRegex(search);
+    }
+    // 🔎 Build Mongo filter
+    let filter = {};
+
+    if (search) {
+      const suppliers = await Supplier.find({
+        supplierName: { $regex: search, $options: "i" },
+      }).select("_id");
+
+      filter.$or = [
+        { itemName: { $regex: search, $options: "i" } },
+        { itemCategoryName: { $regex: search, $options: "i" } },
+        { itemDescription: { $regex: search, $options: "i" } },
+        { itemSupplier: { $in: suppliers.map((s) => s._id) } },
+      ];
+    }
+
+    if (category) {
+      filter.itemCategoryName = {
+        $regex: "^" + escapeRegex(category) + "$",
+        $options: "i",
+      };
+    }
+
+    if (supplier) {
+      filter.itemSupplier = new mongoose.Types.ObjectId(supplier);
+    }
+
+    const totalItems = await Items.countDocuments(filter);
+
+    const items = await Items.find(filter)
       .populate("itemImage")
+      .populate("itemSupplier", "supplierName")
       .select(
         "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
       )
@@ -236,34 +425,13 @@ router.get(
       .limit(limit)
       .lean();
 
-    // 🔹 Aggregation for consumption (still fast)
-    const consumptionData = await Transaction.aggregate([
-      { $match: { type: "OUTWARD" } },
-      {
-        $group: {
-          _id: "$item",
-          totalQty: { $sum: "$qty" },
-        },
-      },
-    ]);
-
-    const consumptionMap = {};
-    for (let i = 0; i < consumptionData.length; i++) {
-      consumptionMap[consumptionData[i]._id.toString()] =
-        consumptionData[i].totalQty;
-    }
-
-    // 🔹 Attach data
     for (let i = 0; i < items.length; i++) {
-      const id = items[i]._id.toString();
-      const totalOutward = consumptionMap[id] || 0;
+      const dc = await getMonthlyConsumption(items[i]);
+      items[i].monthlyConsumption = dc.perMonth;
 
-      items[i].monthlyConsumption = totalOutward;
-
-      if (totalOutward > 0) {
-        items[i].stockDaysLeft = Math.floor(
-          (items[i].itemQty / totalOutward) * 30,
-        );
+      if (dc.perMonth > 0) {
+        const monthsLeft = items[i].itemQty / dc.perMonth;
+        items[i].stockDaysLeft = Math.floor(monthsLeft * 30);
       } else {
         items[i].stockDaysLeft = "∞";
       }
@@ -280,6 +448,7 @@ router.get(
       .lean();
 
     const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
+    const baseUrl = req.originalUrl.split("?")[0];
 
     res.render("items/allItems", {
       items,
@@ -287,7 +456,13 @@ router.get(
       itemSuppliers,
       currentPage: page,
       totalPages,
-      query: req.query || {},
+      search,
+      category,
+      supplier,
+      baseUrl,
+      query: req.query, // Pass query params back to pre-fill the form
+
+      requestPath: req.path, // ADD THIS
     });
   }),
 );
@@ -494,12 +669,61 @@ router.get("/search", async (req, res) => {
 //     res.redirect("/items");
 //   })
 // );
+// router.post(
+//   "/",
+//   upload.array("item[itemImage]"),
+//   validateItem,
+//   catchAsync(async (req, res) => {
+//     let item = new Items(req.body.item);
+//     await item.save();
+
+//     if (req.files && req.files.length > 0) {
+//       for (const file of req.files) {
+//         const image = new Images({
+//           contentType: file.mimetype,
+//           data: fs.readFileSync(
+//             path.join(__dirname, "..", "views", "images", file.filename),
+//           ),
+//           path: file.path,
+//           name: file.originalname,
+//         });
+//         await image.save();
+//         item.itemImage.push(image);
+//         fs.unlink(file.path, () => {});
+//       }
+//       await item.save();
+//     }
+
+//     const initialStock = item.itemQty;
+//     await new Transaction({
+//       itemId: item._id,
+//       type: "initial",
+//       quantity: initialStock,
+//       stockBefore: 0,
+//       stockAfter: initialStock,
+//     }).save();
+
+//     res.redirect("/items");
+//   }),
+// );
 router.post(
   "/",
   upload.array("item[itemImage]"),
   validateItem,
   catchAsync(async (req, res) => {
-    let item = new Items(req.body.item);
+    let itemData = req.body.item;
+
+    // ✅ CLEAN DATA BEFORE SAVE
+
+    if (itemData.itemCategoryName) {
+      itemData.itemCategoryName = itemData.itemCategoryName.trim();
+    }
+
+    if (itemData.itemName) {
+      itemData.itemName = itemData.itemName.trim().toUpperCase();
+    }
+
+    let item = new Items(itemData);
     await item.save();
 
     if (req.files && req.files.length > 0) {
@@ -705,6 +929,8 @@ router.get(
     //   query: req.query,
     //   items: allItems, // ✅ now available in EJS
     // });
+    const baseUrl = req.originalUrl.split("?")[0];
+
     res.render("items/transactions", {
       groupedTransactions,
       sortedDates,
@@ -712,6 +938,8 @@ router.get(
       items: allItems,
       page,
       totalPages,
+      baseUrl,
+      requestPath: req.path, // ADD THIS
     });
   }),
 );
@@ -776,6 +1004,7 @@ router.get(
         totalConsumption,
       };
     }
+    const baseUrl = req.originalUrl.split("?")[0];
 
     // Render the insights page with the data
     res.render("items/insights", {
@@ -783,6 +1012,8 @@ router.get(
       insights,
       transactions,
       query: req.query, // Pass query params back to pre-fill the form
+      requestPath: req.path, // ADD THIS
+      baseUrl,
     });
   }),
 );
@@ -1371,6 +1602,7 @@ router.get(
     // ---------------------------------
     const items = await Items.find({})
       .populate("itemImage")
+      .populate("itemSupplier", "supplierName")
       .sort({ _id: 1 })
       .lean();
 
@@ -1434,10 +1666,31 @@ router.get(
       const id = item._id.toString();
 
       // 🔹 Filters
-      if (itemId && id !== itemId) continue;
-      if (category && item.itemCategoryName !== category) continue;
-      if (supplier && item.itemSupplier !== supplier) continue;
+      // ---------------- FILTERS (FIXED) ----------------
 
+      // Item filter
+      if (itemId && id !== itemId) continue;
+
+      // Category filter (case-insensitive)
+      if (
+        category &&
+        item.itemCategoryName &&
+        item.itemCategoryName.toLowerCase().trim() !==
+          category.toLowerCase().trim()
+      )
+        continue;
+
+      // Supplier filter (ObjectId safe)
+      if (supplier) {
+        if (!item.itemSupplier) continue;
+
+        const supplierId =
+          typeof item.itemSupplier === "object"
+            ? item.itemSupplier._id.toString()
+            : item.itemSupplier.toString();
+
+        if (supplierId !== supplier) continue;
+      }
       // ---------------------------------
       // 🔹 Period Start Logic (NODE 15 SAFE)
       // ---------------------------------
@@ -1549,6 +1802,15 @@ router.get(
           ";base64," +
           item.itemImage[0].data.toString("base64");
       }
+      // ---------------------------------
+      // 🔹 Consumption Days
+      // ---------------------------------
+      let consumptionDays = 0;
+
+      if (periodStart && periodEnd) {
+        const diffTime = Math.abs(periodEnd - periodStart);
+        consumptionDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
 
       // ---------------------------------
       // 🔹 Push Row
@@ -1557,8 +1819,7 @@ router.get(
         _id: item._id,
         itemName: item.itemName,
         category: item.itemCategoryName,
-        supplier: item.itemSupplier,
-
+        supplier: item.itemSupplier ? item.itemSupplier.supplierName : "",
         base64Image,
         unit: item.itemUnit || "",
         currentStock: item.itemQty || 0,
@@ -1592,6 +1853,7 @@ router.get(
         stockMonthsLeft,
         stockOutDate,
         reorderQty,
+        consumptionDays,
       });
     }
 
@@ -1623,6 +1885,7 @@ router.get(
 
     const avgPerHeat =
       totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
+    const baseUrl = req.originalUrl.split("?")[0];
 
     // ---------------------------------
     // 🔹 Render
@@ -1633,11 +1896,12 @@ router.get(
       suppliers,
       transactions,
       query: req.query,
-
       totalHeats,
       openHeats,
       closeHeats,
       avgPerHeat,
+      requestPath: req.path, // ADD THIS
+      baseUrl,
     });
   }),
 );
@@ -1870,28 +2134,28 @@ router.delete(
 
 // Add this route below other routes in items.js
 
-router.get("/suggestions", async (req, res) => {
-  try {
-    const query = req.query.q || "";
-    if (!query.trim()) return res.json([]);
+// router.get("/suggestions", async(req, res) => {
+//     try {
+//         const query = req.query.q || "";
+//         if (!query.trim()) return res.json([]);
 
-    const items = await Items.find({
-      $or: [
-        { itemName: { $regex: query, $options: "i" } },
-        { itemCategoryName: { $regex: query, $options: "i" } },
-        { itemSupplier: { $regex: query, $options: "i" } },
-        { itemDescription: { $regex: query, $options: "i" } },
-      ],
-    })
-      .limit(8)
-      .select("itemName itemCategoryName");
+//         const items = await Items.find({
+//                 $or: [
+//                     { itemName: { $regex: query, $options: "i" } },
+//                     { itemCategoryName: { $regex: query, $options: "i" } },
+//                     { itemSupplier: { $regex: query, $options: "i" } },
+//                     { itemDescription: { $regex: query, $options: "i" } },
+//                 ],
+//             })
+//             .limit(8)
+//             .select("itemName itemCategoryName");
 
-    res.json(items);
-  } catch (err) {
-    console.error("Error fetching suggestions:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
+//         res.json(items);
+//     } catch (err) {
+//         console.error("Error fetching suggestions:", err);
+//         res.status(500).json({ error: "Server error" });
+//     }
+// });
 
 // const path = require("path");
 // const fs = require("fs");
@@ -1944,31 +2208,135 @@ router.get(
 // ------------------------------------
 // 🔹 CONSUMPTION REPORT PDF
 // ------------------------------------
+// router.get(
+//     "/report/consumption",
+//     catchAsync(async(req, res) => {
+//         var category = req.query.category;
+//         var supplier = req.query.supplier;
+//         var startDate = req.query.startDate;
+//         var endDate = req.query.endDate;
+//         var mode = req.query.mode;
+
+//         var match = { type: "outward" };
+
+//         // Date logic
+//         var dateRangeStart = null;
+//         var dateRangeEnd = endDate ? new Date(endDate) : new Date();
+
+//         if (mode === "sinceLastInward") {
+//             const lastInward = await Transaction.findOne({ type: "inward" })
+//                 .sort({ createdAt: -1 })
+//                 .lean();
+//             if (lastInward) dateRangeStart = new Date(lastInward.createdAt);
+//         } else if (mode === "sinceLastOutward") {
+//             const lastOutward = await Transaction.findOne({ type: "outward" })
+//                 .sort({ createdAt: -1 })
+//                 .lean();
+//             if (lastOutward) dateRangeStart = new Date(lastOutward.createdAt);
+//         } else if (mode === "sinceStart") {
+//             const firstTx = await Transaction.findOne({})
+//                 .sort({ createdAt: 1 })
+//                 .lean();
+//             if (firstTx) dateRangeStart = new Date(firstTx.createdAt);
+//         }
+
+//         if (startDate) dateRangeStart = new Date(startDate);
+//         if (endDate) {
+//             dateRangeEnd = new Date(endDate);
+//             dateRangeEnd.setHours(23, 59, 59, 999);
+//         }
+
+//         if (dateRangeStart) {
+//             baseMatch.createdAt = {
+//                 $gte: dateRangeStart,
+//                 $lte: dateRangeEnd,
+//             };
+//         }
+
+//         // Filter by category/supplier
+//         const transactions = await Transaction.aggregate([
+//             { $match: match },
+//             {
+//                 $lookup: {
+//                     from: "allitems",
+//                     localField: "itemId",
+//                     foreignField: "_id",
+//                     as: "item",
+//                 },
+//             },
+//             { $unwind: "$item" },
+//             {
+//                 $match: Object.assign({},
+//                     category && category !== "all" ?
+//                     { "item.itemCategoryName": category } :
+//                     {},
+//                     supplier && supplier !== "all" ?
+//                     { "item.itemSupplier": supplier } :
+//                     {},
+//                 ),
+//             },
+//             {
+//                 $group: {
+//                     _id: "$item._id",
+//                     itemName: { $first: "$item.itemName" },
+//                     category: { $first: "$item.itemCategoryName" },
+//                     supplier: { $first: "$item.itemSupplier" },
+//                     totalUsed: { $sum: "$quantity" },
+//                     lastUsed: { $max: "$createdAt" },
+//                 },
+//             },
+//             { $sort: { itemName: 1 } },
+//         ]);
+
+//         // Render HTML
+//         const html = await ejs.renderFile(
+//             path.join(__dirname, "../views/items/pdf_consumption.ejs"), {
+//                 transactions,
+//                 category,
+//                 supplier,
+//                 mode,
+//                 startDate,
+//                 endDate,
+//             }, { async: false },
+//         );
+
+//         const browser = await puppeteer.launch({ headless: true });
+//         const page = await browser.newPage();
+//         await page.setContent(html, { waitUntil: "networkidle0" });
+
+//         const pdfPath = path.join(
+//             __dirname,
+//             `../public/reports/Consumption_Report_${Date.now()}.pdf`,
+//         );
+
+//         await page.pdf({
+//             path: pdfPath,
+//             format: "A4",
+//             landscape: true,
+//             printBackground: true,
+//         });
+
+//         await browser.close();
+
+//         res.download(pdfPath, () => fs.unlinkSync(pdfPath));
+//     }),
+// );
 router.get(
   "/report/consumption",
   catchAsync(async (req, res) => {
-    var category = req.query.category;
-    var supplier = req.query.supplier;
-    var startDate = req.query.startDate;
-    var endDate = req.query.endDate;
-    var mode = req.query.mode;
+    const { itemId, category, supplier, startDate, endDate, mode } = req.query;
 
-    var match = { type: "outward" };
+    let match = { type: { $in: ["outward", "lend"] } };
 
-    // Date logic
-    var dateRangeStart = null;
-    var dateRangeEnd = endDate ? new Date(endDate) : new Date();
+    // ---------------- DATE LOGIC ----------------
+    let dateRangeStart = null;
+    let dateRangeEnd = endDate ? new Date(endDate) : new Date();
 
     if (mode === "sinceLastInward") {
       const lastInward = await Transaction.findOne({ type: "inward" })
         .sort({ createdAt: -1 })
         .lean();
       if (lastInward) dateRangeStart = new Date(lastInward.createdAt);
-    } else if (mode === "sinceLastOutward") {
-      const lastOutward = await Transaction.findOne({ type: "outward" })
-        .sort({ createdAt: -1 })
-        .lean();
-      if (lastOutward) dateRangeStart = new Date(lastOutward.createdAt);
     } else if (mode === "sinceStart") {
       const firstTx = await Transaction.findOne({})
         .sort({ createdAt: 1 })
@@ -1983,15 +2351,16 @@ router.get(
     }
 
     if (dateRangeStart) {
-      baseMatch.createdAt = {
+      match.createdAt = {
         $gte: dateRangeStart,
         $lte: dateRangeEnd,
       };
     }
 
-    // Filter by category/supplier
+    // ---------------- AGGREGATION ----------------
     const transactions = await Transaction.aggregate([
       { $match: match },
+
       {
         $lookup: {
           from: "allitems",
@@ -2001,31 +2370,61 @@ router.get(
         },
       },
       { $unwind: "$item" },
+
+      // Supplier lookup
       {
-        $match: Object.assign(
-          {},
-          category && category !== "all"
-            ? { "item.itemCategoryName": category }
-            : {},
-          supplier && supplier !== "all"
-            ? { "item.itemSupplier": supplier }
-            : {},
-        ),
+        $lookup: {
+          from: "suppliers",
+          localField: "item.itemSupplier",
+          foreignField: "_id",
+          as: "supplierData",
+        },
       },
+      {
+        $unwind: {
+          path: "$supplierData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Filters
+      {
+        $match: {
+          ...(itemId
+            ? { "item._id": new mongoose.Types.ObjectId(itemId) }
+            : {}),
+          ...(category
+            ? {
+                "item.itemCategoryName": {
+                  $regex: "^" + category + "$",
+                  $options: "i",
+                },
+              }
+            : {}),
+          ...(supplier
+            ? {
+                "item.itemSupplier": new mongoose.Types.ObjectId(supplier),
+              }
+            : {}),
+        },
+      },
+
+      // Group
       {
         $group: {
           _id: "$item._id",
           itemName: { $first: "$item.itemName" },
           category: { $first: "$item.itemCategoryName" },
-          supplier: { $first: "$item.itemSupplier" },
+          supplier: { $first: "$supplierData.supplierName" },
           totalUsed: { $sum: "$quantity" },
           lastUsed: { $max: "$createdAt" },
         },
       },
+
       { $sort: { itemName: 1 } },
     ]);
 
-    // Render HTML
+    // ---------------- RENDER PDF ----------------
     const html = await ejs.renderFile(
       path.join(__dirname, "../views/items/pdf_consumption.ejs"),
       {
@@ -2060,7 +2459,6 @@ router.get(
     res.download(pdfPath, () => fs.unlinkSync(pdfPath));
   }),
 );
-
 router.post("/utility/backup-drive", (req, res) => {
   runBackup("manual-drive");
   req.flash("success", "☁️ Google Drive backup started!");

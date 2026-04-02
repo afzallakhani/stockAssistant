@@ -3,7 +3,14 @@
     <div class="container py-3">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
             <h2 class="fw-bold text-primary mb-2">📊 Consumption Summary</h2>
-            <a href="/items/report/consumption?category=<%= query.category || '' %>&supplier=<%= query.supplier || '' %>&startDate=<%= query.startDate || '' %>&endDate=<%= query.endDate || '' %>&mode=<%= query.mode || '' %>" class="btn btn-warning shadow-sm">
+            <a href="/items/report/consumption?
+itemId=<%= query.itemId || '' %>&
+category=<%= query.category || '' %>&
+supplier=<%= query.supplier || '' %>&
+startDate=<%= query.startDate || '' %>&
+endDate=<%= query.endDate || '' %>&
+mode=<%= query.mode || '' %>&
+heatType=<%= query.heatType || '' %>" class="btn btn-warning shadow-sm">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
         </div>
@@ -35,8 +42,9 @@
                 <select class="form-select" name="supplier">
         <option value="">All Suppliers</option>
         <% suppliers.forEach(s => { %>
-          <option value="<%= s.supplierName %>" <%= query.supplier === s.supplierName ? "selected" : "" %>><%= s.supplierName %></option>
-        <% }) %>
+<option value="<%= s._id %>" <%= query.supplier === s._id.toString() ? "selected" : "" %>>
+  <%= s.supplierName %>
+</option>        <% }) %>
       </select>
             </div>
 
@@ -71,6 +79,10 @@
                 <button class="btn btn-primary"><i class="bi bi-funnel"></i> Apply</button>
             </div>
         </form>
+        <div>
+            <%- include('../partials/clearFilters') %>
+
+        </div>
 
         <!-- Summary Cards -->
         <div class="row g-3 text-center mb-4">
@@ -162,7 +174,10 @@
       : '—' %>
   </small>
                                     </li>
-
+                                    <li class="list-group-item">
+                                        <strong>Heats in Period:</strong>
+                                        <%= tx.heatsCount %>
+                                    </li>
                                     <li class="list-group-item"><strong>Total Used:</strong>
                                         <%= tx.totalUsed || '0.00'  %> <small class="text-muted"><%= tx.unit %></small>
 
