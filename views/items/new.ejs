@@ -1,84 +1,309 @@
 <% layout('layout/boilerplate') %>
-    <div class="row">
-        <h1 class="text-center">Add New Item To The Inventory</h1>
-        <div class="col-6 offset-3">
 
-            <form action="/items" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
-                <label class="form-label" for="name">Item Name</label>
-                <input class="form-control" type="text" id="name" name="item[itemName]" required>
+    <div class="container my-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white text-center py-3 rounded-top">
+                <h4 class="mb-0 fw-semibold">
+                    <i class="bi bi-box-seam"></i> Add New Item to Inventory
+                </h4>
+            </div>
 
-                <label class="form-label" for="description">Item Description</label>
-                <input class="form-control" type="text" id="description" name="item[itemDescription]" required>
+            <div class="card-body">
+                <form action="/items" method="POST" class="needs-validation" novalidate enctype="multipart/form-data">
 
-                <!-- <label class="form-label" for="unit">Item Quantity Unit</label>
-                <input class="form-control" type="text" id="unit" name="item[itemUnit]" required> -->
-                <label for="unit" class="form-label">Item Quantity Unit</label>
-                <select class="form-select form-select-md" name="item[itemUnit]" id="unit" required>
-                        <option selected>Select Item Quantity Unit</option>
-                        <option value="NOS">NOS</option>
-                        <option value="PCS">PCS</option>
-                        <option value="BOX">BOX</option>
-                        <option value="KGS">KGS</option>
-                        <option value="MTS">MTS</option>
-                        <option value="BAGS">BAGS</option>
+                    <!-- DATE + ITEM DETAILS -->
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="itemDate" name="item[createdAt]" required>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Item Name</label>
+                            <input type="text" class="form-control" name="item[itemName]" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" name="item[itemDescription]" required>
+                        </div>
+                    </div>
+
+                    <!-- QTY + UNIT -->
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity Unit</label>
+                            <select class="form-select" name="item[itemUnit]" required>
+                            <option disabled selected>Select Unit</option>
+                            <option value="NOS">NOS</option>
+                            <option value="PCS">PCS</option>
+                            <option value="BOX">BOX</option>
+                            <option value="KGS">KGS</option>
+                            <option value="MTS">MTS</option>
+                            <option value="BAGS">BAGS</option>
+                            <option value="SETS">SETS</option>
+                            <option value="MTRS">MTRS</option>
                         </select>
-                <label class="form-label" for="qty">Item Quantity</label>
-                <input class="form-control" type="number" id="qty" name="item[itemQty]" required>
-                <!-- <label class="form-label" for="category">Item Category</label>
-                <input class="form-control" type="text" id="category" name="item[itemCategoryName]" required> -->
-                <div class="row">
-                    <div class="col">
+                        </div>
 
-                        <label for="category" class="form-label-sm">Item Category</label>
-                        <select class="form-select" name="item[itemCategoryName]" id="category" required>
-                                <option selected>Select Item Category</option>
-                                <% for(let item of itemCategories){%>
-            
-                                <option value="Item Category"><%= item.itemCategoryName %>
-                                </option>
-                                <%} %>
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" name="item[itemQty]" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Daily Consumption</label>
+                            <input type="text" class="form-control" name="item[life]" placeholder="e.g. 1 HEAT, 5 HEATS">
+                        </div>
+                    </div>
+
+                    <!-- CATEGORY + SUPPLIER -->
+                    <div class="row g-3 mt-3 align-items-end">
+
+                        <!-- CATEGORY -->
+                        <div class="col-md-8">
+                            <label class="form-label">Item Category</label>
+                            <div class="input-group">
+                                <select class="form-select" id="category" name="item[itemCategoryName]" required>
+                                <option disabled selected>Select Category</option>
+                                <% itemCategories.forEach(cat => { %>
+                                    <option><%= cat.itemCategoryName %></option>
+                                <% }) %>
                             </select>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-sm btn-primary mt-2 mb-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
-    Add New Category
-  </button>
 
-                        <!-- Modal -->
-                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content ">
-                                    <div class="modal-header ">
-                                        <h5 class="modal-title " id="exampleModalLongTitle ">Add New Category</h5>
-
-
-                                    </div>
-                                    <div class="modal-body">
-                                        <div>
-                                            <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
-                                            </form>
-                                            <h1></h1>
-                                            <form action="/items/category" novalidate method="POST" enctype="multipart/form-data">
-                                                <label class="form-label" for="newItemCategory">New Item Category</label>
-                                                <input class="form-control" type="text" id="newItemCategory" name="category[itemCategoryName]">
-                                                <button type="submit" class="mt-2 btn btn-success">Add Category</button>
-                                            </form>
-                                        </div>
-                                    </div>
-
-                                </div>
+                                <!-- OPEN CATEGORY MODAL -->
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
                             </div>
                         </div>
 
-                    </div>
-                    <!-- <div class="col mt-4 ">
-                        <input type="text " name=" " id=" " class="form-control "> </div>
-                </div> -->
+                        <!-- SUPPLIER -->
+                        <div class="col-md-4">
+                            <label class="form-label">Item Supplier</label>
+                            <div class="input-group">
+                                <input id="supplierName" type="text" class="form-control awesomplete" autocomplete="off">
+                                <input type="hidden" id="supplierId" name="item[itemSupplier]">
+                                <!-- OPEN SUPPLIER MODAL -->
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                            </div>
 
-                    <label class="form-label" for="image">Item Image</label>
-                    <input class="form-control img-fluid" type="file" id="image" name="item[itemImage]" required>
-                    <button class="btn btn-success my-2">Save Item</button>
-            </form>
+                            <ul id="supplierList" class="d-none">
+                                <% itemSuppliers.forEach(sup => { %>
+                                    <li data-id="<%= sup._id %>">
+                                        <%= sup.supplierName.trim() %> (
+                                            <%= sup.supplierCity %>)
+                                    </li>
+                                    <% }) %>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- IMAGE -->
+                    <div class="mt-3">
+                        <label class="form-label">Upload Images</label>
+                        <input type="file" class="form-control" name="item[itemImage]" multiple>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button class="btn btn-success px-4 py-2 fw-semibold">
+                        <i class="bi bi-save"></i> Save Item
+                    </button>
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>
-    <div class="container ">
+
+    <!-- CATEGORY MODAL -->
+    <div class="modal fade" id="addCategoryModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5>Add Category</h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addCategoryForm">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" id="newCategoryInput" class="form-control" required>
+
+                        <div class="text-end mt-3">
+                            <button class="btn btn-success">Save</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPPLIER MODAL -->
+    <div class="modal fade" id="addSupplierModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header bg-primary text-white">
+                    <h5>Add Supplier</h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addSupplierForm">
+                        <label class="form-label">Supplier Name</label>
+                        <input type="text" id="supName" class="form-control" required>
+
+                        <label class="form-label mt-2">City</label>
+                        <input type="text" id="supCity" class="form-control" required>
+
+                        <label class="form-label mt-2">State</label>
+                        <input type="text" id="supState" class="form-control" required>
+
+                        <div class="text-end mt-3">
+                            <button class="btn btn-success">Save Supplier</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- AWESOMPLETE -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // Set today date automatically
+            document.getElementById("itemDate").value = new Date().toISOString().split("T")[0];
+
+            const input = document.getElementById("supplierName");
+            const hiddenInput = document.getElementById("supplierId");
+
+            const listItems = Array.from(document.querySelectorAll("#supplierList li")).map(li => ({
+                label: li.textContent.trim(),
+                value: li.textContent.trim(),
+                id: li.dataset.id
+            }));
+
+            const awesomplete = new Awesomplete(input, {
+                list: listItems.map(item => item.label),
+                minChars: 1
+            });
+
+            // When user selects supplier
+            input.addEventListener("awesomplete-selectcomplete", function() {
+                const selected = listItems.find(item => item.label === input.value);
+                if (selected) {
+                    hiddenInput.value = selected.id; // ✅ Save ObjectId
+                }
+            });
+            /* =======================
+               ADD CATEGORY (AJAX)
+            ======================= */
+            document.getElementById("addCategoryForm").addEventListener("submit", async e => {
+                e.preventDefault();
+
+                const name = document.getElementById("newCategoryInput").value;
+
+                const res = await fetch("/items/category/ajax", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        itemCategoryName: name
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    const select = document.getElementById("category");
+                    const opt = document.createElement("option");
+                    opt.textContent = data.category.itemCategoryName;
+                    select.appendChild(opt);
+                    select.value = data.category.itemCategoryName;
+
+                    bootstrap.Modal.getInstance(document.getElementById("addCategoryModal")).hide();
+                }
+            });
+
+
+            /* =======================
+               ADD SUPPLIER (AJAX)
+            ======================= */
+            document.getElementById("addSupplierForm").addEventListener("submit", async e => {
+                e.preventDefault();
+
+                const payload = {
+                    supplierName: document.getElementById("supName").value,
+                    supplierCity: document.getElementById("supCity").value,
+                    supplierState: document.getElementById("supState").value
+                };
+
+                const res = await fetch("/supplier/ajax", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById("supplierName").value = data.supplier.supplierName;
+                    document.getElementById("supplierId").value = data.supplier._id;
+
+
+                    bootstrap.Modal.getInstance(document.getElementById("addSupplierModal")).hide();
+                }
+            });
+
+        });
+    </script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .card {
+            border-radius: 12px;
+        }
+        
+        label {
+            font-weight: 500;
+        }
+        
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+        }
+        
+        .awesomplete>ul {
+            width: 100% !important;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            z-index: 2000;
+        }
+        
+        .awesomplete mark {
+            background: transparent;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1rem !important;
+            }
+        }
+    </style>

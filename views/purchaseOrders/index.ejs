@@ -1,0 +1,89 @@
+<% layout("layout/boilerplate") %>
+
+    <div class="container mt-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Purchase Orders</h3>
+            <a href="/purchase-orders/new" class="btn btn-primary">
+      ➕ New PO
+    </a>
+        </div>
+
+        <% if (!pos.length) { %>
+            <div class="alert alert-info">No Purchase Orders found.</div>
+            <% } else { %>
+
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>PO No</th>
+                            <th>Date</th>
+                            <th>Supplier</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th style="width:240px">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <% pos.forEach((po, i) => { %>
+                            <tr>
+                                <td>
+                                    <%= i + 1 %>
+                                </td>
+
+                                <td>
+                                    <a href="/purchase-orders/<%= po._id %>">
+                                        <%= po.poNumber %>
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <%= po.createdAt.toDateString() %>
+                                </td>
+
+                                <td>
+                                    <%= po.supplier?.name || "—" %>
+                                </td>
+
+                                <td>₹
+                                    <%= po.subTotal %>
+                                </td>
+
+                                <td>
+                                    <% if (po.status === "draft") { %>
+                                        <span class="badge bg-warning text-dark">Draft</span>
+                                        <% } else { %>
+                                            <span class="badge bg-success">Final</span>
+                                            <% } %>
+                                </td>
+
+                                <td>
+                                    <a href="/purchase-orders/<%= po._id %>" class="btn btn-sm btn-outline-primary">
+              View
+            </a>
+
+                                    <a href="/purchase-orders/<%= po._id %>/pdf" class="btn btn-sm btn-outline-secondary">
+              PDF
+            </a>
+
+                                    <% if (po.status === "draft") { %>
+                                        <a href="/purchase-orders/<%= po._id %>/edit" class="btn btn-sm btn-warning">
+                Edit
+              </a>
+
+                                        <form method="POST" action="/purchase-orders/<%= po._id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('Delete this PO?')">
+                                            <button class="btn btn-sm btn-danger">
+                  Delete
+                </button>
+                                        </form>
+                                        <% } %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+
+                <% } %>
+    </div>

@@ -1,149 +1,304 @@
 <% layout('layout/boilerplate') %>
 
+    <div class="container py-4">
 
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="fw-bold mb-2 text-primary">Refractories & Consumables</h1>
+            <p class="text-muted fs-5">Smart inventory management made simple</p>
+        </div>
 
-    <div class="container-fluid align-items-center justify-content-center">
-        <h1 class="font-weight-bold">Refractories And Consumables</h1>
-    </div>
-    <form action="/items/search" method="get">
-        <input class="form-control" type="search" id="keyWord" name="item[itemName]" placeholder="Search Item" class="mt-1">
+        <!-- 🔍 Search & Filters -->
+        <div class="bg-white p-4 rounded-4 shadow-sm mb-5">
+            <div class="row g-3 align-items-center">
 
-
-    </form>
-
-
-    <div class="tabel-responsive">
-        <table class="table table-hover table align-middle text-center" id="dataTable">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Image</th>
-                    <th scope="col">Item Name</th>
-                    <th scope="col">Item Category</th>
-                    <th scope="col">Item Description</th>
-                    <th scope="col">Item Quantity</th>
-                    <th scope="col">Unit</th>
-                    <th scope="col">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                <tr>
-                    <form action="/items" method="POST" novalidate class="validated-form form-inline" enctype="multipart/form-data">
-
-                        <td class="font-weight-bold form-control-sm text-center">
-                            New
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm text-center img-fluid" type="file" id="image" name="item[itemImage]" required>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="text" id="name" name="item[itemName]" required>
-                        </td>
-                        <td>
-                            <select class="form-select form-select-sm" name="item[itemCategoryName]" id="category" required>
-                                <option selected>Category</option>
-                                <option value="CCM REFACTORIES">CCM REFACTORIES</option>
-                                <option value="CCM REFACTORIES">CCM CONSUMABLES</option>
-                                <option value="CCM SPARE PARTS">CCM SPARE PARTS</option>
-                                <option value="FURNACE SPARE PARTS">FURNACE SPARE PARTS</option>
-                                <option value="FURNACE CONSUMABLES">FURNACE CONSUMABLES</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="text" id="description" name="item[itemDescription]" required>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="text" id="qty" name="item[itemQty]" required>
-                        </td>
-                        <td>
-                            <select class="form-select form-select-sm" name="item[itemUnit]" id="unit" required>
-                                <option selected>Qty Unit</option>
-                                <option value="NOS">NOS</option>
-                                <option value="PCS">PCS</option>
-                                <option value="BOX">BOX</option>
-                                <option value="KGS">KGS</option>
-                                <option value="MTS">MTS</option>
-                                <option value="BAGS">BAGS</option>
-                            </select>
-                        </td>
-                        <td>
-                            <button class="btn btn-success btn-sm my-2 form-control form-control-sm">Save</button>
-                        </td>
-
+                <!-- Search -->
+                <div class="col-lg-6">
+                    <form action="/items" method="get" id="itemSearchForm" class="position-relative">
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden">
+                            <span class="input-group-text bg-white border-0 ps-3">
+                            <i class="bi bi-search text-muted fs-5"></i>
+                        </span>
+                            <input type="search" id="itemSearch" name="search" value="<%= search || '' %>" class="form-control border-0" placeholder="Search by item, category, supplier or description..." autocomplete="off" />
+                        </div>
                     </form>
 
-                </tr>
+                    <!-- Suggestions dropdown -->
+                    <div id="suggestionsWrapper" class="bg-white rounded-3 shadow mt-2 w-100" style="position:absolute; z-index:9999; display:none;">
+                        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                            <span class="fw-semibold text-secondary">Suggestions</span>
+                            <button type="button" id="closeSuggestions" class="btn btn-sm btn-light border">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                        </div>
+                        <ul id="suggestions" class="list-group list-group-flush mb-0"></ul>
+                    </div>
+                </div>
 
-                <% items.forEach(function(item, index){%>
+                <!-- Category Filter -->
+                <div class="col-md-3">
+                    <select id="filterCategory" class="form-select shadow-sm border-0">
+                    <option value="">All Categories</option>
+                    <% itemCategories.forEach(cat => { %>
+                        <option value="<%= cat.itemCategoryName %>"
+                            <%= category === cat.itemCategoryName ? 'selected' : '' %>>
+                            <%= cat.itemCategoryName %>
+                        </option>
+                    <% }) %>
+                </select>
+                </div>
 
-                    <tr>
-                        <td>
-                            <%= index + 1 %>
-                        </td>
-                        <td class="p-0">
-                            <% for(let image of item.itemImage) {%>
-                                <img src="data:image/<%=image.contentType%>;base64,
-                            <%=image.data.toString('base64')%>" class="img-fluid" style="height: 1000; width: 100px;">
-                                <% }%>
-                        </td>
-                        <td id="itemNameFilter">
-                            <%= item.itemName %>
-                        </td>
-                        <td id="itemCategoryFilter">
-                            <%= item.itemCategoryName %>
-                        </td>
-                        <td>
-                            <%= item.itemDescription %>
-                        </td>
-                        <td>
-                            <%= item.itemQty %>
-                        </td>
-                        <td>
-                            <%= item.itemUnit %>
-                        </td>
-                        <td>
-                            <a href="/items/<%= item._id %>/edit " class="btn btn-warning mb-1 bi bi-pencil-square"></a>
-                            <!-- <a href="" class="d-inline" method="POST" onclick="return confirm('Are you sure you want to edit this item?')" class="btn  btn-danger mb-1 ">Delete</a> -->
-                            <form action="/items/<%= item._id %>?_method=DELETE" method="post">
-                                <button type="submit" onclick="return confirm('Are you sure you want to edit this item?')" class="btn mb-1 bi bi-trash btn-danger"></button>
-                            </form>
-                        </td>
-                    </tr>
-                    <%}) %>
-            </tbody>
-        </table>
-    </div>
+                <!-- Supplier Filter -->
+                <div class="col-md-3">
+                    <select id="filterSupplier" class="form-select shadow-sm border-0">
+                    <option value="">All Suppliers</option>
+                    <% itemSuppliers.forEach(sup => { %>
+                        <option value="<%= sup._id %>"
+  <%= supplier == sup._id.toString() ? 'selected' : '' %>>
+  <%= sup.supplierName %>
+</option>
+                    <% }) %>
+                </select>
 
-    <!-- <button onclick="filterTable()">Filter</button> -->
-    <div class="btn-group">
-        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Filter
-        </button>
-        <div class="dropdown-menu">
-            ...
+                </div>
+                <%- include('../partials/clearFilters') %>
+
+            </div>
+
         </div>
+
+        <!-- Navigation Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+
+            <a class="btn btn-primary shadow-sm" href="/items/inwards">
+                <i class="bi bi-box-arrow-in-down"></i> Inwards
+            </a>
+            <a class="btn btn-secondary shadow-sm" href="/items/outwards">
+                <i class="bi bi-box-arrow-up"></i> Outwards
+            </a>
+            <a class="btn btn-info shadow-sm text-white" href="/items/lend">
+                <i class="bi bi-arrow-left-right"></i> Lend Item
+            </a>
+            <a class="btn btn-warning shadow-sm text-white" href="/items/transactions">
+                <i class="bi bi-clock-history"></i> Transactions
+            </a>
+            <a class="btn btn-success shadow-sm text-white" href="/items/insights">
+                <i class="bi bi-graph-up"></i> Insights
+            </a>
+            <a class="btn btn-outline-dark shadow-sm" href="/items/consumption">
+                <i class="bi bi-bar-chart-line"></i> Consumption Summary
+            </a>
+            <a href="#" class="btn btn-danger" id="exportStockBtn">
+                <i class="bi bi-file-earmark-pdf"></i> Export Stock PDF
+            </a>
+
+            <a href="/purchase-orders/new" class="btn btn-success">
+  ➕ Create PO
+</a>
+
+        </div>
+        <!-- 🗂️ Item Grid -->
+        <h3 class="text-center fw-bold mb-4 text-dark">All Inventory Items</h3>
+        <div id="itemsGrid" class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3">
+            <% items.forEach(item => { %>
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition">
+
+                        <% if (item.itemImage && item.itemImage.length > 0) { %>
+                            <img src="data:image/<%= item.itemImage[0].contentType %>;base64,<%= item.itemImage[0].data.toString('base64') %>" class="card-img-top" style="height:230px; object-fit:contain; background:#f8f9fa;">
+                            <% } else { %>
+                                <img src="https://via.placeholder.com/600x400.png?text=No+Image" class="card-img-top">
+                                <% } %>
+
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-semibold">
+                                            <%= item.itemName %>
+                                        </h5>
+                                        <p class="card-subtitle text-muted mb-2">
+                                            <%= item.itemCategoryName %>
+                                        </p>
+                                        <p class="card-text small text-secondary">
+                                            <%= item.itemDescription %>
+                                        </p>
+                                    </div>
+
+                                    <ul class="list-group list-group-flush small">
+                                        <li class="list-group-item"><strong>Supplier:</strong>
+                                            <%= item.itemSupplier ? item.itemSupplier.supplierName : '' %>
+                                        </li>
+                                        <li class="list-group-item"><strong>Quantity:</strong>
+                                            <%= item.itemQty %>
+                                                <%= item.itemUnit %>
+                                        </li>
+                                        <li class="list-group-item"><strong>Monthly Usage:</strong>
+                                            <%= item.monthlyConsumption || 0 %>
+                                                <%= item.itemUnit %>/month</li>
+                                        <li class="list-group-item"><strong>Stock Days Left:</strong>
+                                            <%= item.stockDaysLeft %> days</li>
+                                        <li class="list-group-item"><strong>Added:</strong>
+                                            <%= item.formattedItemDate %>
+                                        </li>
+                                    </ul>
+
+                                    <div class="card-body text-end">
+                                        <form action="/items/<%= item._id %>/view" method="GET" class="d-inline">
+                                            <button class="btn btn-outline-primary btn-sm">View</button>
+                                        </form>
+                                        <form action="/items/<%= item._id %>/edit" method="GET" class="d-inline">
+                                            <button class="btn btn-outline-info btn-sm">Edit</button>
+                                        </form>
+                                        <form action="/items/<%= item._id %>?_method=DELETE" method="POST" class="d-inline">
+                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                        </form>
+                                    </div>
+
+                    </div>
+                </div>
+                <% }) %>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+
+                <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="/items?page=<%= currentPage - 1 %>&search=<%= search || '' %>&category=<%= category || '' %>&supplier=<%= supplier || '' %>">
+                        Previous
+                    </a>
+                    </li>
+                    <% } %>
+
+                        <% for (let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                <a class="page-link" href="/items?page=<%= i %>&search=<%= search || '' %>&category=<%= category || '' %>&supplier=<%= supplier || '' %>">
+                                    <%= i %>
+                                </a>
+                            </li>
+                            <% } %>
+
+                                <% if (currentPage < totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="/items?page=<%= currentPage + 1 %>&search=<%= search || '' %>&category=<%= category || '' %>&supplier=<%= supplier || '' %>">
+                        Next
+                    </a>
+                                    </li>
+                                    <% } %>
+
+            </ul>
+        </nav>
+
     </div>
-
+    <!-- Scroll Buttons -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
+        <button onclick="scrollToTop()" class="btn btn-outline-primary rounded-circle shadow mb-2"><i class="bi bi-arrow-up"></i></button><br>
+        <button onclick="scrollToBottom()" class="btn btn-outline-primary rounded-circle shadow"><i class="bi bi-arrow-down"></i></button>
+    </div>
+    <div id="bottom"></div>
     <script>
-        function filterTable() {
-            // Get the value of the filter inputs
-            var itemNameFilter = document.getElementById("itemNameFilter").value.toUpperCase();
-            var itemCategoryFilter = document.getElementById("itemCategoryFilter").value.toUpperCase();
+        const searchInput = document.getElementById("itemSearch");
+        const filterCategory = document.getElementById("filterCategory");
+        const filterSupplier = document.getElementById("filterSupplier");
 
-            // Get the table rows
-            var rows = document.getElementById("dataTable").getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+        filterCategory.addEventListener("change", submitFilters);
+        filterSupplier.addEventListener("change", submitFilters);
 
-            // Loop through the rows and hide those that do not match the filter
-            for (var i = 0; i < rows.length; i++) {
-                var itemName = rows[i].getElementsByTagName("td")[0].innerHTML.toUpperCase();
-                var itemCategory = rows[i].getElementsByTagName("td")[5].innerHTML.toUpperCase();
+        function submitFilters() {
+            const search = searchInput.value.trim();
+            const category = filterCategory.value.trim();
+            const supplier = filterSupplier.value.trim();
 
-                if (itemName.indexOf(itemNameFilter) > -1 && itemCategory.indexOf(itemCategoryFilter) > -1) {
-                    rows[i].style.display = "";
-                } else {
-                    rows[i].style.display = "none";
-                }
-            }
+            const params = new URLSearchParams();
+
+            if (search) params.append("search", search);
+            if (category) params.append("category", category);
+            if (supplier) params.append("supplier", supplier);
+
+            window.location.href = "/items?" + params.toString();
         }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        function scrollToBottom() {
+            document.getElementById("bottom").scrollIntoView({
+                behavior: "smooth"
+            });
+        }
+    </script>
+    <script>
+        const suggestionsBox = document.getElementById("suggestions");
+        const suggestionsWrapper = document.getElementById("suggestionsWrapper");
+        const closeBtn = document.getElementById("closeSuggestions");
+
+        // 🔍 Live Suggestions
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.trim();
+
+            if (query.length < 1) {
+                suggestionsWrapper.style.display = "none";
+                return;
+            }
+
+            fetch(`/items/suggestions?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => showSuggestions(data, query))
+                .catch(err => console.log(err));
+        });
+
+        function showSuggestions(items, query) {
+            suggestionsBox.innerHTML = "";
+
+            if (items.length === 0) {
+                suggestionsBox.innerHTML = `<li class="list-group-item text-muted">No results found</li>`;
+                suggestionsWrapper.style.display = "block";
+                return;
+            }
+
+            const regex = new RegExp(`(${query})`, "ig");
+
+            items.forEach(item => {
+                const li = document.createElement("li");
+                li.className = "list-group-item list-group-item-action";
+
+                const highlighted = item.itemName.replace(regex, "<mark>$1</mark>");
+
+                li.innerHTML = `
+    ${highlighted}
+    <br>
+    <small class="text-muted">
+        ${item.itemCategoryName || ""} | Stock: ${item.itemQty || 0} ${item.itemUnit || ""}
+    </small>
+`;
+
+                // ✅ THIS IS THE CLICK CODE YOU ASKED ABOUT
+                li.addEventListener("click", () => {
+                    searchInput.value = item.itemName;
+
+                    const params = new URLSearchParams();
+                    params.append("search", item.itemName);
+
+                    window.location.href = "/items?" + params.toString();
+                });
+
+                suggestionsBox.appendChild(li);
+            });
+
+            suggestionsWrapper.style.display = "block";
+        }
+
+        // Close suggestions
+        closeBtn.addEventListener("click", () => {
+            suggestionsWrapper.style.display = "none";
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest("#suggestionsWrapper") && e.target !== searchInput) {
+                suggestionsWrapper.style.display = "none";
+            }
+        });
     </script>

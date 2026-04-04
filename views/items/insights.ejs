@@ -1,0 +1,133 @@
+<%  layout('layout/boilerplate') %>
+    <h1>Item Insights & Consumption Report</h1>
+
+    <!-- Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Filter Report</h5>
+            <form action="/items/insights" method="GET" class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="itemId" class="form-label">Select Item</label>
+                    <select class="form-control" name="itemId" id="itemId" required>
+                    <option value="">-- Choose an Item --</option>
+                    <% for(let item of allItems) { %>
+                        <option value="<%= item._id %>" <%= query.itemId && query.itemId.toString() === item._id.toString() ? 'selected' : '' %>>
+                            <%= item.itemName %>
+                        </option>
+                    <% } %>
+                </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate" value="<%= query.startDate || '' %>" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate" value="<%= query.endDate || '' %>" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end mb-3">
+                    <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Display -->
+    <% if (insights) { %>
+        <!-- Summary Cards -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Summary for: <strong><%= transactions.length > 0 ? transactions[0].itemId.itemName : 'Selected Item' %></strong> (
+                <%= new Date(query.startDate).toLocaleDateString('en-GB') %> to
+                    <%= new Date(query.endDate).toLocaleDateString('en-GB') %>)
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <h4>Total Inwards</h4>
+                            <p class="fs-3 text-success">
+                                <%= insights.totalInward %>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <h4>Total Outwards</h4>
+                            <p class="fs-3 text-danger">
+                                <%= insights.totalOutward %>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <h4>Net Consumption</h4>
+                            <p class="fs-3">
+                                <%= insights.totalConsumption %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Transactions Table -->
+        <h3>Detailed Transactions</h3>
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Stock Before</th>
+                    <th>Stock After</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if(transactions.length > 0) { %>
+                    <% for(let transaction of transactions) { %>
+                        <tr>
+                            <td>
+                                <%= new Date(transaction.createdAt).toLocaleDateString('en-GB') %>
+                            </td>
+                            <td>
+                                <span class="badge <%= transaction.type === 'inward' ? 'bg-success' : (transaction.type === 'outward' ? 'bg-danger' : 'bg-secondary') %>">
+                                <%= transaction.type %>
+                            </span>
+                            </td>
+                            <td>
+                                <%= transaction.quantity %>
+                            </td>
+                            <td>
+                                <%= transaction.stockBefore %>
+                            </td>
+                            <td>
+                                <%= transaction.stockAfter %>
+                            </td>
+                        </tr>
+                        <% } %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="text-center">No transactions found for the selected criteria.</td>
+                                </tr>
+                                <% } %>
+            </tbody>
+        </table>
+        <% } else if (query.itemId) { %>
+            <div class="alert alert-warning" role="alert">
+                No data found for the selected item and date range. Please try different filters.
+            </div>
+            <% } else { %>
+                <div class="alert alert-info" role="alert">
+                    Please select an item and a date range to generate a report.
+                </div>
+                <% } %>
+
+                    <style>
+                        .stat-card {
+                            border: 1px solid #dee2e6;
+                            padding: 20px;
+                            border-radius: .25rem;
+                            background-color: #f8f9fa;
+                        }
+                    </style>

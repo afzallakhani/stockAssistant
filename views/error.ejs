@@ -1,15 +1,20 @@
-<% layout('layout/boilerplate') %>
-    <div class="row">
-        <div class="col-6 offset-3">
-            <div class="alert alert-danger" role="alert">
-                <h4 class="alert-heading">
-                    <%= err.message %>
-                </h4>
-                <p>
-                    <%= err.stack %>
-                </p>
-                <hr>
-                <p class="mb-0"></p>
-            </div>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Error</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="alert alert-danger">
+            <h4>
+                <%= err.message %>
+            </h4>
+            <pre><%= err.stack %></pre>
         </div>
     </div>
+</body>
+
+</html>

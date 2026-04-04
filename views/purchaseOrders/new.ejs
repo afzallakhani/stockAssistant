@@ -1,0 +1,260 @@
+<% layout('layout/boilerplate') %>
+    <style>
+        .select2-container .select2-selection--single {
+            height: 38px;
+            padding-top: 4px;
+        }
+    </style>
+
+    <div class="container mt-4">
+        <h3>Create Purchase Order</h3>
+
+        <form method="POST" action="/purchase-orders">
+
+            <!-- SUPPLIER TYPE -->
+            <div class="mb-3">
+                <label class="form-label">Supplier Type</label>
+                <select id="supplierMode" name="supplierMode" class="form-select">
+        <option value="master">Select Supplier</option>
+        <option value="custom">Custom Supplier</option>
+      </select>
+            </div>
+
+            <!-- MASTER SUPPLIER -->
+            <div id="supplierMaster">
+                <select name="supplierId" id="supplierId" class="form-select searchable">
+        <% suppliers.forEach(function(s){ %>
+          <option value="<%= s._id %>"><%= s.supplierName %></option>
+        <% }) %>
+      </select>
+            </div>
+
+            <!-- CUSTOM SUPPLIER -->
+            <div id="supplierCustom" style="display:none">
+                <input class="form-control mb-2" name="supplierName" placeholder="Supplier Name">
+                <textarea class="form-control mb-2" name="supplierAddress" placeholder="Address"></textarea>
+                <input class="form-control mb-2" name="supplierGst" placeholder="GST">
+            </div>
+
+            <hr>
+
+            <!-- ITEMS -->
+            <h5>Items</h5>
+
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th width="90">Type</th>
+                        <th>Item</th>
+                        <th>Description</th>
+                        <th width="90">Qty</th>
+                        <th width="120">Unit</th>
+                        <th width="110">Rate</th>
+                        <th width="160">Info</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addItem()">➕ Add Item</button>
+
+            <hr>
+
+            <textarea class="form-control mb-3" name="terms" placeholder="Terms & Conditions"></textarea>
+
+            <button class="btn btn-primary">Create PO</button>
+
+        </form>
+    </div>
+
+    <script>
+        let idx = 0;
+        let availableItems = [];
+
+        /* ================= ADD ITEM ================= */
+        function addItem() {
+
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+    <td>
+      <select class="form-select"
+        name="items[${idx}][itemType]"
+        onchange="toggleItemType(this, ${idx})">
+        <option value="master">DB</option>
+        <option value="custom">Custom</option>
+      </select>
+    </td>
+
+    <td id="itemDB${idx}">
+      <select class="form-select searchable-item"
+        name="items[${idx}][itemId]"
+        onchange="loadItemInfo(this, ${idx})">
+        <option value="">Select Item</option>
+      </select>
+    </td>
+
+    <td id="itemCustom${idx}" style="display:none">
+      <input class="form-control"
+        name="items[${idx}][name]"
+        placeholder="Item name">
+    </td>
+
+    <td>
+      <textarea class="form-control"
+        name="items[${idx}][description]"></textarea>
+    </td>
+
+    <td>
+      <input class="form-control"
+        name="items[${idx}][qty]"
+        type="number" min="0">
+    </td>
+
+    <td>
+      <input class="form-control"
+        name="items[${idx}][unit]"
+        placeholder="Unit">
+    </td>
+
+    <td>
+      <input class="form-control"
+        name="items[${idx}][rate]"
+        type="number" min="0">
+    </td>
+
+    <td>
+      <small id="info${idx}" class="text-muted">Select item</small>
+    </td>
+  `;
+
+            document.getElementById("itemsBody").appendChild(tr);
+            renderItemOptions();
+            idx++;
+            setTimeout(function() {
+                $('.searchable-item').select2({
+                    width: '100%',
+                    placeholder: "Search item"
+                });
+            }, 50);
+
+        }
+
+        /* ================= TOGGLE TYPE ================= */
+        function toggleItemType(sel, i) {
+
+            var isMaster = sel.value === "master";
+
+            document.getElementById("itemDB" + i).style.display =
+                isMaster ? "block" : "none";
+
+            document.getElementById("itemCustom" + i).style.display =
+                isMaster ? "none" : "block";
+        }
+
+        /* ================= LOAD ITEM INFO ================= */
+        function loadItemInfo(select, i) {
+
+            var selected = availableItems.find(function(it) {
+                return it._id === select.value;
+            });
+
+            if (!selected) return;
+
+            // Set unit
+            document.querySelector('[name="items[' + i + '][unit]"]').value =
+                selected.unit || "";
+
+            // Show BOTH values properly
+            document.getElementById("info" + i).innerHTML =
+                "Stock: <b>" + selected.currentStock + "</b><br>" +
+                "Avg / Month: <b>" + selected.avgMonthlyConsumption + "</b>";
+        }
+
+
+
+
+        /* ================= RENDER ITEM OPTIONS ================= */
+        function renderItemOptions() {
+
+            document.querySelectorAll('[name$="[itemId]"]').forEach(function(select) {
+
+                var currentValue = select.value;
+
+                select.innerHTML = '<option value="">Select Item</option>';
+
+                availableItems.forEach(function(item) {
+
+                    var option = document.createElement("option");
+                    option.value = item._id;
+                    option.textContent = item.name;
+                    select.appendChild(option);
+
+                });
+
+                select.value = currentValue;
+
+            });
+        }
+
+        /* ================= HANDLE SUPPLIER CHANGE ================= */
+        async function handleSupplierChange() {
+
+            var mode = document.getElementById("supplierMode").value;
+            var supplierId = document.getElementById("supplierId").value;
+
+            document.getElementById("supplierMaster").style.display =
+                mode === "master" ? "block" : "none";
+
+            document.getElementById("supplierCustom").style.display =
+                mode === "custom" ? "block" : "none";
+
+            try {
+
+                if (mode === "master" && supplierId) {
+
+                    var res = await fetch("/purchase-orders/supplier/" + supplierId + "/items");
+                    availableItems = await res.json();
+
+                } else {
+
+                    var res = await fetch("/purchase-orders/items/all");
+                    availableItems = await res.json();
+
+                }
+
+                renderItemOptions();
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        document.getElementById("supplierMode")
+            .addEventListener("change", handleSupplierChange);
+
+        document.getElementById("supplierId")
+            .addEventListener("change", handleSupplierChange);
+
+        function activateSearchable() {
+
+            // Supplier dropdown
+            $('#supplierId').select2({
+                width: '100%',
+                placeholder: "Search supplier"
+            });
+
+            // Item dropdowns
+            $('.searchable-item').select2({
+                width: '100%',
+                placeholder: "Search item"
+            });
+        }
+
+        /* ================= INIT ================= */
+        addItem();
+        handleSupplierChange();
+        $(document).ready(function() {
+            activateSearchable();
+        });
+    </script>
