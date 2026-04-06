@@ -71,6 +71,23 @@
         .content {
             padding-top: 80px;
         }
+        
+        .alert-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #dc3545;
+            color: white;
+            font-size: 10px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+            font-weight: 600;
+        }
     </style>
 
 </head>
@@ -167,7 +184,18 @@
 
             <!-- SELECT2 JS -->
             <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <script>
+                function toggleAlertPanel() {
+                    const box = document.getElementById("stockAlertBox");
+                    if (!box) return;
 
+                    if (box.style.display === "none" || box.style.display === "") {
+                        box.style.display = "block";
+                    } else {
+                        box.style.display = "none";
+                    }
+                }
+            </script>
 
 </body>
 

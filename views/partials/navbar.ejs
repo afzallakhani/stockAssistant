@@ -24,7 +24,20 @@
                     <a class="nav-link" href="/items/utility"><i class="bi bi-gear"></i> Utility</a>
                 </li>
 
+                <li class="nav-item position-relative me-3">
+                    <a href="#" class="nav-link position-relative" onclick="toggleAlertPanel()">
+                        <i class="bi bi-bell fs-5"></i>
 
+                        <% if (typeof criticalItems !== 'undefined' && typeof warningItems !== 'undefined') { %>
+                            <% const alertCount = criticalItems.length + warningItems.length; %>
+                                <% if (alertCount > 0) { %>
+                                    <span class="alert-badge">
+                    <%= alertCount %>
+                </span>
+                                    <% } %>
+                                        <% } %>
+                    </a>
+                </li>
             </ul>
         </div>
     </div>

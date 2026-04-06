@@ -38,7 +38,7 @@ const BACKUP_DIR = path.join(__dirname, "../backups");
 let upload = multer({ storage: multerStorage });
 
 function escapeRegex(text) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 // router.get(
 //   "/",
@@ -56,38 +56,38 @@ function escapeRegex(text) {
 //   })
 // );
 router.get("/backup-now", (req, res) => {
-  runBackup("manual");
-  res.send("Backup triggered successfully!");
+    runBackup("manual");
+    res.send("Backup triggered successfully!");
 });
 // GET item stock & avg monthly consumption
 
-router.get("/:id/po-info", async (req, res) => {
-  const itemId = req.params.id;
+router.get("/:id/po-info", async(req, res) => {
+    const itemId = req.params.id;
 
-  const item = await Items.findById(itemId).lean();
-  if (!item) {
-    return res.json({});
-  }
+    const item = await Items.findById(itemId).lean();
+    if (!item) {
+        return res.json({});
+    }
 
-  /* ================= CURRENT STOCK ================= */
-  const txs = await Transaction.find({ itemId: item._id });
+    /* ================= CURRENT STOCK ================= */
+    const txs = await Transaction.find({ itemId: item._id });
 
-  let inward = 0;
-  let outward = 0;
+    let inward = 0;
+    let outward = 0;
 
-  txs.forEach((tx) => {
-    if (tx.type === "inward") inward += tx.quantity;
-    if (tx.type === "outward" || tx.type === "lend") outward += tx.quantity;
-  });
+    txs.forEach((tx) => {
+        if (tx.type === "inward") inward += tx.quantity;
+        if (tx.type === "outward" || tx.type === "lend") outward += tx.quantity;
+    });
 
-  /* ================= AVG / MONTH (UTIL) ================= */
-  const monthly = await getMonthlyConsumption(item);
+    /* ================= AVG / MONTH (UTIL) ================= */
+    const monthly = await getMonthlyConsumption(item);
 
-  res.json({
-    unit: item.itemUnit,
-    currentStock: item.itemQty,
-    avgMonthly: monthly.perMonth,
-  });
+    res.json({
+        unit: item.itemUnit,
+        currentStock: item.itemQty,
+        avgMonthly: monthly.perMonth,
+    });
 });
 
 // // ✅ Manual Backup Trigger (this is what "Backup Now" button calls)
@@ -125,70 +125,70 @@ router.get("/:id/po-info", async (req, res) => {
 // });
 // Manual Backup Trigger
 router.post("/utility/backup", (req, res) => {
-  runBackup("manual");
-  req.flash("success", "✅ Backup started successfully!");
-  res.redirect("/items/utility");
+    runBackup("manual");
+    req.flash("success", "✅ Backup started successfully!");
+    res.redirect("/items/utility");
 });
 
 // Restore Backup
 router.post("/utility/restore", (req, res) => {
-  const file = req.body.backupFile;
-  const BACKUP_PATH = path.join(__dirname, "../backups");
-  const fullPath = path.join(BACKUP_PATH, file);
+    const file = req.body.backupFile;
+    const BACKUP_PATH = path.join(__dirname, "../backups");
+    const fullPath = path.join(BACKUP_PATH, file);
 
-  const cmd = `"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongorestore.exe" --gzip --archive="${fullPath}" --drop`;
+    const cmd = `"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\mongorestore.exe" --gzip --archive="${fullPath}" --drop`;
 
-  exec(cmd, (err) => {
-    if (err) {
-      req.flash("error", "Restore failed");
-      return res.redirect("/items/utility");
-    }
-    req.flash("success", "Database restored successfully");
-    res.redirect("/items/utility");
-  });
+    exec(cmd, (err) => {
+        if (err) {
+            req.flash("error", "Restore failed");
+            return res.redirect("/items/utility");
+        }
+        req.flash("success", "Database restored successfully");
+        res.redirect("/items/utility");
+    });
 });
 
 // Delete Backup
 router.post("/utility/delete", (req, res) => {
-  const file = req.body.backupFile;
-  const BACKUP_PATH = path.join(__dirname, "../backups");
+    const file = req.body.backupFile;
+    const BACKUP_PATH = path.join(__dirname, "../backups");
 
-  try {
-    fs.unlinkSync(path.join(BACKUP_PATH, file));
-    req.flash("success", "Backup deleted successfully");
-  } catch (err) {
-    req.flash("error", "Failed to delete backup");
-  }
+    try {
+        fs.unlinkSync(path.join(BACKUP_PATH, file));
+        req.flash("success", "Backup deleted successfully");
+    } catch (err) {
+        req.flash("error", "Failed to delete backup");
+    }
 
-  res.redirect("/items/utility");
+    res.redirect("/items/utility");
 });
 
 // Utility Dashboard Page
 
 router.get("/utility", (req, res) => {
-  const BACKUP_PATH = path.join(__dirname, "../backups");
+    const BACKUP_PATH = path.join(__dirname, "../backups");
 
-  let backups = [];
+    let backups = [];
 
-  if (fs.existsSync(BACKUP_PATH)) {
-    backups = fs
-      .readdirSync(BACKUP_PATH)
-      .filter((f) => f.endsWith(".archive.gz"))
-      .map((f) => {
-        const stat = fs.statSync(path.join(BACKUP_PATH, f));
-        return {
-          name: f,
-          date: stat.mtime,
-        };
-      })
-      .sort((a, b) => b.date - a.date);
-  }
+    if (fs.existsSync(BACKUP_PATH)) {
+        backups = fs
+            .readdirSync(BACKUP_PATH)
+            .filter((f) => f.endsWith(".archive.gz"))
+            .map((f) => {
+                const stat = fs.statSync(path.join(BACKUP_PATH, f));
+                return {
+                    name: f,
+                    date: stat.mtime,
+                };
+            })
+            .sort((a, b) => b.date - a.date);
+    }
 
-  res.render("items/utility", {
-    backups,
-    success: req.flash("success"),
-    error: req.flash("error"),
-  });
+    res.render("items/utility", {
+        backups,
+        success: req.flash("success"),
+        error: req.flash("error"),
+    });
 });
 
 // router.get(
@@ -351,142 +351,310 @@ router.get("/utility", (req, res) => {
 //     });
 //   }),
 // );
-router.get("/suggestions", async (req, res) => {
-  let q = req.query.q || "";
-  q = escapeRegex(q);
+router.get("/suggestions", async(req, res) => {
+    let q = req.query.q || "";
+    q = escapeRegex(q);
 
-  if (!q) return res.json([]);
+    if (!q) return res.json([]);
 
-  const suppliers = await Supplier.find({
-    supplierName: { $regex: q, $options: "i" },
-  }).select("_id");
+    const suppliers = await Supplier.find({
+        supplierName: { $regex: q, $options: "i" },
+    }).select("_id");
 
-  const items = await Items.find({
-    $or: [
-      { itemName: { $regex: q, $options: "i" } },
-      { itemCategoryName: { $regex: q, $options: "i" } },
-      { itemDescription: { $regex: q, $options: "i" } },
-      { itemSupplier: { $in: suppliers.map((s) => s._id) } },
-    ],
-  })
-    .select("itemName itemCategoryName itemQty itemUnit")
-    .limit(5);
+    const items = await Items.find({
+            $or: [
+                { itemName: { $regex: q, $options: "i" } },
+                { itemCategoryName: { $regex: q, $options: "i" } },
+                { itemDescription: { $regex: q, $options: "i" } },
+                { itemSupplier: { $in: suppliers.map((s) => s._id) } },
+            ],
+        })
+        .select("itemName itemCategoryName itemQty itemUnit")
+        .limit(5);
 
-  res.json(items);
+    res.json(items);
 });
+// router.get(
+//     "/",
+//     catchAsync(async(req, res) => {
+//         const page = parseInt(req.query.page) || 1;
+//         const limit = 15;
+//         const skip = (page - 1) * limit;
+
+//         let { search, category, supplier } = req.query;
+
+//         if (search) {
+//             search = escapeRegex(search);
+//         }
+//         // 🔎 Build Mongo filter
+//         let filter = {};
+
+//         if (search) {
+//             const suppliers = await Supplier.find({
+//                 supplierName: { $regex: search, $options: "i" },
+//             }).select("_id");
+
+//             filter.$or = [
+//                 { itemName: { $regex: search, $options: "i" } },
+//                 { itemCategoryName: { $regex: search, $options: "i" } },
+//                 { itemDescription: { $regex: search, $options: "i" } },
+//                 { itemSupplier: { $in: suppliers.map((s) => s._id) } },
+//             ];
+//         }
+
+//         if (category) {
+//             filter.itemCategoryName = {
+//                 $regex: "^" + escapeRegex(category) + "$",
+//                 $options: "i",
+//             };
+//         }
+
+//         if (supplier) {
+//             filter.itemSupplier = new mongoose.Types.ObjectId(supplier);
+//         }
+
+//         const totalItems = await Items.countDocuments(filter);
+
+//         const items = await Items.find(filter)
+//             .populate("itemImage")
+//             .populate("itemSupplier", "supplierName")
+//             .select(
+//                 "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
+//             )
+//             .skip(skip)
+//             .limit(limit)
+//             .lean();
+
+//         // for (let i = 0; i < items.length; i++) {
+//         //     const dc = await getMonthlyConsumption(items[i]);
+//         //     items[i].monthlyConsumption = dc.perMonth;
+
+//         //     if (dc.perMonth > 0) {
+//         //         const monthsLeft = items[i].itemQty / dc.perMonth;
+//         //         items[i].stockDaysLeft = Math.floor(monthsLeft * 30);
+//         //     } else {
+//         //         items[i].stockDaysLeft = "∞";
+//         //     }
+
+//         //     items[i].formattedItemDate = new Date(
+//         //         items[i].createdAt,
+//         //     ).toLocaleDateString("en-GB");
+//         // }
+//         let criticalItems = [];
+//         let warningItems = [];
+
+//         for (let i = 0; i < items.length; i++) {
+//             const dc = await getMonthlyConsumption(items[i]);
+//             items[i].monthlyConsumption = dc.perMonth;
+
+//             if (dc.perMonth > 0) {
+//                 const monthsLeft = items[i].itemQty / dc.perMonth;
+//                 items[i].stockDaysLeft = Math.floor(monthsLeft * 30);
+//                 items[i].stockMonthsLeft = monthsLeft.toFixed(1);
+
+//                 // 🔴 Status logic
+//                 if (monthsLeft <= 1) {
+//                     items[i].status = "Critical";
+//                     criticalItems.push(items[i]);
+//                 } else if (monthsLeft <= 1.5) {
+//                     items[i].status = "Warning";
+//                     warningItems.push(items[i]);
+//                 } else {
+//                     items[i].status = "Safe";
+//                 }
+//             } else {
+//                 items[i].stockDaysLeft = "∞";
+//                 items[i].status = "Safe";
+//             }
+
+//             items[i].formattedItemDate = new Date(
+//                 items[i].createdAt,
+//             ).toLocaleDateString("en-GB");
+//         }
+//         const totalPages = Math.ceil(totalItems / limit);
+
+//         const itemCategories = await ItemCategories.find({})
+//             .select("itemCategoryName")
+//             .lean();
+
+//         const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
+//         const baseUrl = req.originalUrl.split("?")[0];
+
+//         res.render("items/allItems", {
+//             items,
+//             itemCategories,
+//             itemSuppliers,
+//             currentPage: page,
+//             totalPages,
+//             search,
+//             category,
+//             supplier,
+//             baseUrl,
+//             query: req.query, // Pass query params back to pre-fill the form
+
+//             requestPath: req.path, // ADD THIS
+//             criticalItems,
+//             warningItems,
+//         });
+//     }),
+// );
 router.get(
-  "/",
-  catchAsync(async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 15;
-    const skip = (page - 1) * limit;
+    "/",
+    catchAsync(async(req, res) => {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 15;
+        const skip = (page - 1) * limit;
 
-    let { search, category, supplier } = req.query;
+        let { search, category, supplier } = req.query;
 
-    if (search) {
-      search = escapeRegex(search);
-    }
-    // 🔎 Build Mongo filter
-    let filter = {};
+        if (search) {
+            search = escapeRegex(search);
+        }
 
-    if (search) {
-      const suppliers = await Supplier.find({
-        supplierName: { $regex: search, $options: "i" },
-      }).select("_id");
+        // 🔎 Build Mongo filter
+        let filter = {};
 
-      filter.$or = [
-        { itemName: { $regex: search, $options: "i" } },
-        { itemCategoryName: { $regex: search, $options: "i" } },
-        { itemDescription: { $regex: search, $options: "i" } },
-        { itemSupplier: { $in: suppliers.map((s) => s._id) } },
-      ];
-    }
+        if (search) {
+            const suppliers = await Supplier.find({
+                supplierName: { $regex: search, $options: "i" },
+            }).select("_id");
 
-    if (category) {
-      filter.itemCategoryName = {
-        $regex: "^" + escapeRegex(category) + "$",
-        $options: "i",
-      };
-    }
+            filter.$or = [
+                { itemName: { $regex: search, $options: "i" } },
+                { itemCategoryName: { $regex: search, $options: "i" } },
+                { itemDescription: { $regex: search, $options: "i" } },
+                { itemSupplier: { $in: suppliers.map((s) => s._id) } },
+            ];
+        }
 
-    if (supplier) {
-      filter.itemSupplier = new mongoose.Types.ObjectId(supplier);
-    }
+        if (category) {
+            filter.itemCategoryName = {
+                $regex: "^" + escapeRegex(category) + "$",
+                $options: "i",
+            };
+        }
 
-    const totalItems = await Items.countDocuments(filter);
+        if (supplier) {
+            filter.itemSupplier = new mongoose.Types.ObjectId(supplier);
+        }
 
-    const items = await Items.find(filter)
-      .populate("itemImage")
-      .populate("itemSupplier", "supplierName")
-      .select(
-        "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
-      )
-      .skip(skip)
-      .limit(limit)
-      .lean();
+        // =====================================================
+        // 🔴 PART 1 — GET ALL ITEMS FOR CRITICAL / WARNING ALERT
+        // =====================================================
+        const allItemsForAlert = await Items.find({})
+            .select("itemName itemQty itemUnit createdAt")
+            .lean();
 
-    for (let i = 0; i < items.length; i++) {
-      const dc = await getMonthlyConsumption(items[i]);
-      items[i].monthlyConsumption = dc.perMonth;
+        let criticalItems = [];
+        let warningItems = [];
 
-      if (dc.perMonth > 0) {
-        const monthsLeft = items[i].itemQty / dc.perMonth;
-        items[i].stockDaysLeft = Math.floor(monthsLeft * 30);
-      } else {
-        items[i].stockDaysLeft = "∞";
-      }
+        for (let i = 0; i < allItemsForAlert.length; i++) {
+            const dc = await getMonthlyConsumption(allItemsForAlert[i]);
 
-      items[i].formattedItemDate = new Date(
-        items[i].createdAt,
-      ).toLocaleDateString("en-GB");
-    }
+            if (dc.perMonth > 0) {
+                const monthsLeft = allItemsForAlert[i].itemQty / dc.perMonth;
+                allItemsForAlert[i].stockMonthsLeft = monthsLeft.toFixed(1);
 
-    const totalPages = Math.ceil(totalItems / limit);
+                if (monthsLeft <= 1) {
+                    criticalItems.push(allItemsForAlert[i]);
+                } else if (monthsLeft <= 1.5) {
+                    warningItems.push(allItemsForAlert[i]);
+                }
+            }
+        }
 
-    const itemCategories = await ItemCategories.find({})
-      .select("itemCategoryName")
-      .lean();
+        // =====================================================
+        // 🔵 PART 2 — PAGINATION ITEMS (FOR DISPLAY CARDS)
+        // =====================================================
+        const totalItems = await Items.countDocuments(filter);
 
-    const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
-    const baseUrl = req.originalUrl.split("?")[0];
+        const items = await Items.find(filter)
+            .populate("itemImage")
+            .populate("itemSupplier", "supplierName")
+            .select(
+                "itemName itemCategoryName itemSupplier itemQty itemUnit itemDescription createdAt itemImage",
+            )
+            .skip(skip)
+            .limit(limit)
+            .lean();
 
-    res.render("items/allItems", {
-      items,
-      itemCategories,
-      itemSuppliers,
-      currentPage: page,
-      totalPages,
-      search,
-      category,
-      supplier,
-      baseUrl,
-      query: req.query, // Pass query params back to pre-fill the form
+        for (let i = 0; i < items.length; i++) {
+            const dc = await getMonthlyConsumption(items[i]);
+            items[i].monthlyConsumption = dc.perMonth;
 
-      requestPath: req.path, // ADD THIS
-    });
-  }),
+            if (dc.perMonth > 0) {
+                const monthsLeft = items[i].itemQty / dc.perMonth;
+                items[i].stockDaysLeft = Math.floor(monthsLeft * 30);
+                items[i].stockMonthsLeft = monthsLeft.toFixed(1);
+
+                if (monthsLeft <= 1) {
+                    items[i].status = "Critical";
+                } else if (monthsLeft <= 1.5) {
+                    items[i].status = "Warning";
+                } else {
+                    items[i].status = "Safe";
+                }
+            } else {
+                items[i].stockDaysLeft = "∞";
+                items[i].status = "Safe";
+            }
+
+            items[i].formattedItemDate = new Date(
+                items[i].createdAt,
+            ).toLocaleDateString("en-GB");
+        }
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const itemCategories = await ItemCategories.find({})
+            .select("itemCategoryName")
+            .lean();
+
+        const itemSuppliers = await Supplier.find({}).select("supplierName").lean();
+
+        const baseUrl = req.originalUrl.split("?")[0];
+
+        // =====================================================
+        // 🔴 RENDER
+        // =====================================================
+        res.render("items/allItems", {
+            items,
+            itemCategories,
+            itemSuppliers,
+            currentPage: page,
+            totalPages,
+            search,
+            category,
+            supplier,
+            baseUrl,
+            query: req.query,
+            requestPath: req.path,
+            criticalItems,
+            warningItems,
+        });
+    }),
 );
 router.get("/", (req, res) => {
-  console.log("hi");
-  res.render("home");
+    console.log("hi");
+    res.render("home");
 });
 router.get(
-  "/spares",
-  catchAsync(async (req, res) => {
-    const items = await Items.find({}).populate("itemImage");
-    const images = await Images.find({});
-    console.log("hi");
-    res.render("items/spares");
-  }),
+    "/spares",
+    catchAsync(async(req, res) => {
+        const items = await Items.find({}).populate("itemImage");
+        const images = await Images.find({});
+        console.log("hi");
+        res.render("items/spares");
+    }),
 );
 router.get(
-  "/new",
-  catchAsync(async (req, res) => {
-    const itemCategories = await ItemCategories.find({});
-    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
-    console.log(itemSuppliers);
-    res.render("items/new", { itemCategories, itemSuppliers });
-  }),
+    "/new",
+    catchAsync(async(req, res) => {
+        const itemCategories = await ItemCategories.find({});
+        const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+        console.log(itemSuppliers);
+        res.render("items/new", { itemCategories, itemSuppliers });
+    }),
 );
 // router.get(
 //     "/outwards",
@@ -499,96 +667,96 @@ router.get(
 // and an 'Item' model for your items in the database.
 
 // GET route to display the outwards form
-router.get("/outwards", async (req, res) => {
-  try {
-    const items = await Items.find({}).populate("itemImage").lean();
-    const itemCategories = await ItemCategories.find({});
-    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
-    items.forEach((item) => {
-      if (item.itemImage && item.itemImage.length > 0) {
-        item.base64Image = `data:image/${
+router.get("/outwards", async(req, res) => {
+    try {
+        const items = await Items.find({}).populate("itemImage").lean();
+        const itemCategories = await ItemCategories.find({});
+        const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+        items.forEach((item) => {
+            if (item.itemImage && item.itemImage.length > 0) {
+                item.base64Image = `data:image/${
           item.itemImage[0].contentType
         };base64,${item.itemImage[0].data.toString("base64")}`;
-      } else {
-        item.base64Image =
-          "https://via.placeholder.com/60x60.png?text=No+Image";
-      }
-    });
-    res.render("items/outwards", {
-      items,
-      itemCategories,
-      itemSuppliers,
-    });
-  } catch (error) {
-    console.error("Error fetching items for outwards log:", error);
-    res.status(500).send("Error fetching items.");
-  }
+            } else {
+                item.base64Image =
+                    "https://via.placeholder.com/60x60.png?text=No+Image";
+            }
+        });
+        res.render("items/outwards", {
+            items,
+            itemCategories,
+            itemSuppliers,
+        });
+    } catch (error) {
+        console.error("Error fetching items for outwards log:", error);
+        res.status(500).send("Error fetching items.");
+    }
 });
 
 // GET: Lend items page
 router.get(
-  "/lend",
-  catchAsync(async (req, res) => {
-    const items = await Items.find({}).populate("itemImage").lean();
-    const itemCategories = await ItemCategories.find({});
-    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
-    items.forEach((item) => {
-      if (item.itemImage && item.itemImage.length > 0) {
-        item.base64Image = `data:image/${
+    "/lend",
+    catchAsync(async(req, res) => {
+        const items = await Items.find({}).populate("itemImage").lean();
+        const itemCategories = await ItemCategories.find({});
+        const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+        items.forEach((item) => {
+            if (item.itemImage && item.itemImage.length > 0) {
+                item.base64Image = `data:image/${
           item.itemImage[0].contentType
         };base64,${item.itemImage[0].data.toString("base64")}`;
-      } else {
-        item.base64Image =
-          "https://via.placeholder.com/60x60.png?text=No+Image";
-      }
-    });
-    res.render("items/lend", {
-      items,
-      itemCategories,
-      itemSuppliers,
-    });
-  }),
+            } else {
+                item.base64Image =
+                    "https://via.placeholder.com/60x60.png?text=No+Image";
+            }
+        });
+        res.render("items/lend", {
+            items,
+            itemCategories,
+            itemSuppliers,
+        });
+    }),
 );
 
 // POST: Handle lend transaction
 router.post(
-  "/lend",
-  catchAsync(async (req, res) => {
-    const { items } = req.body;
+    "/lend",
+    catchAsync(async(req, res) => {
+        const { items } = req.body;
 
-    for (const itemData of items) {
-      const lendQty = parseInt(itemData.lendQty, 10);
-      if (lendQty > 0) {
-        const item = await Items.findById(itemData.id);
-        if (item) {
-          const stockBefore = item.itemQty;
-          const stockAfter = stockBefore - lendQty;
+        for (const itemData of items) {
+            const lendQty = parseInt(itemData.lendQty, 10);
+            if (lendQty > 0) {
+                const item = await Items.findById(itemData.id);
+                if (item) {
+                    const stockBefore = item.itemQty;
+                    const stockAfter = stockBefore - lendQty;
 
-          item.itemQty = stockAfter;
-          await item.save();
+                    item.itemQty = stockAfter;
+                    await item.save();
 
-          await new Transaction({
-            itemId: item._id,
-            type: "lend",
-            quantity: lendQty,
-            stockBefore,
-            stockAfter,
-            remarks: itemData.remarks || "",
-          }).save();
+                    await new Transaction({
+                        itemId: item._id,
+                        type: "lend",
+                        quantity: lendQty,
+                        stockBefore,
+                        stockAfter,
+                        remarks: itemData.remarks || "",
+                    }).save();
+                }
+            }
         }
-      }
-    }
 
-    res.redirect("/items/transactions");
-  }),
+        res.redirect("/items/transactions");
+    }),
 );
 
 router.get(
-  "/category",
-  catchAsync(async (req, res) => {
-    const category = await ItemCategories.find({});
-    res.render("items/category", { category });
-  }),
+    "/category",
+    catchAsync(async(req, res) => {
+        const category = await ItemCategories.find({});
+        res.render("items/category", { category });
+    }),
 );
 
 // searched items display
@@ -610,22 +778,22 @@ router.get(
 
 //   res.render("items/search", { item });
 // });
-router.get("/search", async (req, res) => {
-  const query =
-    req.query && req.query.item && req.query.item.itemName
-      ? req.query.item.itemName.trim()
-      : "";
+router.get("/search", async(req, res) => {
+    const query =
+        req.query && req.query.item && req.query.item.itemName ?
+        req.query.item.itemName.trim() :
+        "";
 
-  const items = await Items.find({
-    $or: [
-      { itemName: { $regex: query, $options: "i" } },
-      { itemCategoryName: { $regex: query, $options: "i" } },
-      { itemSupplier: { $regex: query, $options: "i" } },
-      { itemDescription: { $regex: query, $options: "i" } },
-    ],
-  }).populate("itemImage");
+    const items = await Items.find({
+        $or: [
+            { itemName: { $regex: query, $options: "i" } },
+            { itemCategoryName: { $regex: query, $options: "i" } },
+            { itemSupplier: { $regex: query, $options: "i" } },
+            { itemDescription: { $regex: query, $options: "i" } },
+        ],
+    }).populate("itemImage");
 
-  res.render("items/search", { items });
+    res.render("items/search", { items });
 });
 
 // add new item to database
@@ -707,122 +875,122 @@ router.get("/search", async (req, res) => {
 //   }),
 // );
 router.post(
-  "/",
-  upload.array("item[itemImage]"),
-  validateItem,
-  catchAsync(async (req, res) => {
-    let itemData = req.body.item;
+    "/",
+    upload.array("item[itemImage]"),
+    validateItem,
+    catchAsync(async(req, res) => {
+        let itemData = req.body.item;
 
-    // ✅ CLEAN DATA BEFORE SAVE
+        // ✅ CLEAN DATA BEFORE SAVE
 
-    if (itemData.itemCategoryName) {
-      itemData.itemCategoryName = itemData.itemCategoryName.trim();
-    }
+        if (itemData.itemCategoryName) {
+            itemData.itemCategoryName = itemData.itemCategoryName.trim();
+        }
 
-    if (itemData.itemName) {
-      itemData.itemName = itemData.itemName.trim().toUpperCase();
-    }
+        if (itemData.itemName) {
+            itemData.itemName = itemData.itemName.trim().toUpperCase();
+        }
 
-    let item = new Items(itemData);
-    await item.save();
+        let item = new Items(itemData);
+        await item.save();
 
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const image = new Images({
-          contentType: file.mimetype,
-          data: fs.readFileSync(
-            path.join(__dirname, "..", "views", "images", file.filename),
-          ),
-          path: file.path,
-          name: file.originalname,
-        });
-        await image.save();
-        item.itemImage.push(image);
-        fs.unlink(file.path, () => {});
-      }
-      await item.save();
-    }
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const image = new Images({
+                    contentType: file.mimetype,
+                    data: fs.readFileSync(
+                        path.join(__dirname, "..", "views", "images", file.filename),
+                    ),
+                    path: file.path,
+                    name: file.originalname,
+                });
+                await image.save();
+                item.itemImage.push(image);
+                fs.unlink(file.path, () => {});
+            }
+            await item.save();
+        }
 
-    const initialStock = item.itemQty;
-    await new Transaction({
-      itemId: item._id,
-      type: "initial",
-      quantity: initialStock,
-      stockBefore: 0,
-      stockAfter: initialStock,
-    }).save();
+        const initialStock = item.itemQty;
+        await new Transaction({
+            itemId: item._id,
+            type: "initial",
+            quantity: initialStock,
+            stockBefore: 0,
+            stockAfter: initialStock,
+        }).save();
 
-    res.redirect("/items");
-  }),
+        res.redirect("/items");
+    }),
 );
 router.get(
-  "/:id/view",
-  catchAsync(async (req, res) => {
-    const item = await Items.findById(req.params.id).populate("itemImage");
-    if (!item) return res.status(404).send("Item not found");
-    res.render("items/viewItem", { item });
-  }),
+    "/:id/view",
+    catchAsync(async(req, res) => {
+        const item = await Items.findById(req.params.id).populate("itemImage");
+        if (!item) return res.status(404).send("Item not found");
+        res.render("items/viewItem", { item });
+    }),
 );
 
 // GET route to display the inwards form
 router.get(
-  "/inwards",
-  catchAsync(async (req, res) => {
-    const items = await Items.find({}).populate("itemImage").lean();
-    const itemCategories = await ItemCategories.find({});
-    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
-    items.forEach((item) => {
-      if (item.itemImage && item.itemImage.length > 0) {
-        item.base64Image = `data:image/${
+    "/inwards",
+    catchAsync(async(req, res) => {
+        const items = await Items.find({}).populate("itemImage").lean();
+        const itemCategories = await ItemCategories.find({});
+        const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+        items.forEach((item) => {
+            if (item.itemImage && item.itemImage.length > 0) {
+                item.base64Image = `data:image/${
           item.itemImage[0].contentType
         };base64,${item.itemImage[0].data.toString("base64")}`;
-      } else {
-        item.base64Image =
-          "https://via.placeholder.com/60x60.png?text=No+Image";
-      }
-    });
-    res.render("items/inwards", {
-      items,
-      itemCategories,
-      itemSuppliers,
-    });
-  }),
+            } else {
+                item.base64Image =
+                    "https://via.placeholder.com/60x60.png?text=No+Image";
+            }
+        });
+        res.render("items/inwards", {
+            items,
+            itemCategories,
+            itemSuppliers,
+        });
+    }),
 );
 
 // POST route to handle inward stock updates
 router.post(
-  "/inwards",
-  catchAsync(async (req, res) => {
-    const { items } = req.body;
+    "/inwards",
+    catchAsync(async(req, res) => {
+        const { items } = req.body;
 
-    for (const itemData of items) {
-      const inwardsQty = parseInt(itemData.inwardsQty, 10);
+        for (const itemData of items) {
+            const inwardsQty = parseInt(itemData.inwardsQty, 10);
 
-      if (inwardsQty > 0) {
-        const item = await Items.findById(itemData.id);
-        if (item) {
-          const stockBefore = item.itemQty;
-          const stockAfter = stockBefore + inwardsQty;
+            if (inwardsQty > 0) {
+                const item = await Items.findById(itemData.id);
+                if (item) {
+                    const stockBefore = item.itemQty;
+                    const stockAfter = stockBefore + inwardsQty;
 
-          // Update the item's quantity
-          item.itemQty = stockAfter;
-          await item.save();
+                    // Update the item's quantity
+                    item.itemQty = stockAfter;
+                    await item.save();
 
-          // Create a transaction log
-          await new Transaction({
-            itemId: item._id,
-            type: "inward",
-            quantity: inwardsQty,
-            stockBefore,
-            stockAfter,
-            remarks: itemData.remarks || "",
-          }).save();
+                    // Create a transaction log
+                    await new Transaction({
+                        itemId: item._id,
+                        type: "inward",
+                        quantity: inwardsQty,
+                        stockBefore,
+                        stockAfter,
+                        remarks: itemData.remarks || "",
+                    }).save();
+                }
+            }
         }
-      }
-    }
 
-    res.redirect("/items");
-  }),
+        res.redirect("/items");
+    }),
 );
 
 // GET route to view all transactions
@@ -867,155 +1035,155 @@ router.post(
 //     })
 // );
 router.get(
-  "/transactions",
-  catchAsync(async (req, res) => {
-    // Fetch all items for the filter dropdow
-    const page = parseInt(req.query.page || 1);
-    const limit = 50;
+    "/transactions",
+    catchAsync(async(req, res) => {
+        // Fetch all items for the filter dropdow
+        const page = parseInt(req.query.page || 1);
+        const limit = 50;
 
-    const allItems = await Items.find().select("itemName _id");
+        const allItems = await Items.find().select("itemName _id");
 
-    // Build the filter query based on request parameters
-    const filter = {};
-    if (req.query.itemId) {
-      filter.itemId = req.query.itemId;
-    }
-    if (req.query.type) {
-      filter.type = req.query.type;
-    }
+        // Build the filter query based on request parameters
+        const filter = {};
+        if (req.query.itemId) {
+            filter.itemId = req.query.itemId;
+        }
+        if (req.query.type) {
+            filter.type = req.query.type;
+        }
 
-    if (req.query.startDate || req.query.endDate) {
-      filter.createdAt = {};
-      if (req.query.startDate) {
-        filter.createdAt.$gte = new Date(req.query.startDate);
-      }
-      if (req.query.endDate) {
-        const end = new Date(req.query.endDate);
-        end.setHours(23, 59, 59, 999);
-        filter.createdAt.$lte = end;
-      }
-    }
+        if (req.query.startDate || req.query.endDate) {
+            filter.createdAt = {};
+            if (req.query.startDate) {
+                filter.createdAt.$gte = new Date(req.query.startDate);
+            }
+            if (req.query.endDate) {
+                const end = new Date(req.query.endDate);
+                end.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = end;
+            }
+        }
 
-    // Fetch transactions using the filter, sorted by most recent
-    const transactions = await Transaction.find(filter)
-      .populate("itemId", "itemName")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(500);
-    const totalCount = await Transaction.countDocuments(filter);
-    const totalPages = Math.ceil(totalCount / limit);
+        // Fetch transactions using the filter, sorted by most recent
+        const transactions = await Transaction.find(filter)
+            .populate("itemId", "itemName")
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(500);
+        const totalCount = await Transaction.countDocuments(filter);
+        const totalPages = Math.ceil(totalCount / limit);
 
-    // --- New Grouping Logic ---
-    // Group transactions by date
-    const groupedTransactions = transactions.reduce((acc, tx) => {
-      // Create a date key in 'YYYY-MM-DD' format for reliable grouping
-      const dateKey = new Date(tx.createdAt).toISOString().split("T")[0];
-      if (!acc[dateKey]) {
-        acc[dateKey] = [];
-      }
-      acc[dateKey].push(tx);
-      return acc;
-    }, {});
+        // --- New Grouping Logic ---
+        // Group transactions by date
+        const groupedTransactions = transactions.reduce((acc, tx) => {
+            // Create a date key in 'YYYY-MM-DD' format for reliable grouping
+            const dateKey = new Date(tx.createdAt).toISOString().split("T")[0];
+            if (!acc[dateKey]) {
+                acc[dateKey] = [];
+            }
+            acc[dateKey].push(tx);
+            return acc;
+        }, {});
 
-    // Get an array of date keys and sort them from newest to oldest
-    const sortedDates = Object.keys(groupedTransactions).sort(
-      (a, b) => new Date(b) - new Date(a),
-    );
+        // Get an array of date keys and sort them from newest to oldest
+        const sortedDates = Object.keys(groupedTransactions).sort(
+            (a, b) => new Date(b) - new Date(a),
+        );
 
-    // Render the page, passing the new grouped data structures
-    // res.render("items/transactions", {
-    //   groupedTransactions,
-    //   sortedDates,
-    //   query: req.query,
-    //   items: allItems, // ✅ now available in EJS
-    // });
-    const baseUrl = req.originalUrl.split("?")[0];
+        // Render the page, passing the new grouped data structures
+        // res.render("items/transactions", {
+        //   groupedTransactions,
+        //   sortedDates,
+        //   query: req.query,
+        //   items: allItems, // ✅ now available in EJS
+        // });
+        const baseUrl = req.originalUrl.split("?")[0];
 
-    res.render("items/transactions", {
-      groupedTransactions,
-      sortedDates,
-      query: req.query,
-      items: allItems,
-      page,
-      totalPages,
-      baseUrl,
-      requestPath: req.path, // ADD THIS
-    });
-  }),
+        res.render("items/transactions", {
+            groupedTransactions,
+            sortedDates,
+            query: req.query,
+            items: allItems,
+            page,
+            totalPages,
+            baseUrl,
+            requestPath: req.path, // ADD THIS
+        });
+    }),
 );
 router.get(
-  "/insights",
-  catchAsync(async (req, res) => {
-    const { itemId, startDate, endDate } = req.query;
-    const allItems = await Items.find({}).sort({ itemName: 1 });
-    let insights = null;
-    let transactions = [];
+    "/insights",
+    catchAsync(async(req, res) => {
+        const { itemId, startDate, endDate } = req.query;
+        const allItems = await Items.find({}).sort({ itemName: 1 });
+        let insights = null;
+        let transactions = [];
 
-    // Only run the query if all filters are present
-    if (itemId && startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      // Adjust end date to include all transactions on that day
-      end.setHours(23, 59, 59, 999);
+        // Only run the query if all filters are present
+        if (itemId && startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            // Adjust end date to include all transactions on that day
+            end.setHours(23, 59, 59, 999);
 
-      // 1. Fetch individual transactions for the detailed table
-      transactions = await Transaction.find({
-        itemId: itemId,
-        createdAt: { $gte: start, $lte: end },
-      })
-        .populate("itemId")
-        .sort({ createdAt: -1 });
+            // 1. Fetch individual transactions for the detailed table
+            transactions = await Transaction.find({
+                    itemId: itemId,
+                    createdAt: { $gte: start, $lte: end },
+                })
+                .populate("itemId")
+                .sort({ createdAt: -1 });
 
-      // 2. Use MongoDB Aggregation Pipeline to calculate insights
-      const aggregationResult = await Transaction.aggregate([
-        // Stage 1: Filter documents for the specific item and date range
-        {
-          $match: {
-            itemId: new mongoose.Types.ObjectId(itemId),
-            createdAt: { $gte: start, $lte: end },
-          },
-        },
-        // Stage 2: Group by transaction type and sum the quantities
-        {
-          $group: {
-            _id: "$type", // Group by 'inward', 'outward', 'initial', etc.
-            totalQuantity: { $sum: "$quantity" },
-          },
-        },
-      ]);
+            // 2. Use MongoDB Aggregation Pipeline to calculate insights
+            const aggregationResult = await Transaction.aggregate([
+                // Stage 1: Filter documents for the specific item and date range
+                {
+                    $match: {
+                        itemId: new mongoose.Types.ObjectId(itemId),
+                        createdAt: { $gte: start, $lte: end },
+                    },
+                },
+                // Stage 2: Group by transaction type and sum the quantities
+                {
+                    $group: {
+                        _id: "$type", // Group by 'inward', 'outward', 'initial', etc.
+                        totalQuantity: { $sum: "$quantity" },
+                    },
+                },
+            ]);
 
-      // 3. Process the aggregation results to create a simple insights object
-      let totalInward = 0;
-      let totalOutward = 0;
-      aggregationResult.forEach((result) => {
-        if (result._id === "inward") {
-          totalInward = result.totalQuantity;
-        } else if (result._id === "outward") {
-          totalOutward = result.totalQuantity;
+            // 3. Process the aggregation results to create a simple insights object
+            let totalInward = 0;
+            let totalOutward = 0;
+            aggregationResult.forEach((result) => {
+                if (result._id === "inward") {
+                    totalInward = result.totalQuantity;
+                } else if (result._id === "outward") {
+                    totalOutward = result.totalQuantity;
+                }
+            });
+
+            // Total Consumption is the sum of all 'outward' transactions in the period
+            const totalConsumption = totalOutward;
+
+            insights = {
+                totalInward,
+                totalOutward,
+                totalConsumption,
+            };
         }
-      });
+        const baseUrl = req.originalUrl.split("?")[0];
 
-      // Total Consumption is the sum of all 'outward' transactions in the period
-      const totalConsumption = totalOutward;
-
-      insights = {
-        totalInward,
-        totalOutward,
-        totalConsumption,
-      };
-    }
-    const baseUrl = req.originalUrl.split("?")[0];
-
-    // Render the insights page with the data
-    res.render("items/insights", {
-      allItems,
-      insights,
-      transactions,
-      query: req.query, // Pass query params back to pre-fill the form
-      requestPath: req.path, // ADD THIS
-      baseUrl,
-    });
-  }),
+        // Render the insights page with the data
+        res.render("items/insights", {
+            allItems,
+            insights,
+            transactions,
+            query: req.query, // Pass query params back to pre-fill the form
+            requestPath: req.path, // ADD THIS
+            baseUrl,
+        });
+    }),
 );
 // router.get(
 //   "/consumption",
@@ -1592,402 +1760,397 @@ router.get(
 //     })
 // );
 router.get(
-  "/consumption",
-  catchAsync(async (req, res) => {
-    const { itemId, category, supplier, startDate, endDate, mode, heatType } =
-      req.query;
+    "/consumption",
+    catchAsync(async(req, res) => {
+        const { itemId, category, supplier, startDate, endDate, mode, heatType } =
+        req.query;
 
-    // ---------------------------------
-    // 🔹 Masters (ITEM-DRIVEN)
-    // ---------------------------------
-    const items = await Items.find({})
-      .populate("itemImage")
-      .populate("itemSupplier", "supplierName")
-      .sort({ _id: 1 })
-      .lean();
+        // ---------------------------------
+        // 🔹 Masters (ITEM-DRIVEN)
+        // ---------------------------------
+        const items = await Items.find({})
+            .populate("itemImage")
+            .populate("itemSupplier", "supplierName")
+            .sort({ _id: 1 })
+            .lean();
 
-    const categories = await ItemCategories.find({});
-    const suppliers = await Supplier.find({});
+        const categories = await ItemCategories.find({});
+        const suppliers = await Supplier.find({});
 
-    // ---------------------------------
-    // 🔹 Date Range
-    // ---------------------------------
-    const hasManualRange = startDate || endDate;
-    const rangeStart = startDate ? new Date(startDate) : null;
-    const rangeEnd = endDate
-      ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
-      : new Date();
+        // ---------------------------------
+        // 🔹 Date Range
+        // ---------------------------------
+        const hasManualRange = startDate || endDate;
+        const rangeStart = startDate ? new Date(startDate) : null;
+        const rangeEnd = endDate ?
+            new Date(new Date(endDate).setHours(23, 59, 59, 999)) :
+            new Date();
 
-    // ---------------------------------
-    // 🔹 Initial & Last Inward Maps
-    // ---------------------------------
-    const initialMap = {};
-    const lastInwardMap = {};
+        // ---------------------------------
+        // 🔹 Initial & Last Inward Maps
+        // ---------------------------------
+        const initialMap = {};
+        const lastInwardMap = {};
 
-    const initials = await Transaction.aggregate([
-      { $match: { type: "initial" } },
-      { $sort: { createdAt: 1 } },
-      {
-        $group: {
-          _id: "$itemId",
-          date: { $first: "$createdAt" },
-          qty: { $first: "$quantity" },
-        },
-      },
-    ]);
-
-    initials.forEach((r) => {
-      initialMap[r._id.toString()] = r;
-    });
-
-    const lastInwards = await Transaction.aggregate([
-      { $match: { type: "inward" } },
-      { $sort: { createdAt: -1 } },
-      {
-        $group: {
-          _id: "$itemId",
-          date: { $first: "$createdAt" },
-          qty: { $first: "$quantity" },
-        },
-      },
-    ]);
-
-    lastInwards.forEach((r) => {
-      lastInwardMap[r._id.toString()] = r;
-    });
-
-    // ---------------------------------
-    // 🔹 Build Consumption Rows
-    // ---------------------------------
-    const transactions = [];
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const id = item._id.toString();
-
-      // 🔹 Filters
-      // ---------------- FILTERS (FIXED) ----------------
-
-      // Item filter
-      if (itemId && id !== itemId) continue;
-
-      // Category filter (case-insensitive)
-      if (
-        category &&
-        item.itemCategoryName &&
-        item.itemCategoryName.toLowerCase().trim() !==
-          category.toLowerCase().trim()
-      )
-        continue;
-
-      // Supplier filter (ObjectId safe)
-      if (supplier) {
-        if (!item.itemSupplier) continue;
-
-        const supplierId =
-          typeof item.itemSupplier === "object"
-            ? item.itemSupplier._id.toString()
-            : item.itemSupplier.toString();
-
-        if (supplierId !== supplier) continue;
-      }
-      // ---------------------------------
-      // 🔹 Period Start Logic (NODE 15 SAFE)
-      // ---------------------------------
-      let periodStart = null;
-      const periodEnd = rangeEnd;
-
-      if (hasManualRange) {
-        periodStart = rangeStart;
-      } else if (mode === "sinceLastInward") {
-        if (lastInwardMap[id] && lastInwardMap[id].date) {
-          periodStart = lastInwardMap[id].date;
-        } else {
-          periodStart = item.createdAt;
-        }
-      } else {
-        if (initialMap[id] && initialMap[id].date) {
-          periodStart = initialMap[id].date;
-        } else {
-          periodStart = item.createdAt;
-        }
-      }
-
-      // ---------------------------------
-      // 🔹 Total Used
-      // ---------------------------------
-      let totalUsed = 0;
-
-      if (periodStart) {
-        const sum = await Transaction.aggregate([
-          {
-            $match: {
-              itemId: item._id,
-              type: { $in: ["outward", "lend"] },
-              createdAt: { $gte: periodStart, $lte: periodEnd },
+        const initials = await Transaction.aggregate([
+            { $match: { type: "initial" } },
+            { $sort: { createdAt: 1 } },
+            {
+                $group: {
+                    _id: "$itemId",
+                    date: { $first: "$createdAt" },
+                    qty: { $first: "$quantity" },
+                },
             },
-          },
-          { $group: { _id: null, total: { $sum: "$quantity" } } },
         ]);
 
-        if (sum.length > 0) totalUsed = sum[0].total;
-      }
-      // ---------------------------------
-      // 🔹 Last Outward / Lend (FIX)
-      // ---------------------------------
-      let lastUsed = null;
-      let lastOutwardQty = 0;
+        initials.forEach((r) => {
+            initialMap[r._id.toString()] = r;
+        });
 
-      const lastOutward = await Transaction.findOne({
-        itemId: item._id,
-        type: { $in: ["outward", "lend"] },
-      })
-        .sort({ createdAt: -1 })
-        .select("createdAt quantity")
-        .lean();
+        const lastInwards = await Transaction.aggregate([
+            { $match: { type: "inward" } },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: "$itemId",
+                    date: { $first: "$createdAt" },
+                    qty: { $first: "$quantity" },
+                },
+            },
+        ]);
 
-      if (lastOutward) {
-        lastUsed = lastOutward.createdAt;
-        lastOutwardQty = lastOutward.quantity;
-      }
+        lastInwards.forEach((r) => {
+            lastInwardMap[r._id.toString()] = r;
+        });
 
-      // ---------------------------------
-      // 🔹 Monthly Consumption
-      // ---------------------------------
-      let months = 1;
+        // ---------------------------------
+        // 🔹 Build Consumption Rows
+        // ---------------------------------
+        const transactions = [];
 
-      if (periodStart && periodEnd) {
-        months =
-          (periodEnd.getFullYear() - periodStart.getFullYear()) * 12 +
-          (periodEnd.getMonth() - periodStart.getMonth()) +
-          (periodEnd.getDate() - periodStart.getDate()) / 30;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const id = item._id.toString();
 
-        months = Math.max(1, Number(months.toFixed(2)));
-      }
+            // 🔹 Filters
+            // ---------------- FILTERS (FIXED) ----------------
 
-      const avgPerMonth = Number((totalUsed / months).toFixed(2));
+            // Item filter
+            if (itemId && id !== itemId) continue;
 
-      // ---------------------------------
-      // 🔹 Stock Calculations
-      // ---------------------------------
-      let stockMonthsLeft = null;
-      let stockOutDate = null;
+            // Category filter (case-insensitive)
+            if (
+                category &&
+                item.itemCategoryName &&
+                item.itemCategoryName.toLowerCase().trim() !==
+                category.toLowerCase().trim()
+            )
+                continue;
 
-      if (avgPerMonth > 0) {
-        stockMonthsLeft = Number((item.itemQty / avgPerMonth).toFixed(1));
+            // Supplier filter (ObjectId safe)
+            if (supplier) {
+                if (!item.itemSupplier) continue;
 
-        stockOutDate = new Date();
-        stockOutDate.setMonth(
-          stockOutDate.getMonth() + Math.ceil(stockMonthsLeft),
-        );
-      }
-      // ---------------------------------
-      // 🔹 Reorder Qty (1 FULL MONTH)
-      // ---------------------------------
-      let reorderQty = 0;
+                const supplierId =
+                    typeof item.itemSupplier === "object" ?
+                    item.itemSupplier._id.toString() :
+                    item.itemSupplier.toString();
 
-      if (avgPerMonth > 0) {
-        reorderQty = Number(avgPerMonth.toFixed(1));
-      }
+                if (supplierId !== supplier) continue;
+            }
+            // ---------------------------------
+            // 🔹 Period Start Logic (NODE 15 SAFE)
+            // ---------------------------------
+            let periodStart = null;
+            const periodEnd = rangeEnd;
 
-      // ---------------------------------
-      // 🔹 Image
-      // ---------------------------------
-      let base64Image = "https://via.placeholder.com/400x300.png?text=No+Image";
+            if (hasManualRange) {
+                periodStart = rangeStart;
+            } else if (mode === "sinceLastInward") {
+                if (lastInwardMap[id] && lastInwardMap[id].date) {
+                    periodStart = lastInwardMap[id].date;
+                } else {
+                    periodStart = item.createdAt;
+                }
+            } else {
+                if (initialMap[id] && initialMap[id].date) {
+                    periodStart = initialMap[id].date;
+                } else {
+                    periodStart = item.createdAt;
+                }
+            }
 
-      if (item.itemImage && item.itemImage.length > 0) {
-        base64Image =
-          "data:image/" +
-          item.itemImage[0].contentType +
-          ";base64," +
-          item.itemImage[0].data.toString("base64");
-      }
-      // ---------------------------------
-      // 🔹 Consumption Days
-      // ---------------------------------
-      let consumptionDays = 0;
+            // ---------------------------------
+            // 🔹 Total Used
+            // ---------------------------------
+            let totalUsed = 0;
 
-      if (periodStart && periodEnd) {
-        const diffTime = Math.abs(periodEnd - periodStart);
-        consumptionDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      }
+            if (periodStart) {
+                const sum = await Transaction.aggregate([{
+                        $match: {
+                            itemId: item._id,
+                            type: { $in: ["outward", "lend"] },
+                            createdAt: { $gte: periodStart, $lte: periodEnd },
+                        },
+                    },
+                    { $group: { _id: null, total: { $sum: "$quantity" } } },
+                ]);
 
-      // ---------------------------------
-      // 🔹 Push Row
-      // ---------------------------------
-      transactions.push({
-        _id: item._id,
-        itemName: item.itemName,
-        category: item.itemCategoryName,
-        supplier: item.itemSupplier ? item.itemSupplier.supplierName : "",
-        base64Image,
-        unit: item.itemUnit || "",
-        currentStock: item.itemQty || 0,
+                if (sum.length > 0) totalUsed = sum[0].total;
+            }
+            // ---------------------------------
+            // 🔹 Last Outward / Lend (FIX)
+            // ---------------------------------
+            let lastUsed = null;
+            let lastOutwardQty = 0;
 
-        initialDate:
-          initialMap[id] && initialMap[id].date
-            ? initialMap[id].date
-            : item.createdAt,
+            const lastOutward = await Transaction.findOne({
+                    itemId: item._id,
+                    type: { $in: ["outward", "lend"] },
+                })
+                .sort({ createdAt: -1 })
+                .select("createdAt quantity")
+                .lean();
 
-        initialQty:
-          initialMap[id] && initialMap[id].qty
-            ? initialMap[id].qty
-            : item.itemQty || 0,
+            if (lastOutward) {
+                lastUsed = lastOutward.createdAt;
+                lastOutwardQty = lastOutward.quantity;
+            }
 
-        lastInwards:
-          lastInwardMap[id] && lastInwardMap[id].date
-            ? lastInwardMap[id].date
-            : null,
+            // ---------------------------------
+            // 🔹 Monthly Consumption
+            // ---------------------------------
+            let months = 1;
 
-        lastInwardQty:
-          lastInwardMap[id] && lastInwardMap[id].qty
-            ? lastInwardMap[id].qty
-            : 0,
+            if (periodStart && periodEnd) {
+                months =
+                    (periodEnd.getFullYear() - periodStart.getFullYear()) * 12 +
+                    (periodEnd.getMonth() - periodStart.getMonth()) +
+                    (periodEnd.getDate() - periodStart.getDate()) / 30;
 
-        periodStart,
-        periodEnd,
-        lastUsed,
-        lastOutwardQty,
-        totalUsed,
-        avgPerMonth,
-        stockMonthsLeft,
-        stockOutDate,
-        reorderQty,
-        consumptionDays,
-      });
-    }
+                months = Math.max(1, Number(months.toFixed(2)));
+            }
 
-    // ---------------------------------
-    // 🔹 Heat Summary (UNCHANGED)
-    // ---------------------------------
-    const billetFilter = {};
+            const avgPerMonth = Number((totalUsed / months).toFixed(2));
 
-    if (hasManualRange) {
-      billetFilter.createdAt = { $gte: rangeStart, $lte: rangeEnd };
-    }
+            // ---------------------------------
+            // 🔹 Stock Calculations
+            // ---------------------------------
+            let stockMonthsLeft = null;
+            let stockOutDate = null;
 
-    if (heatType === "open") {
-      billetFilter.$or = [{ ce: null }, { ce: "" }];
-    } else if (heatType === "close") {
-      billetFilter.ce = { $nin: [null, ""] };
-    }
+            if (avgPerMonth > 0) {
+                stockMonthsLeft = Number((item.itemQty / avgPerMonth).toFixed(1));
 
-    const billets = await Billets.find(billetFilter);
+                stockOutDate = new Date();
+                stockOutDate.setMonth(
+                    stockOutDate.getMonth() + Math.ceil(stockMonthsLeft),
+                );
+            }
+            // ---------------------------------
+            // 🔹 Reorder Qty (1 FULL MONTH)
+            // ---------------------------------
+            let reorderQty = 0;
 
-    const openHeats = billets.filter((b) => !b.ce).length;
-    const closeHeats = billets.filter((b) => b.ce).length;
-    const totalHeats = billets.length;
+            if (avgPerMonth > 0) {
+                reorderQty = Number(avgPerMonth.toFixed(1));
+            }
 
-    let totalUsedOverall = 0;
-    for (let i = 0; i < transactions.length; i++) {
-      totalUsedOverall += Number(transactions[i].totalUsed || 0);
-    }
+            // ---------------------------------
+            // 🔹 Image
+            // ---------------------------------
+            let base64Image = "https://via.placeholder.com/400x300.png?text=No+Image";
 
-    const avgPerHeat =
-      totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
-    const baseUrl = req.originalUrl.split("?")[0];
+            if (item.itemImage && item.itemImage.length > 0) {
+                base64Image =
+                    "data:image/" +
+                    item.itemImage[0].contentType +
+                    ";base64," +
+                    item.itemImage[0].data.toString("base64");
+            }
+            // ---------------------------------
+            // 🔹 Consumption Days
+            // ---------------------------------
+            let consumptionDays = 0;
 
-    // ---------------------------------
-    // 🔹 Render
-    // ---------------------------------
-    res.render("items/consumption", {
-      items,
-      categories,
-      suppliers,
-      transactions,
-      query: req.query,
-      totalHeats,
-      openHeats,
-      closeHeats,
-      avgPerHeat,
-      requestPath: req.path, // ADD THIS
-      baseUrl,
-    });
-  }),
+            if (periodStart && periodEnd) {
+                const diffTime = Math.abs(periodEnd - periodStart);
+                consumptionDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+
+            // ---------------------------------
+            // 🔹 Push Row
+            // ---------------------------------
+            transactions.push({
+                _id: item._id,
+                itemName: item.itemName,
+                category: item.itemCategoryName,
+                supplier: item.itemSupplier ? item.itemSupplier.supplierName : "",
+                base64Image,
+                unit: item.itemUnit || "",
+                currentStock: item.itemQty || 0,
+
+                initialDate: initialMap[id] && initialMap[id].date ?
+                    initialMap[id].date :
+                    item.createdAt,
+
+                initialQty: initialMap[id] && initialMap[id].qty ?
+                    initialMap[id].qty :
+                    item.itemQty || 0,
+
+                lastInwards: lastInwardMap[id] && lastInwardMap[id].date ?
+                    lastInwardMap[id].date :
+                    null,
+
+                lastInwardQty: lastInwardMap[id] && lastInwardMap[id].qty ?
+                    lastInwardMap[id].qty :
+                    0,
+
+                periodStart,
+                periodEnd,
+                lastUsed,
+                lastOutwardQty,
+                totalUsed,
+                avgPerMonth,
+                stockMonthsLeft,
+                stockOutDate,
+                reorderQty,
+                consumptionDays,
+            });
+        }
+
+        // ---------------------------------
+        // 🔹 Heat Summary (UNCHANGED)
+        // ---------------------------------
+        const billetFilter = {};
+
+        if (hasManualRange) {
+            billetFilter.createdAt = { $gte: rangeStart, $lte: rangeEnd };
+        }
+
+        if (heatType === "open") {
+            billetFilter.$or = [{ ce: null }, { ce: "" }];
+        } else if (heatType === "close") {
+            billetFilter.ce = { $nin: [null, ""] };
+        }
+
+        const billets = await Billets.find(billetFilter);
+
+        const openHeats = billets.filter((b) => !b.ce).length;
+        const closeHeats = billets.filter((b) => b.ce).length;
+        const totalHeats = billets.length;
+
+        let totalUsedOverall = 0;
+        for (let i = 0; i < transactions.length; i++) {
+            totalUsedOverall += Number(transactions[i].totalUsed || 0);
+        }
+
+        const avgPerHeat =
+            totalHeats > 0 ? (totalUsedOverall / totalHeats).toFixed(2) : 0;
+        const baseUrl = req.originalUrl.split("?")[0];
+
+        // ---------------------------------
+        // 🔹 Render
+        // ---------------------------------
+        res.render("items/consumption", {
+            items,
+            categories,
+            suppliers,
+            transactions,
+            query: req.query,
+            totalHeats,
+            openHeats,
+            closeHeats,
+            avgPerHeat,
+            requestPath: req.path, // ADD THIS
+            baseUrl,
+        });
+    }),
 );
 
 // *** THIS IS THE ROUTE TO FIX THE ERROR ***
 // It correctly defines the DELETE method for your transactions
 router.delete(
-  "/transactions/:id",
-  catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const transaction = await Transaction.findById(id);
+    "/transactions/:id",
+    catchAsync(async(req, res) => {
+        const { id } = req.params;
+        const transaction = await Transaction.findById(id);
 
-    if (!transaction) {
-      throw new ExpressError("Transaction not found", 404);
-    }
-    if (transaction.type === "initial") {
-      throw new ExpressError("Cannot reverse an initial stock entry.", 400);
-    }
+        if (!transaction) {
+            throw new ExpressError("Transaction not found", 404);
+        }
+        if (transaction.type === "initial") {
+            throw new ExpressError("Cannot reverse an initial stock entry.", 400);
+        }
 
-    const item = await Items.findById(transaction.itemId);
-    if (item) {
-      if (transaction.type === "inward") {
-        // Revert inward → reduce stock
-        item.itemQty -= transaction.quantity;
-      } else if (transaction.type === "outward") {
-        // Revert outward → increase stock
-        item.itemQty += transaction.quantity;
-      } else if (transaction.type === "lend") {
-        // Revert lend → increase stock (because item was lent out)
-        item.itemQty += transaction.quantity;
-      } else if (transaction.type === "return") {
-        // Revert return → decrease stock (because returned item was added back)
-        item.itemQty -= transaction.quantity;
-      }
+        const item = await Items.findById(transaction.itemId);
+        if (item) {
+            if (transaction.type === "inward") {
+                // Revert inward → reduce stock
+                item.itemQty -= transaction.quantity;
+            } else if (transaction.type === "outward") {
+                // Revert outward → increase stock
+                item.itemQty += transaction.quantity;
+            } else if (transaction.type === "lend") {
+                // Revert lend → increase stock (because item was lent out)
+                item.itemQty += transaction.quantity;
+            } else if (transaction.type === "return") {
+                // Revert return → decrease stock (because returned item was added back)
+                item.itemQty -= transaction.quantity;
+            }
 
-      await item.save();
-    }
+            await item.save();
+        }
 
-    await Transaction.findByIdAndDelete(id);
-    res.redirect("/items/transactions");
-  }),
+        await Transaction.findByIdAndDelete(id);
+        res.redirect("/items/transactions");
+    }),
 );
 // ➕ Log "return" transaction when item is brought back
 router.post(
-  "/transactions/:id/return",
-  catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const { quantity } = req.body;
+    "/transactions/:id/return",
+    catchAsync(async(req, res) => {
+        const { id } = req.params;
+        const { quantity } = req.body;
 
-    const lendTx = await Transaction.findById(id).populate("itemId");
-    if (!lendTx) throw new ExpressError("Lend transaction not found", 404);
-    if (lendTx.type !== "lend")
-      throw new ExpressError("Only lend transactions can be returned", 400);
+        const lendTx = await Transaction.findById(id).populate("itemId");
+        if (!lendTx) throw new ExpressError("Lend transaction not found", 404);
+        if (lendTx.type !== "lend")
+            throw new ExpressError("Only lend transactions can be returned", 400);
 
-    const item = lendTx.itemId;
-    const returnQty = parseInt(quantity) || lendTx.quantity; // default to full quantity
+        const item = lendTx.itemId;
+        const returnQty = parseInt(quantity) || lendTx.quantity; // default to full quantity
 
-    // ✅ Update stock
-    item.itemQty += returnQty;
-    await item.save();
+        // ✅ Update stock
+        item.itemQty += returnQty;
+        await item.save();
 
-    // ✅ Log return transaction
-    await new Transaction({
-      itemId: item._id,
-      type: "return",
-      quantity: returnQty,
-      stockBefore: item.itemQty - returnQty,
-      stockAfter: item.itemQty,
-      borrower: lendTx.borrower || null,
-    }).save();
+        // ✅ Log return transaction
+        await new Transaction({
+            itemId: item._id,
+            type: "return",
+            quantity: returnQty,
+            stockBefore: item.itemQty - returnQty,
+            stockAfter: item.itemQty,
+            borrower: lendTx.borrower || null,
+        }).save();
 
-    // ✅ Mark the lend transaction as returned
-    lendTx.returned = true;
-    await lendTx.save();
+        // ✅ Mark the lend transaction as returned
+        lendTx.returned = true;
+        await lendTx.save();
 
-    res.redirect("/items/transactions");
-  }),
+        res.redirect("/items/transactions");
+    }),
 );
 
 // --- Other routes ---
 router.get(
-  "/new",
-  catchAsync(async (req, res) => {
-    const itemCategories = await ItemCategories.find({});
-    res.render("items/new", { itemCategories });
-  }),
+    "/new",
+    catchAsync(async(req, res) => {
+        const itemCategories = await ItemCategories.find({});
+        res.render("items/new", { itemCategories });
+    }),
 );
 
 // router.get(
@@ -2002,134 +2165,134 @@ router.get(
 
 // add item categories
 router.post(
-  "/category",
-  upload.fields([]),
-  catchAsync(async (req, res, next) => {
-    // if (!req.body.item) throw new ExpressError("Invalid Item Data", 400);
+    "/category",
+    upload.fields([]),
+    catchAsync(async(req, res, next) => {
+        // if (!req.body.item) throw new ExpressError("Invalid Item Data", 400);
 
-    let category = new ItemCategories(req.body.category);
-    await category.save();
-    res.redirect("/items/new");
-  }),
+        let category = new ItemCategories(req.body.category);
+        await category.save();
+        res.redirect("/items/new");
+    }),
 );
 
 router.delete(
-  "/category/:id",
-  catchAsync(async (req, res) => {
-    const { id } = req.params;
-    await ItemCategories.findByIdAndDelete(id);
-    res.redirect("/items/category");
-  }),
+    "/category/:id",
+    catchAsync(async(req, res) => {
+        const { id } = req.params;
+        await ItemCategories.findByIdAndDelete(id);
+        res.redirect("/items/category");
+    }),
 );
 router.get(
-  "/:id/edit",
-  catchAsync(async (req, res, next) => {
-    const item = await Items.findById(req.params.id).populate("itemImage");
-    const itemCategories = await ItemCategories.find({});
-    const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
-    res.render("items/edit", { item, itemCategories, itemSuppliers });
-    // next(e);
-  }),
+    "/:id/edit",
+    catchAsync(async(req, res, next) => {
+        const item = await Items.findById(req.params.id).populate("itemImage");
+        const itemCategories = await ItemCategories.find({});
+        const itemSuppliers = await Supplier.find({}, "supplierName supplierCity");
+        res.render("items/edit", { item, itemCategories, itemSuppliers });
+        // next(e);
+    }),
 );
 router.put(
-  "/:id",
-  upload.array("item[itemImage]"),
-  catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const item = await Items.findById(id).populate("itemImage");
+    "/:id",
+    upload.array("item[itemImage]"),
+    catchAsync(async(req, res) => {
+        const { id } = req.params;
+        const item = await Items.findById(id).populate("itemImage");
 
-    // ✅ Update text fields
-    Object.assign(item, req.body.item);
+        // ✅ Update text fields
+        Object.assign(item, req.body.item);
 
-    // ✅ DELETE selected old images
-    if (req.body.deleteImages) {
-      const idsToDelete = Array.isArray(req.body.deleteImages)
-        ? req.body.deleteImages
-        : [req.body.deleteImages];
+        // ✅ DELETE selected old images
+        if (req.body.deleteImages) {
+            const idsToDelete = Array.isArray(req.body.deleteImages) ?
+                req.body.deleteImages :
+                [req.body.deleteImages];
 
-      // Remove from DB
-      await Images.deleteMany({ _id: { $in: idsToDelete } });
+            // Remove from DB
+            await Images.deleteMany({ _id: { $in: idsToDelete } });
 
-      // Remove references from item
-      item.itemImage = item.itemImage.filter(
-        (img) => !idsToDelete.includes(img._id.toString()),
-      );
-    }
+            // Remove references from item
+            item.itemImage = item.itemImage.filter(
+                (img) => !idsToDelete.includes(img._id.toString()),
+            );
+        }
 
-    // ✅ ADD / REPLACE uploaded images
-    if (req.files && req.files.length > 0) {
-      // (Optional) clear all existing images if you want full replacement
-      // await Images.deleteMany({ _id: { $in: item.itemImage } });
-      // item.itemImage = [];
+        // ✅ ADD / REPLACE uploaded images
+        if (req.files && req.files.length > 0) {
+            // (Optional) clear all existing images if you want full replacement
+            // await Images.deleteMany({ _id: { $in: item.itemImage } });
+            // item.itemImage = [];
 
-      for (const file of req.files) {
-        const image = new Images({
-          contentType: file.mimetype,
-          data: fs.readFileSync(
-            path.join(__dirname, "..", "views", "images", file.filename),
-          ),
-          path: file.path,
-          name: file.originalname,
-        });
-        await image.save();
-        item.itemImage.push(image);
-        fs.unlink(file.path, () => {}); // cleanup temp file
-      }
-    }
+            for (const file of req.files) {
+                const image = new Images({
+                    contentType: file.mimetype,
+                    data: fs.readFileSync(
+                        path.join(__dirname, "..", "views", "images", file.filename),
+                    ),
+                    path: file.path,
+                    name: file.originalname,
+                });
+                await image.save();
+                item.itemImage.push(image);
+                fs.unlink(file.path, () => {}); // cleanup temp file
+            }
+        }
 
-    await item.save();
-    // req.flash("success", "Item updated successfully!");
+        await item.save();
+        // req.flash("success", "Item updated successfully!");
 
-    res.redirect("/items");
-  }),
+        res.redirect("/items");
+    }),
 );
 
 // Replace your existing POST "/update-stock" route with this
 
 router.post(
-  "/update-stock",
-  catchAsync(async (req, res) => {
-    const { items } = req.body;
+    "/update-stock",
+    catchAsync(async(req, res) => {
+        const { items } = req.body;
 
-    for (const itemData of items) {
-      const outwardsQty = parseInt(itemData.outwardsQty, 10);
+        for (const itemData of items) {
+            const outwardsQty = parseInt(itemData.outwardsQty, 10);
 
-      // Only process if there's a quantity to move outwards
-      if (outwardsQty > 0) {
-        // Find the item to get its current stock
-        const item = await Items.findById(itemData.id);
-        if (item) {
-          const stockBefore = item.itemQty;
-          const stockAfter = stockBefore - outwardsQty;
+            // Only process if there's a quantity to move outwards
+            if (outwardsQty > 0) {
+                // Find the item to get its current stock
+                const item = await Items.findById(itemData.id);
+                if (item) {
+                    const stockBefore = item.itemQty;
+                    const stockAfter = stockBefore - outwardsQty;
 
-          // Update the item's quantity
-          item.itemQty = stockAfter;
-          await item.save();
+                    // Update the item's quantity
+                    item.itemQty = stockAfter;
+                    await item.save();
 
-          // Create a transaction log
-          await new Transaction({
-            itemId: item._id,
-            type: "outward",
-            quantity: outwardsQty,
-            stockBefore,
-            stockAfter,
-            remarks: itemData.remarks || "",
-          }).save();
+                    // Create a transaction log
+                    await new Transaction({
+                        itemId: item._id,
+                        type: "outward",
+                        quantity: outwardsQty,
+                        stockBefore,
+                        stockAfter,
+                        remarks: itemData.remarks || "",
+                    }).save();
+                }
+            }
         }
-      }
-    }
 
-    res.redirect("/items");
-  }),
+        res.redirect("/items");
+    }),
 );
 
 router.delete(
-  "/:id",
-  catchAsync(async (req, res) => {
-    const { id } = req.params;
-    await Items.findByIdAndDelete(id);
-    res.redirect("/items");
-  }),
+    "/:id",
+    catchAsync(async(req, res) => {
+        const { id } = req.params;
+        await Items.findByIdAndDelete(id);
+        res.redirect("/items");
+    }),
 );
 
 // Add this route below other routes in items.js
@@ -2164,45 +2327,43 @@ router.delete(
 // 🔹 STOCK REPORT PDF
 // ------------------------------------
 router.get(
-  "/report/stock",
-  catchAsync(async (req, res) => {
-    var category = req.query.category;
-    var supplier = req.query.supplier;
+    "/report/stock",
+    catchAsync(async(req, res) => {
+        var category = req.query.category;
+        var supplier = req.query.supplier;
 
-    var match = {};
-    if (category && category !== "all") match.itemCategoryName = category;
-    if (supplier && supplier !== "all") match.itemSupplier = supplier;
+        var match = {};
+        if (category && category !== "all") match.itemCategoryName = category;
+        if (supplier && supplier !== "all") match.itemSupplier = supplier;
 
-    const items = await Items.find(match).sort({ itemName: 1 }).lean();
+        const items = await Items.find(match).sort({ itemName: 1 }).lean();
 
-    // render HTML first
-    const html = await ejs.renderFile(
-      path.join(__dirname, "../views/items/pdf_stock.ejs"),
-      { items, category, supplier },
-      { async: false },
-    );
+        // render HTML first
+        const html = await ejs.renderFile(
+            path.join(__dirname, "../views/items/pdf_stock.ejs"), { items, category, supplier }, { async: false },
+        );
 
-    // generate PDF
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+        // generate PDF
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: "networkidle0" });
 
-    const pdfPath = path.join(
-      __dirname,
-      `../public/reports/Stock_Report_${Date.now()}.pdf`,
-    );
+        const pdfPath = path.join(
+            __dirname,
+            `../public/reports/Stock_Report_${Date.now()}.pdf`,
+        );
 
-    await page.pdf({
-      path: pdfPath,
-      format: "A4",
-      landscape: true,
-      printBackground: true,
-    });
+        await page.pdf({
+            path: pdfPath,
+            format: "A4",
+            landscape: true,
+            printBackground: true,
+        });
 
-    await browser.close();
+        await browser.close();
 
-    res.download(pdfPath, () => fs.unlinkSync(pdfPath));
-  }),
+        res.download(pdfPath, () => fs.unlinkSync(pdfPath));
+    }),
 );
 
 // ------------------------------------
@@ -2322,159 +2483,157 @@ router.get(
 //     }),
 // );
 router.get(
-  "/report/consumption",
-  catchAsync(async (req, res) => {
-    const { itemId, category, supplier, startDate, endDate, mode } = req.query;
+    "/report/consumption",
+    catchAsync(async(req, res) => {
+        const { itemId, category, supplier, startDate, endDate, mode } = req.query;
 
-    let match = { type: { $in: ["outward", "lend"] } };
+        let match = { type: { $in: ["outward", "lend"] } };
 
-    // ---------------- DATE LOGIC ----------------
-    let dateRangeStart = null;
-    let dateRangeEnd = endDate ? new Date(endDate) : new Date();
+        // ---------------- DATE LOGIC ----------------
+        let dateRangeStart = null;
+        let dateRangeEnd = endDate ? new Date(endDate) : new Date();
 
-    if (mode === "sinceLastInward") {
-      const lastInward = await Transaction.findOne({ type: "inward" })
-        .sort({ createdAt: -1 })
-        .lean();
-      if (lastInward) dateRangeStart = new Date(lastInward.createdAt);
-    } else if (mode === "sinceStart") {
-      const firstTx = await Transaction.findOne({})
-        .sort({ createdAt: 1 })
-        .lean();
-      if (firstTx) dateRangeStart = new Date(firstTx.createdAt);
-    }
+        if (mode === "sinceLastInward") {
+            const lastInward = await Transaction.findOne({ type: "inward" })
+                .sort({ createdAt: -1 })
+                .lean();
+            if (lastInward) dateRangeStart = new Date(lastInward.createdAt);
+        } else if (mode === "sinceStart") {
+            const firstTx = await Transaction.findOne({})
+                .sort({ createdAt: 1 })
+                .lean();
+            if (firstTx) dateRangeStart = new Date(firstTx.createdAt);
+        }
 
-    if (startDate) dateRangeStart = new Date(startDate);
-    if (endDate) {
-      dateRangeEnd = new Date(endDate);
-      dateRangeEnd.setHours(23, 59, 59, 999);
-    }
+        if (startDate) dateRangeStart = new Date(startDate);
+        if (endDate) {
+            dateRangeEnd = new Date(endDate);
+            dateRangeEnd.setHours(23, 59, 59, 999);
+        }
 
-    if (dateRangeStart) {
-      match.createdAt = {
-        $gte: dateRangeStart,
-        $lte: dateRangeEnd,
-      };
-    }
+        if (dateRangeStart) {
+            match.createdAt = {
+                $gte: dateRangeStart,
+                $lte: dateRangeEnd,
+            };
+        }
 
-    // ---------------- AGGREGATION ----------------
-    const transactions = await Transaction.aggregate([
-      { $match: match },
+        // ---------------- AGGREGATION ----------------
+        const transactions = await Transaction.aggregate([
+            { $match: match },
 
-      {
-        $lookup: {
-          from: "allitems",
-          localField: "itemId",
-          foreignField: "_id",
-          as: "item",
-        },
-      },
-      { $unwind: "$item" },
-
-      // Supplier lookup
-      {
-        $lookup: {
-          from: "suppliers",
-          localField: "item.itemSupplier",
-          foreignField: "_id",
-          as: "supplierData",
-        },
-      },
-      {
-        $unwind: {
-          path: "$supplierData",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-
-      // Filters
-      {
-        $match: {
-          ...(itemId
-            ? { "item._id": new mongoose.Types.ObjectId(itemId) }
-            : {}),
-          ...(category
-            ? {
-                "item.itemCategoryName": {
-                  $regex: "^" + category + "$",
-                  $options: "i",
+            {
+                $lookup: {
+                    from: "allitems",
+                    localField: "itemId",
+                    foreignField: "_id",
+                    as: "item",
                 },
-              }
-            : {}),
-          ...(supplier
-            ? {
-                "item.itemSupplier": new mongoose.Types.ObjectId(supplier),
-              }
-            : {}),
-        },
-      },
+            },
+            { $unwind: "$item" },
 
-      // Group
-      {
-        $group: {
-          _id: "$item._id",
-          itemName: { $first: "$item.itemName" },
-          category: { $first: "$item.itemCategoryName" },
-          supplier: { $first: "$supplierData.supplierName" },
-          totalUsed: { $sum: "$quantity" },
-          lastUsed: { $max: "$createdAt" },
-        },
-      },
+            // Supplier lookup
+            {
+                $lookup: {
+                    from: "suppliers",
+                    localField: "item.itemSupplier",
+                    foreignField: "_id",
+                    as: "supplierData",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$supplierData",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
 
-      { $sort: { itemName: 1 } },
-    ]);
+            // Filters
+            {
+                $match: {
+                    ...(itemId ?
+                        { "item._id": new mongoose.Types.ObjectId(itemId) } :
+                        {}),
+                    ...(category ?
+                        {
+                            "item.itemCategoryName": {
+                                $regex: "^" + category + "$",
+                                $options: "i",
+                            },
+                        } :
+                        {}),
+                    ...(supplier ?
+                        {
+                            "item.itemSupplier": new mongoose.Types.ObjectId(supplier),
+                        } :
+                        {}),
+                },
+            },
 
-    // ---------------- RENDER PDF ----------------
-    const html = await ejs.renderFile(
-      path.join(__dirname, "../views/items/pdf_consumption.ejs"),
-      {
-        transactions,
-        category,
-        supplier,
-        mode,
-        startDate,
-        endDate,
-      },
-      { async: false },
-    );
+            // Group
+            {
+                $group: {
+                    _id: "$item._id",
+                    itemName: { $first: "$item.itemName" },
+                    category: { $first: "$item.itemCategoryName" },
+                    supplier: { $first: "$supplierData.supplierName" },
+                    totalUsed: { $sum: "$quantity" },
+                    lastUsed: { $max: "$createdAt" },
+                },
+            },
 
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+            { $sort: { itemName: 1 } },
+        ]);
 
-    const pdfPath = path.join(
-      __dirname,
-      `../public/reports/Consumption_Report_${Date.now()}.pdf`,
-    );
+        // ---------------- RENDER PDF ----------------
+        const html = await ejs.renderFile(
+            path.join(__dirname, "../views/items/pdf_consumption.ejs"), {
+                transactions,
+                category,
+                supplier,
+                mode,
+                startDate,
+                endDate,
+            }, { async: false },
+        );
 
-    await page.pdf({
-      path: pdfPath,
-      format: "A4",
-      landscape: true,
-      printBackground: true,
-    });
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: "networkidle0" });
 
-    await browser.close();
+        const pdfPath = path.join(
+            __dirname,
+            `../public/reports/Consumption_Report_${Date.now()}.pdf`,
+        );
 
-    res.download(pdfPath, () => fs.unlinkSync(pdfPath));
-  }),
+        await page.pdf({
+            path: pdfPath,
+            format: "A4",
+            landscape: true,
+            printBackground: true,
+        });
+
+        await browser.close();
+
+        res.download(pdfPath, () => fs.unlinkSync(pdfPath));
+    }),
 );
 router.post("/utility/backup-drive", (req, res) => {
-  runBackup("manual-drive");
-  req.flash("success", "☁️ Google Drive backup started!");
-  res.redirect("/items/utility");
+    runBackup("manual-drive");
+    req.flash("success", "☁️ Google Drive backup started!");
+    res.redirect("/items/utility");
 });
-router.post("/category/ajax", upload.none(), async (req, res) => {
-  try {
-    const category = new ItemCategories({
-      itemCategoryName: req.body.itemCategoryName,
-    });
-    await category.save();
+router.post("/category/ajax", upload.none(), async(req, res) => {
+    try {
+        const category = new ItemCategories({
+            itemCategoryName: req.body.itemCategoryName,
+        });
+        await category.save();
 
-    res.json({ success: true, category });
-  } catch (err) {
-    res.json({ success: false, error: err.message });
-  }
+        res.json({ success: true, category });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
 });
 
 module.exports = router;
