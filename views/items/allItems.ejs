@@ -1,5 +1,34 @@
 <% layout('layout/boilerplate') %>
-
+    <style>
+        .stock-alert-card {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-left: 5px solid #dc3545;
+            border-radius: 10px;
+            z-index: 2000;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stock-alert-header {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        
+        .stock-alert-body {
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 10px 15px;
+        }
+        
+        .stock-alert-body ul {
+            padding-left: 18px;
+        }
+    </style>
     <div class="container py-4">
 
         <!-- Header -->
@@ -8,6 +37,52 @@
             <p class="text-muted fs-5">Smart inventory management made simple</p>
         </div>
 
+        <div id="stockAlertBox" class="stock-alert-card" style="display:none;">
+
+            <div class="stock-alert-header d-flex justify-content-between align-items-center">
+                <span>
+            <i class="bi bi-exclamation-triangle text-danger"></i>
+            Stock Alerts
+        </span>
+                <button class="btn btn-sm btn-light border" onclick="ignoreAlert()">Ignore</button>
+            </div>
+
+            <div class="stock-alert-body">
+
+                <% if (criticalItems.length > 0) { %>
+                    <div class="mb-2">
+                        <strong class="text-danger">Critical</strong>
+                        <ul>
+                            <% criticalItems.forEach(item => { %>
+                                <li>
+                                    <%= item.itemName %>
+                                        <span class="badge bg-danger float-end">
+                                <%= item.stockMonthsLeft %>m
+                            </span>
+                                </li>
+                                <% }) %>
+                        </ul>
+                    </div>
+                    <% } %>
+
+                        <% if (warningItems.length > 0) { %>
+                            <div>
+                                <strong class="text-warning">Warning</strong>
+                                <ul>
+                                    <% warningItems.forEach(item => { %>
+                                        <li>
+                                            <%= item.itemName %>
+                                                <span class="badge bg-warning text-dark float-end">
+                                <%= item.stockMonthsLeft %>m
+                            </span>
+                                        </li>
+                                        <% }) %>
+                                </ul>
+                            </div>
+                            <% } %>
+
+            </div>
+        </div>
         <!-- 🔍 Search & Filters -->
         <div class="bg-white p-4 rounded-4 shadow-sm mb-5">
             <div class="row g-3 align-items-center">
@@ -139,7 +214,16 @@
                                             <%= item.formattedItemDate %>
                                         </li>
                                     </ul>
-
+                                    <li class="list-group-item">
+                                        <strong>Status:</strong>
+                                        <% if (item.status === "Critical") { %>
+                                            <span class="badge bg-danger">Critical</span>
+                                            <% } else if (item.status === "Warning") { %>
+                                                <span class="badge bg-warning text-dark">Warning</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-success">Safe</span>
+                                                    <% } %>
+                                    </li>
                                     <div class="card-body text-end">
                                         <form action="/items/<%= item._id %>/view" method="GET" class="d-inline">
                                             <button class="btn btn-outline-primary btn-sm">View</button>
@@ -301,4 +385,50 @@
                 suggestionsWrapper.style.display = "none";
             }
         });
+    </script>
+    <!-- <script>
+        function ignoreAlert() {
+            const today = new Date().toISOString().slice(0, 10);
+            localStorage.setItem("hideStockAlertDate", today);
+            document.getElementById("stockAlertBox").style.display = "none";
+        }
+
+        window.onload = function() {
+            const today = new Date().toISOString().slice(0, 10);
+            const hiddenDate = localStorage.getItem("hideStockAlertDate");
+
+            if (hiddenDate === today) {
+                const box = document.getElementById("stockAlertBox");
+                if (box) box.style.display = "none";
+            }
+        };
+    </script> -->
+    <script>
+        function toggleAlertPanel() {
+            const box = document.getElementById("stockAlertBox");
+
+            if (box.style.display === "none") {
+                box.style.display = "block";
+            } else {
+                box.style.display = "none";
+            }
+        }
+
+        // Ignore only for today
+        function ignoreAlert() {
+            const today = new Date().toISOString().slice(0, 10);
+            localStorage.setItem("hideStockAlertDate", today);
+            document.getElementById("stockAlertBox").style.display = "none";
+        }
+
+        // Auto hide if ignored today
+        window.onload = function() {
+            const today = new Date().toISOString().slice(0, 10);
+            const hiddenDate = localStorage.getItem("hideStockAlertDate");
+
+            if (hiddenDate === today) {
+                const box = document.getElementById("stockAlertBox");
+                if (box) box.style.display = "none";
+            }
+        };
     </script>
