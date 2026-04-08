@@ -568,11 +568,6 @@ router.get(
                     warningItems.push(allItemsForAlert[i]);
                 }
             }
-            console.log({
-                item: allItemsForAlert[i].itemName,
-                qty: allItemsForAlert[i].itemQty,
-                perMonth: dc.perMonth,
-            });
         }
 
         // ✅ SORT BY MOST URGENT

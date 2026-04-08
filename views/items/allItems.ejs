@@ -55,19 +55,39 @@
 
                         <% criticalItems.forEach(item => { %>
                             <div class="alert-item critical">
-                                <div>
+
+                                <!-- LEFT SIDE -->
+                                <div class="alert-left">
                                     <div class="item-name">
                                         <%= item.itemName %>
                                     </div>
+
+                                    <div class="stock-line">
+                                        Stock:
+                                        <%= item.itemQty %>
+                                            <%= item.itemUnit || '' %>
+                                    </div>
+
                                     <div class="supplier-name">
                                         <%= item.itemSupplier ? item.itemSupplier.supplierName : '' %>
                                     </div>
+
+
                                 </div>
 
-                                <div class="days-badge bg-danger">
-                                    <%= item.stockDaysLeft %>d
+                                <!-- RIGHT SIDE -->
+                                <div class="alert-right">
+                                    <div class="days-badge bg-danger">
+                                        <%= item.stockDaysLeft %>d
+                                    </div>
+
+                                    <a href="/purchase-orders/new?supplierId=<%= item.itemSupplier?._id %>&autoFill=true" class="btn btn-sm btn-secondary po-btn">
+   Create PO
+</a>
                                 </div>
+
                             </div>
+
                             <% }) %>
                     </div>
                     <% } %>
@@ -86,10 +106,15 @@
                                                 <%= item.itemSupplier ? item.itemSupplier.supplierName : '' %>
                                             </div>
                                         </div>
-
-                                        <div class="days-badge bg-warning text-dark">
-                                            <%= item.stockDaysLeft %>d
+                                        <div class="alert-right">
+                                            <div class="days-badge bg-warning text-dark">
+                                                <%= item.stockDaysLeft %>d
+                                            </div>
+                                            <a href="/purchase-orders/new?supplierId=<%= item.itemSupplier?._id %>&autoFill=true" class="btn btn-sm btn-secondary po-btn">
+   Create PO
+</a>
                                         </div>
+
                                     </div>
                                     <% }) %>
                             </div>
