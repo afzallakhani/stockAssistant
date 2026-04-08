@@ -30,26 +30,26 @@ const ExpressError = require("./utils/ExpressError");
 // const unlinkAsync = promisify(fs.unlink);
 
 mongoose.connect("mongodb://localhost:27017/stockAssistant", {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useUnifiedTopology: true,
 
-    useFindAndModify: false,
+  useFindAndModify: false,
 });
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
-    console.log("Database Connected");
-    console.log("MongoDB Version:", mongoose.version);
-    const changeStream = db.watch();
+  console.log("Database Connected");
+  console.log("MongoDB Version:", mongoose.version);
+  const changeStream = db.watch();
 
-    changeStream.on("change", (change) => {
-        console.log("📦 Database change detected:", change.operationType);
-        runBackup("auto");
-    });
+  changeStream.on("change", (change) => {
+    console.log("📦 Database change detected:", change.operationType);
+    runBackup("auto");
+  });
 
-    console.log("👀 Auto-backup watcher started...");
+  console.log("👀 Auto-backup watcher started...");
 });
 
 const app = express();
@@ -64,10 +64,10 @@ app.use(methodOverride("_method"));
 
 // Session config
 const sessionConfig = {
-    secret: "supersecretbackupkey",
-    resave: false,
-    saveUninitialized: true,
-    cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 }, // 1 hour
+  secret: "supersecretbackupkey",
+  resave: false,
+  saveUninitialized: true,
+  cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 }, // 1 hour
 };
 
 app.use(session(sessionConfig));
@@ -75,11 +75,54 @@ app.use(flash());
 
 // Make flash messages available to all views
 app.use((req, res, next) => {
-    res.locals.success = req.flash("success");
-    res.locals.error = req.flash("error");
-    next();
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  next();
 });
+const Items = require("./models/elafStock");
+const Supplier = require("./models/supplier");
+const getMonthlyConsumption = require("./utils/getMonthlyConsumption");
 
+app.use(async (req, res, next) => {
+  try {
+    const allItems = await Items.find({})
+      .populate("itemSupplier", "supplierName")
+      .select("itemName itemQty itemUnit itemSupplier")
+      .lean();
+
+    let criticalItems = [];
+    let warningItems = [];
+
+    for (let i = 0; i < allItems.length; i++) {
+      const dc = await getMonthlyConsumption(allItems[i]);
+
+      if (dc.perMonth > 0) {
+        const monthsLeft = allItems[i].itemQty / dc.perMonth;
+        const daysLeft = Math.floor(monthsLeft * 30);
+
+        allItems[i].stockDaysLeft = daysLeft;
+
+        if (daysLeft <= 30) {
+          criticalItems.push(allItems[i]);
+        } else if (daysLeft <= 45) {
+          warningItems.push(allItems[i]);
+        }
+      }
+    }
+
+    // Sort by most urgent first
+    criticalItems.sort((a, b) => a.stockDaysLeft - b.stockDaysLeft);
+    warningItems.sort((a, b) => a.stockDaysLeft - b.stockDaysLeft);
+
+    res.locals.criticalItems = criticalItems;
+    res.locals.warningItems = warningItems;
+
+    next();
+  } catch (err) {
+    console.log("Alert middleware error:", err);
+    next();
+  }
+});
 app.use("/items", item);
 app.use("/partymaster", party);
 app.use("/supplier", supplier);
@@ -87,61 +130,30 @@ app.use("/billets", billets);
 app.use("/purchase-orders", purchaseOrderRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));
-app.use(async(req, res, next) => {
-    try {
-        const allItems = await Items.find({})
-            .select("itemName itemQty itemUnit")
-            .lean();
 
-        let criticalItems = [];
-        let warningItems = [];
-
-        for (let i = 0; i < allItems.length; i++) {
-            const dc = await getMonthlyConsumption(allItems[i]);
-
-            if (dc.perMonth > 0) {
-                const monthsLeft = allItems[i].itemQty / dc.perMonth;
-                allItems[i].stockMonthsLeft = monthsLeft.toFixed(1);
-
-                if (monthsLeft <= 1) {
-                    criticalItems.push(allItems[i]);
-                } else if (monthsLeft <= 1.5) {
-                    warningItems.push(allItems[i]);
-                }
-            }
-        }
-
-        res.locals.criticalItems = criticalItems;
-        res.locals.warningItems = warningItems;
-
-        next();
-    } catch (err) {
-        next();
-    }
-});
 app.get("/", (req, res) => {
-    res.render("home");
+  res.render("home");
 });
 
 // app.use((req, res) => {
 //     res.status(404).send("NOT FOUND!");
 // });
 app.all("*", (req, res, next) => {
-    next(new ExpressError("Page Not Found!", 404));
+  next(new ExpressError("Page Not Found!", 404));
 });
 
 app.use((err, req, res, next) => {
-    const { statusCode = 500, message = "Something Went Wrong!" } = err;
-    if (!err.message) err.message = "Oh No! Something Went Wrong!";
-    res.status(statusCode).render("error", {
-        err: {
-            message: err.message,
-            stack: process.env.NODE_ENV === "development" ? err.stack : "",
-        },
-        layout: false, // 🔥 STOP recursive rendering
-    });
+  const { statusCode = 500, message = "Something Went Wrong!" } = err;
+  if (!err.message) err.message = "Oh No! Something Went Wrong!";
+  res.status(statusCode).render("error", {
+    err: {
+      message: err.message,
+      stack: process.env.NODE_ENV === "development" ? err.stack : "",
+    },
+    layout: false, // 🔥 STOP recursive rendering
+  });
 });
 
 app.listen(3000, "0.0.0.0", () => {
-    console.log("App Running On Port 3000");
+  console.log("App Running On Port 3000");
 });
