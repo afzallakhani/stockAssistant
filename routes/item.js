@@ -542,7 +542,8 @@ router.get(
         // 🔴 PART 1 — GET ALL ITEMS FOR CRITICAL / WARNING ALERT
         // =====================================================
         const allItemsForAlert = await Items.find({})
-            .select("itemName itemQty itemUnit createdAt")
+            .populate("itemSupplier", "supplierName") // ✅ ADD THIS
+            .select("itemName itemQty itemUnit itemSupplier")
             .lean();
 
         let criticalItems = [];
@@ -553,15 +554,30 @@ router.get(
 
             if (dc.perMonth > 0) {
                 const monthsLeft = allItemsForAlert[i].itemQty / dc.perMonth;
-                allItemsForAlert[i].stockMonthsLeft = monthsLeft.toFixed(1);
+                const rawDays = monthsLeft * 30;
 
-                if (monthsLeft <= 1) {
+                let daysLeft;
+
+                daysLeft = Math.round(rawDays);
+
+                allItemsForAlert[i].stockDaysLeft = daysLeft; // ✅ USE DAYS
+
+                if (daysLeft <= 30) {
                     criticalItems.push(allItemsForAlert[i]);
-                } else if (monthsLeft <= 1.5) {
+                } else if (daysLeft <= 45) {
                     warningItems.push(allItemsForAlert[i]);
                 }
             }
+            console.log({
+                item: allItemsForAlert[i].itemName,
+                qty: allItemsForAlert[i].itemQty,
+                perMonth: dc.perMonth,
+            });
         }
+
+        // ✅ SORT BY MOST URGENT
+        criticalItems.sort((a, b) => a.stockDaysLeft - b.stockDaysLeft);
+        warningItems.sort((a, b) => a.stockDaysLeft - b.stockDaysLeft);
 
         // =====================================================
         // 🔵 PART 2 — PAGINATION ITEMS (FOR DISPLAY CARDS)
