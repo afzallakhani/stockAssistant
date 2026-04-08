@@ -171,103 +171,168 @@
             <%- body %>
 
         </main>
+        <!-- 🔔 GLOBAL ALERT PANEL -->
+        <% if ((criticalItems && criticalItems.length > 0) || (warningItems && warningItems.length > 0)) { %>
+            <div id="stockAlertBox" class="modern-alert-card" style="display:none;">
 
-        <%- include('../partials/footer') %>
+                <div class="modern-alert-header">
+                    <div>
+                        <i class="bi bi-bell-fill text-danger"></i>
+                        <strong>Stock Alerts</strong>
+                    </div>
+                    <button onclick="ignoreAlert()" class="btn btn-sm btn-light">Ignore</button>
+                </div>
 
-            <!-- jQuery Library (3.6.4 as used in your code) -->
-            <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+                <div class="modern-alert-body">
 
-            <!-- jQuery UI JavaScript (compatible with jQuery 3.6.4) -->
-            <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+                    <% if (criticalItems.length > 0) { %>
+                        <div class="alert-section">
+                            <div class="alert-title text-danger">Critical</div>
 
-            <!-- Bootstrap JavaScript Bundle -->
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+                            <% criticalItems.forEach(item => { %>
+                                <div class="alert-item critical">
+                                    <div>
+                                        <div class="item-name">
+                                            <%= item.itemName %>
+                                        </div>
+                                        <div class="supplier-name">
+                                            <%= item.itemSupplier ? item.itemSupplier.supplierName : '' %>
+                                        </div>
+                                    </div>
+                                    <div class="days-badge bg-danger">
+                                        <%= item.stockDaysLeft %>d
+                                    </div>
+                                </div>
+                                <% }) %>
+                        </div>
+                        <% } %>
 
-            <script>
-                $(document).ready(function() {
-                    // Initialize the datepicker
-                    $('#datepicker').datepicker();
-                });
-            </script>
-            <script>
-                $(document).ready(function() {
-                    // Capture keydown event on text input fields
-                    $('form').on('keydown', 'input[type="text"]', function(e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault(); // Prevent the default Enter key behavior (submitting the form)
+                            <% if (warningItems.length > 0) { %>
+                                <div class="alert-section">
+                                    <div class="alert-title text-warning">Warning</div>
 
-                            // Find the next text input field
-                            var nextInput = $(this).closest('form').find('input[type="text"]:eq(' + ($('input[type="text"]').index(this) + 1) + ')');
+                                    <% warningItems.forEach(item => { %>
+                                        <div class="alert-item warning">
+                                            <div>
+                                                <div class="item-name">
+                                                    <%= item.itemName %>
+                                                </div>
+                                                <div class="supplier-name">
+                                                    <%= item.itemSupplier ? item.itemSupplier.supplierName : '' %>
+                                                </div>
+                                            </div>
+                                            <div class="days-badge bg-warning text-dark">
+                                                <%= item.stockDaysLeft %>d
+                                            </div>
+                                        </div>
+                                        <% }) %>
+                                </div>
+                                <% } %>
 
-                            // If the next text input field is not found, focus on the submit button
-                            if (nextInput.length === 0) {
-                                $(this).closest('form').find('button[type="submit"]').focus();
-                            } else {
-                                nextInput.focus();
-                            }
-                        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                            e.preventDefault(); // Prevent the default arrow key behavior
+                </div>
+            </div>
+            <% } %>
+                <%- include('../partials/footer') %>
 
-                            // Find the index of the current input
-                            var currentIndex = $('input[type="text"]').index(this);
+                    <!-- jQuery Library (3.6.4 as used in your code) -->
+                    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
-                            // Calculate the index of the next input based on the arrow key
-                            var nextIndex = e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+                    <!-- jQuery UI JavaScript (compatible with jQuery 3.6.4) -->
+                    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
-                            // Ensure the index is within bounds
-                            nextIndex = Math.max(0, Math.min(nextIndex, $('input[type="text"]').length - 1));
+                    <!-- Bootstrap JavaScript Bundle -->
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 
-                            // Focus on the next input
-                            $('input[type="text"]').eq(nextIndex).focus();
-                        }
-                    });
-                });
-            </script>
-            <script>
-                // Example starter JavaScript for disabling form submissions if there are invalid fields
-                (function() {
-                    'use strict'
+                    <script>
+                        $(document).ready(function() {
+                            // Initialize the datepicker
+                            $('#datepicker').datepicker();
+                        });
+                    </script>
+                    <script>
+                        $(document).ready(function() {
+                            // Capture keydown event on text input fields
+                            $('form').on('keydown', 'input[type="text"]', function(e) {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault(); // Prevent the default Enter key behavior (submitting the form)
 
-                    // Fetch all the forms we want to apply custom Bootstrap validation styles to
-                    const forms = document.querySelectorAll('.validated-form')
+                                    // Find the next text input field
+                                    var nextInput = $(this).closest('form').find('input[type="text"]:eq(' + ($('input[type="text"]').index(this) + 1) + ')');
 
-                    // Loop over them and prevent submission
-                    Array.from(forms)
-                        .forEach(function(form) {
-                            form.addEventListener('submit', function(event) {
-                                if (!form.checkValidity()) {
-                                    event.preventDefault()
-                                    event.stopPropagation()
+                                    // If the next text input field is not found, focus on the submit button
+                                    if (nextInput.length === 0) {
+                                        $(this).closest('form').find('button[type="submit"]').focus();
+                                    } else {
+                                        nextInput.focus();
+                                    }
+                                } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                    e.preventDefault(); // Prevent the default arrow key behavior
+
+                                    // Find the index of the current input
+                                    var currentIndex = $('input[type="text"]').index(this);
+
+                                    // Calculate the index of the next input based on the arrow key
+                                    var nextIndex = e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+
+                                    // Ensure the index is within bounds
+                                    nextIndex = Math.max(0, Math.min(nextIndex, $('input[type="text"]').length - 1));
+
+                                    // Focus on the next input
+                                    $('input[type="text"]').eq(nextIndex).focus();
                                 }
+                            });
+                        });
+                    </script>
+                    <script>
+                        // Example starter JavaScript for disabling form submissions if there are invalid fields
+                        (function() {
+                            'use strict'
 
-                                form.classList.add('was-validated')
-                            }, false)
-                        })
-                })()
-                // var myModal = document.getElementById('myModal')
-                // var myInput = document.getElementById('myInput')
+                            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+                            const forms = document.querySelectorAll('.validated-form')
 
-                // myModal.addEventListener('shown.bs.modal', function() {
-                //     myInput.focus()
-                // })
-            </script>
-            <!-- JQUERY (MUST BE FIRST) -->
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                            // Loop over them and prevent submission
+                            Array.from(forms)
+                                .forEach(function(form) {
+                                    form.addEventListener('submit', function(event) {
+                                        if (!form.checkValidity()) {
+                                            event.preventDefault()
+                                            event.stopPropagation()
+                                        }
 
-            <!-- SELECT2 JS -->
-            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-            <script>
-                function toggleAlertPanel() {
-                    const box = document.getElementById("stockAlertBox");
-                    if (!box) return;
+                                        form.classList.add('was-validated')
+                                    }, false)
+                                })
+                        })()
+                        // var myModal = document.getElementById('myModal')
+                        // var myInput = document.getElementById('myInput')
 
-                    if (box.style.display === "none" || box.style.display === "") {
-                        box.style.display = "block";
-                    } else {
-                        box.style.display = "none";
-                    }
-                }
-            </script>
+                        // myModal.addEventListener('shown.bs.modal', function() {
+                        //     myInput.focus()
+                        // })
+                    </script>
+                    <!-- JQUERY (MUST BE FIRST) -->
+                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+                    <!-- SELECT2 JS -->
+                    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+                    <script>
+                        function ignoreAlert() {
+                            const today = new Date().toISOString().slice(0, 10);
+                            localStorage.setItem("hideStockAlertDate", today);
+                            document.getElementById("stockAlertBox").style.display = "none";
+                        }
+
+                        window.onload = function() {
+                            const today = new Date().toISOString().slice(0, 10);
+                            const hiddenDate = localStorage.getItem("hideStockAlertDate");
+
+                            if (hiddenDate === today) {
+                                const box = document.getElementById("stockAlertBox");
+                                if (box) box.style.display = "none";
+                            }
+                        };
+                    </script>
 
 </body>
 
