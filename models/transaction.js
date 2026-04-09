@@ -74,6 +74,10 @@ const transactionSchema = new Schema({
     type: Number,
     required: true,
   },
+  supplier: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "supplier",
+  },
   stockBefore: Number,
   stockAfter: Number,
   borrower: String,

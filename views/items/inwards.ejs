@@ -70,6 +70,15 @@
                                     <label class="form-label small mb-1">Remarks</label>
                                     <input type="text" name="items[<%= i %>][remarks]" class="form-control form-control-sm" placeholder="Optional remarks">
                                 </div>
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Supplier</label>
+                                    <select name="items[<%= i %>][supplier]" class="form-select form-select-sm">
+    <option value="">Select Supplier</option>
+    <% itemSuppliers.forEach(sup => { %>
+      <option value="<%= sup._id %>"><%= sup.supplierName %></option>
+    <% }) %>
+  </select>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -12,10 +12,12 @@ const ItemSchema = new mongoose.Schema({
   //   type: String,
   //   uppercase: true,
   // },
-  itemSupplier: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "supplier",
-  },
+  itemSupplier: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "supplier",
+    },
+  ],
   itemUnit: {
     type: String,
     uppercase: true,
