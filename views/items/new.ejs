@@ -82,8 +82,14 @@
                         <div class="col-md-4">
                             <label class="form-label">Item Supplier</label>
                             <div class="input-group">
-                                <input id="supplierName" type="text" class="form-control awesomplete" autocomplete="off">
-                                <input type="hidden" id="supplierId" name="item[itemSupplier]">
+                                <select class="form-select" name="item[itemSupplier]" required>
+    <option disabled selected>Select Supplier</option>
+    <% itemSuppliers.forEach(sup => { %>
+        <option value="<%= sup._id %>">
+            <%= sup.supplierName %> (<%= sup.supplierCity %>)
+        </option>
+    <% }) %>
+</select>
                                 <!-- OPEN SUPPLIER MODAL -->
                                 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
                                 <i class="bi bi-plus"></i>
@@ -259,8 +265,16 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    document.getElementById("supplierName").value = data.supplier.supplierName;
-                    document.getElementById("supplierId").value = data.supplier._id;
+                    const select = document.querySelector('select[name="item[itemSupplier]"]');
+
+                    // create new option
+                    const opt = document.createElement("option");
+                    opt.value = data.supplier._id;
+                    opt.textContent = `${data.supplier.supplierName} (${data.supplier.supplierCity})`;
+
+                    // add & select it
+                    select.appendChild(opt);
+                    select.value = data.supplier._id;
 
 
                     bootstrap.Modal.getInstance(document.getElementById("addSupplierModal")).hide();

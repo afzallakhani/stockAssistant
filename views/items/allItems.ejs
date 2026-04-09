@@ -237,8 +237,19 @@
                                     </div>
 
                                     <ul class="list-group list-group-flush small">
-                                        <li class="list-group-item"><strong>Supplier:</strong>
-                                            <%= item.itemSupplier ? item.itemSupplier.supplierName : '' %>
+                                        <li class="list-group-item">
+                                            <strong>Supplier:</strong>
+
+                                            <% if (item.itemSupplier && item.itemSupplier.length > 1) { %>
+                                                Multiple
+                                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="showSupplierStock('<%= item._id %>')">
+      Info
+    </button>
+                                                <% } else if (item.itemSupplier && item.itemSupplier.length === 1) { %>
+                                                    <%= item.itemSupplier[0].supplierName %>
+                                                        <% } else { %>
+                                                            —
+                                                            <% } %>
                                         </li>
                                         <li class="list-group-item"><strong>Quantity:</strong>
                                             <%= item.itemQty %>
@@ -319,6 +330,22 @@
         <button onclick="scrollToBottom()" class="btn btn-outline-primary rounded-circle shadow"><i class="bi bi-arrow-down"></i></button>
     </div>
     <div id="bottom"></div>
+    <div class="modal fade" id="supplierStockModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Supplier-wise Stock</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="supplierStockBody">
+                    Loading...
+                </div>
+
+            </div>
+        </div>
+    </div>
     <script>
         const searchInput = document.getElementById("itemSearch");
         const filterCategory = document.getElementById("filterCategory");
@@ -443,6 +470,27 @@
             }
         };
     </script> -->
+    <script>
+        async function showSupplierStock(itemId) {
+            const res = await fetch(`/items/${itemId}/supplier-stock`);
+            const data = await res.json();
+
+            const body = document.getElementById("supplierStockBody");
+
+            if (!data.length) {
+                body.innerHTML = "<p>No supplier data found</p>";
+            } else {
+                body.innerHTML = data.map(s => `
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <strong>${s.supplierName}</strong>
+        <span>${s.stock}</span>
+      </div>
+    `).join("");
+            }
+
+            new bootstrap.Modal(document.getElementById('supplierStockModal')).show();
+        }
+    </script>
     <script>
         function toggleAlertPanel() {
             const box = document.getElementById("stockAlertBox");

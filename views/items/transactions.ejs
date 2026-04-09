@@ -83,6 +83,10 @@
                                                 <li class="list-group-item"><strong>Quantity:</strong>
                                                     <%= tx.quantity %>
                                                 </li>
+                                                <li class="list-group-item">
+                                                    <strong>Supplier:</strong>
+                                                    <%= tx.supplier ? tx.supplier.supplierName : '-' %>
+                                                </li>
                                                 <li class="list-group-item"><strong>Stock Before:</strong>
                                                     <%= tx.stockBefore %>
                                                 </li>
